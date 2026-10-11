@@ -1,0 +1,4 @@
+<script setup lang="ts">
+defineProps<{ initials: string; color: string; compact?: boolean }>()
+</script>
+<template><div class="portrait" :class="{ compact }" :style="{ '--portrait-color': color }" aria-label="Illustrative operator portrait placeholder"><svg viewBox="0 0 400 300" aria-hidden="true"><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="currentColor" stroke-opacity=".10"/></pattern></defs><rect width="400" height="300" fill="url(#grid)"/><circle cx="200" cy="120" r="45" fill="currentColor" opacity=".45"/><path d="M99 300v-35a101 101 0 01202 0v35" fill="currentColor" opacity=".3"/><path d="M36 74h48M60 50v48M316 230h48M340 206v48" stroke="currentColor" opacity=".5"/></svg><span class="portrait-initials">{{ initials }}</span><span v-if="!compact" class="portrait-label">ILLUSTRATIVE PROFILE · NO REAL PHOTO</span></div></template>

@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Frontend and browser test artifacts
+node_modules/
+dist/
+playwright-report/
+test-results/
+.env.*

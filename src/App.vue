@@ -1,0 +1,90 @@
+<script setup lang="ts">
+import { computed, ref, watch, nextTick } from 'vue'
+import { createDashboard, type Dashboard } from './focus'
+import { calls, profiles, rigs, sampleQsos } from './fixtures'
+import type { Qso } from './types'
+import { currentBandStatus, sortQsos, bandLabel, type SortColumn, type SortDirection } from './qso'
+import OperatorPortrait from './components/OperatorPortrait.vue'
+const props = defineProps<{ dashboard?: Dashboard }>()
+const dashboard = props.dashboard ?? createDashboard()
+const { state } = dashboard
+if (!state.call) {
+ for (const [i, call] of [...calls].reverse().entries()) dashboard.select(call, rigs[i % 3]!.id, { at: Date.now() - (6-i)*94000 })
+}
+const entry = computed(() => state.history.find(e => e.call === state.call)!)
+const rig = (id: string) => rigs.find(r => r.id === id)!
+const profile = computed(() => state.profile.status === 'loaded' ? state.profile.data : null)
+const qsos = computed(() => state.qsos.status === 'loaded' ? state.qsos.data : [])
+const sortColumn = ref<SortColumn>('date'), sortDirection = ref<SortDirection>('descending')
+const columns: { key: SortColumn; label: string }[] = [{ key: 'date', label: 'Date / time' }, { key: 'band', label: 'Band' }, { key: 'mode', label: 'Mode' }, { key: 'sent', label: 'Sent' }, { key: 'received', label: 'Rcvd' }, { key: 'station', label: 'Station' }, { key: 'confirmed', label: 'QSL' }]
+function changeSort(column: SortColumn) {
+ sortDirection.value = sortColumn.value === column && sortDirection.value === 'ascending' ? 'descending' : sortColumn.value === column ? 'ascending' : column === 'date' ? 'descending' : 'ascending'
+ sortColumn.value = column
+}
+const sortedQsos = computed(() => sortQsos(qsos.value, sortColumn.value, sortDirection.value))
+const latestQso = computed(() => sortQsos(qsos.value, 'date', 'descending')[0])
+const bandStatus = computed(() => currentBandStatus(state.qsos, entry.value?.band))
+const bands = computed(() => [...new Set(qsos.value.map(q => q.band))])
+const detail = ref<Qso | null>(null)
+let previousFocus: HTMLElement | null = null
+watch(detail, async value => {
+ if (value) { previousFocus = document.activeElement as HTMLElement; await nextTick(); document.querySelector<HTMLButtonElement>('.detail-dialog button')?.focus() }
+ else previousFocus?.focus()
+})
+function trapDialog(event: KeyboardEvent) {
+ if (event.key === 'Tab') { event.preventDefault(); document.querySelector<HTMLButtonElement>('.detail-dialog button')?.focus() }
+}
+const chosenCall = ref('JA2HDE'), chosenRig = ref(rigs[0]!.id), slow = ref(false), demoOpen = ref(false)
+const deskPreferenceKey = 'wsjtx-dashboard.station-desk'
+function readPreference(key: string) { try { return localStorage.getItem(key) } catch { return null } }
+const deskOpen = ref(readPreference(deskPreferenceKey) === 'open')
+const theme = ref(readPreference('wsjtx-dashboard.theme') === 'light' ? 'light' : 'dark')
+watch(deskOpen, value => { try { localStorage.setItem(deskPreferenceKey, value ? 'open' : 'closed') } catch { /* Session preference still works without storage. */ } })
+watch(theme, value => { try { localStorage.setItem('wsjtx-dashboard.theme', value) } catch { /* Session-only fallback. */ } })
+const demoDialog = ref<HTMLDialogElement | null>(null)
+watch(demoOpen, async open => {
+ await nextTick()
+ if (open) demoDialog.value?.showModal()
+ else demoDialog.value?.close()
+})
+function trapDemoDialog(event: KeyboardEvent) {
+ if (event.key !== 'Tab') return
+ const controls = demoDialog.value?.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled)')
+ if (!controls?.length) return
+ const first = controls[0]!, last = controls[controls.length - 1]!
+ if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+ else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+}
+const notice = ref('Ready for your next selection.')
+const utc = (time: number | string) => new Date(time).toISOString().slice(11,19)
+function simulate() { dashboard.select(chosenCall.value, chosenRig.value, slow.value ? { profileDelay: 2400, qsoDelay: 4000 } : {}); notice.value = `Simulated selection: ${chosenCall.value}`; demoOpen.value = false }
+function interleave() { dashboard.select('DL1DEMO', rigs[0]!.id); dashboard.select('W7DEMO', rigs[1]!.id); dashboard.select('VK3DEMO', rigs[2]!.id); notice.value = 'Three interleaved selections received. Field station is latest.' }
+</script>
+<template>
+ <div class="app-shell" :class="[{ 'station-desk-open': deskOpen }, `theme-${theme}`]">
+  <header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true">⌁</span><h1>WSJT-X <span>Dashboard</span></h1></div><span class="demo-status">Demo · No live connections</span><nav class="console-controls" aria-label="Console controls"><button class="btn console-button" :aria-expanded="deskOpen" aria-controls="station-desk" @click="deskOpen = !deskOpen">Station Desk <span aria-hidden="true">{{ deskOpen ? '▴' : '▾' }}</span></button><button class="btn console-button" aria-haspopup="dialog" aria-controls="demo-tools" :aria-expanded="demoOpen" @click="demoOpen = true">Demo tools</button><button class="btn console-button" :aria-pressed="theme === 'light'" @click="theme = theme === 'dark' ? 'light' : 'dark'">Theme: {{ theme === 'dark' ? 'Dark' : 'Light' }}</button></nav></header>
+  <section v-show="deskOpen" id="station-desk" class="rig-strip" aria-label="Simulated rig identities"><div class="section-eyebrow">STATION DESK <span>3 simulated rigs</span></div><div class="rigs"><div v-for="r in rigs" :key="r.id" class="rig-chip" :style="{ '--rig-color': r.color }"><i></i><strong>{{ r.name }}</strong><span>{{ bandLabel(r.band) }} · {{ r.mode }}</span><code>{{ state.rigSelections[r.id] || 'Idle' }}</code></div></div></section>
+  <dialog ref="demoDialog" id="demo-tools" class="demo-dialog" @keydown="trapDemoDialog" aria-labelledby="demo-tools-title" aria-describedby="demo-tools-description" @close="demoOpen = false" @click="event => { if (event.target === demoDialog) demoOpen = false }">
+   <div class="demo-dialog-heading"><h2 id="demo-tools-title">Demo tools</h2><button class="btn console-button" @click="demoOpen = false" autofocus>Close demo tools</button></div>
+   <p id="demo-tools-description">These tools affect demonstration data only. No radios, live services or logbooks are connected.</p>
+   <div class="demo-action"><h3>Choose a station and radio</h3><div class="control-fields"><label>Callsign<select aria-label="Callsign" v-model="chosenCall" class="form-select form-select-sm"><option v-for="call in calls" :key="call">{{ call }}</option></select></label><label>Simulated radio<select aria-label="Simulated radio" v-model="chosenRig" class="form-select form-select-sm"><option v-for="r in rigs" :value="r.id" :key="r.id">{{ r.name }}</option></select></label><label class="slow-control"><input type="checkbox" v-model="slow" class="form-check-input"> Slow lookups</label></div><p>Display the chosen station immediately, then load its sample profile and contacts. Slow lookups make the waiting states easier to review.</p><button class="btn btn-success btn-sm" @click="simulate">Simulate a station selection</button></div>
+   <div class="demo-action"><button class="btn btn-outline-light btn-sm" @click="interleave">Simulate selections from three radios</button><p>Select DL1DEMO, W7DEMO, then VK3DEMO on separate radios. The last selection appears first.</p></div>
+   <div class="demo-action"><button class="btn btn-outline-light btn-sm" @click="dashboard.decode(); notice = 'Ordinary decode ignored. Focus and history unchanged.'">Simulate an ordinary decode</button><p>A received signal should leave the displayed station and Focus History unchanged.</p></div>
+   <div class="demo-action"><button class="btn btn-outline-light btn-sm" @click="dashboard.race(); notice = 'Slow DL1DEMO → fast JA2HDE. Latest selection must win.'">Test responses arriving out of order</button><p>Select slow DL1DEMO, then fast JA2HDE. Delayed results must never replace the newer station.</p></div>
+   <p class="demo-notice" role="status">{{ notice }} · {{ state.decodes }} ordinary decodes ignored.</p><small>Sample cases: VK3DEMO has no contacts; PY2DEMO has a history error; ZS6DEMO has no profile.</small>
+  </dialog>
+  <main class="desk">
+   <section class="station-panel" aria-label="Focused station">
+    <div class="panel-heading"><span class="section-eyebrow">FOCUSED STATION</span><span class="focus-origin">{{ state.source === 'browse' ? 'Browsing history' : 'Simulated radio selection' }} <span class="mint-dot">●</span></span></div>
+    <div class="station-overview"><div class="portrait-column"><OperatorPortrait :initials="profile?.initials || '··'" :color="profile?.color || '#7d909d'"/><div class="photo-caption">Operator image placeholder <span>DEMO</span></div></div><div class="station-identity"><div class="callsign-row"><h2 data-testid="focused-call">{{ state.call }}</h2><span class="small-label">SAMPLE</span></div><template v-if="profile"><h3>{{ profile.name }}</h3><p class="location">{{ profile.location }}<br><strong>{{ profile.country }}</strong> <span class="grid-locator">{{ profile.grid }}</span></p><p class="operator-bio">{{ profile.bio }}</p></template><div v-else-if="state.profile.status === 'pending'" class="profile-pending" role="status"><div class="skeleton wide"></div><div class="skeleton"></div><p>Loading sample operator profile…</p></div><p v-else-if="state.profile.status === 'empty'" class="muted-state">No sample operator profile available.</p><p v-else class="error-text">Profile unavailable. <button class="text-button" @click="dashboard.retry">Retry</button></p><div class="origin-card" v-if="entry"><span class="rig-dot" :style="{ background: rig(entry.rigId).color }"></span><div><strong>{{ rig(entry.rigId).name }}</strong><span>{{ entry.band ? bandLabel(entry.band) : 'Band unknown' }} · {{ rig(entry.rigId).mode }} <span class="origin-separator">/</span> Last radio selection {{ utc(entry.selectedAt) }} UTC</span><small>{{ entry.rigId }}</small></div></div><div v-if="state.source === 'browse'" class="browse-note">Dashboard browsing only · radio selections unchanged</div></div></div>
+    <div class="worked-summary" aria-live="polite"><template v-if="state.qsos.status === 'loaded' && state.qsos.complete"><div class="worked-title"><span class="worked-check">✓</span><div><strong>Worked before</strong><span>Complete sample history</span></div></div><div class="summary-stat"><strong>{{ qsos.length }}</strong><span>CONTACTS</span></div><div class="summary-stat"><strong>{{ bands.length }}</strong><span>BANDS</span></div><div class="summary-last"><span>LATEST CONTACT</span><strong>{{ latestQso!.date.slice(0,10) }}</strong><small>{{ latestQso!.band }} · {{ latestQso!.mode }}</small></div></template><template v-else-if="state.qsos.status === 'pending'"><span class="spinner-border spinner-border-sm"></span> Loading sample QSO history…</template><template v-else-if="state.qsos.status === 'empty'"><span class="worked-check">○</span><div><strong>Not worked in sample logbook</strong><p class="mb-0">Lookup complete · 0 sample contacts</p></div></template><template v-else><span class="error-text">QSO history unavailable · worked-before status unknown</span><button class="text-button" @click="dashboard.retry">Retry lookup</button></template></div>
+    <div class="band-status" :data-state="bandStatus.kind" data-testid="band-status" aria-live="polite"><strong>{{ bandStatus.title }}</strong><span>{{ bandStatus.detail }}</span><small>Band from latest simulated WSJT-X selection for {{ state.call }}</small></div>
+    <div class="qso-heading"><div><h3>Previous contacts <span>{{ state.qsos.status === 'loaded' ? qsos.length : '—' }}</span></h3><p>{{ state.qsos.status === 'loaded' && !state.qsos.complete ? 'Incomplete demonstration history · status unknown' : 'Complete demonstration logbook history · both station callsigns' }}</p></div><span class="utc-label">ALL TIMES UTC</span></div>
+    <div class="qso-scroll" tabindex="0" aria-label="Scrollable sample QSO history"><table v-if="state.qsos.status === 'loaded'" class="table qso-table"><thead><tr><th v-for="column in columns" :key="column.key" :aria-sort="sortColumn === column.key ? sortDirection : 'none'"><button class="sort-button" @click="changeSort(column.key)">{{ column.label }} <span aria-hidden="true">{{ sortColumn === column.key ? (sortDirection === 'ascending' ? '↑' : '↓') : '↕' }}</span></button></th><th><span class="visually-hidden">Details</span></th></tr></thead><tbody><tr v-for="q in sortedQsos" :key="q.id"><td><button class="qso-link" @click="detail = q" :aria-label="`Contact details ${q.date}`">{{ q.date.slice(0,10) }}<small>{{ utc(q.date) }}</small></button></td><td><span class="band-tag">{{ q.band }}</span></td><td>{{ q.mode }}</td><td class="reports">{{ q.sent }}</td><td class="reports">{{ q.received }}</td><td>{{ q.station }}</td><td><span :class="q.confirmed ? 'confirmed' : 'unconfirmed'">{{ q.confirmed ? '✓ Confirmed' : 'Pending' }}</span></td><td><button class="text-button detail-arrow" @click="detail = q" :aria-label="`Open QSO ${q.id}`">↗</button></td></tr></tbody></table><div v-else-if="state.qsos.status === 'pending'" class="table-loading" role="status"><div class="skeleton" v-for="i in 5" :key="i"></div><p>Retrieving contacts independently of the profile…</p></div><div v-else-if="state.qsos.status === 'empty'" class="empty-state"><span>◎</span><h4>A new connection</h4><p>No contacts found in this station’s complete sample history.</p></div><div v-else class="empty-state error-state"><span>◇</span><h4>History couldn’t be loaded</h4><p>{{ state.qsos.message }}</p><p>Failed lookups never count as zero contacts.</p><button class="btn btn-outline-light btn-sm" @click="dashboard.retry">Retry sample lookup</button></div></div>
+    <div class="panel-footer"><span>◈ Fictional contact records</span><span>In-memory session · resets on reload</span></div>
+   </section>
+   <aside class="history-panel" aria-label="Focus History"><div class="history-heading"><div><span class="section-eyebrow">YOUR OPERATING TRAIL</span><h2>Focus History <span>{{ state.history.length }}</span></h2></div><span class="history-symbol">↶</span></div><p class="history-intro">Selected stations across your rigs.<br>Click to revisit, without touching the radio.</p><div class="history-sort"><span>LATEST RADIO SELECTION</span><span>RADIO TIME · UTC</span></div><div class="history-scroll" tabindex="0" aria-label="Scrollable Focus History"><button v-for="item in state.history" :key="item.call" class="history-entry" :class="{ active: state.call === item.call }" @click="dashboard.browse(item.call)" :aria-pressed="state.call === item.call" :data-testid="`history-${item.call}`"><OperatorPortrait :initials="profiles[item.call]?.initials || '?'" :color="profiles[item.call]?.color || '#aaa'" compact/><div class="history-entry-main"><div class="history-call"><strong>{{ item.call }}</strong><span v-if="state.call === item.call">FOCUSED</span></div><div class="history-location">{{ profiles[item.call]?.country || 'Unknown' }} <span>· {{ profiles[item.call]?.grid }}</span></div><div class="history-qso-hint">{{ item.call === 'PY2DEMO' ? 'Sample QSO history unavailable' : `${sampleQsos(item.call).length} sample contacts` }}</div><div class="history-rig"><i :style="{ background: rig(item.rigId).color }"></i>{{ rig(item.rigId).name }}<time>{{ utc(item.selectedAt) }}</time></div><small v-if="item.browsedAt" class="browsed-label">Browsed {{ utc(item.browsedAt) }} · radio time preserved</small><small v-else class="browsed-label">Simulated selection</small></div></button></div><div class="history-footer"><span class="mint-dot">●</span> Deliberate focus only. Decodes stay quiet.<small>Ordered only by simulated radio selections. Browsing keeps order.</small></div></aside>
+  </main><footer class="app-footer"><span>WSJT-X Dashboard <span class="footer-version">/ MILESTONE 01</span></span><span>Built for the operator. Ready for your next contact.</span></footer>
+ </div>
+ <div v-if="detail" class="detail-backdrop" :class="`theme-${theme}`" @click.self="detail = null" @keydown.esc="detail = null" @keydown="trapDialog"><section role="dialog" aria-modal="true" aria-labelledby="detail-title" class="detail-dialog" tabindex="-1"><div class="d-flex justify-content-between align-items-start"><div><span class="section-eyebrow">SAMPLE CONTACT DETAILS</span><h2 id="detail-title">{{ state.call }}</h2></div><button class="btn btn-outline-light btn-sm" @click="detail = null" autofocus>Close</button></div><dl><dt>Date / time (UTC)</dt><dd>{{ detail.date.slice(0,10) }} {{ utc(detail.date) }}</dd><dt>Band / mode</dt><dd>{{ detail.band }} / {{ detail.mode }}</dd><dt>Sent / received</dt><dd>{{ detail.sent }} / {{ detail.received }}</dd><dt>Station callsign</dt><dd>{{ detail.station }}</dd><dt>Grid locator</dt><dd>{{ detail.grid }}</dd><dt>Sample confirmation</dt><dd>{{ detail.confirmed ? 'Confirmed' : 'Pending' }}</dd></dl><p class="mb-0 text-secondary">Illustrative record only. No logging or radio commands.</p></section></div>
+</template>

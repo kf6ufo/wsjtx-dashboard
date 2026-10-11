@@ -2,7 +2,7 @@
 ## Project vision, decisions, and Codex handoff
 
 **Prepared:** 2026-10-11  
-**Status:** Proposed new project; architecture and roadmap, not an implemented application.  
+**Status:** Architecture and roadmap; Milestone 1 mock demo implemented locally. Operator refinements on 2026-10-11 supersede the original browsing-order proposal.
 **Working repository name:** `wsjtx-dashboard`  
 **Display name:** **WSJT-X Dashboard**  
 **Alternative name retained:** WSJT-X Station Hub
@@ -24,7 +24,7 @@ A successful user experience matters as much as the data pipeline. The user prev
 - **ADIF is a data format, not currently an output destination requirement.** An optional local ADIF output can be added later; it is not a priority in Wavelog-focused v1.
 - **Cross-platform display.** Host centrally on Ubuntu; use ordinary browsers on Ubuntu, macOS, Windows. No separate desktop GUI needed.
 - **Shared focus state.** One current focus and one chronological Focus History across all WSJT-X rigs and connected browser clients.
-- **Operator-driven.** Add to Focus History on detected WSJT-X selection changes or deliberate dashboard clicks, not routine Decode packets.
+- **Operator-driven.** Add/reorder Focus History only on detected WSJT-X selection changes. Dashboard clicks change the displayed focus without changing list order, radio selection time or rig provenance. Routine Decode packets do not change either.
 - **Instant focus, asynchronous enrichment.** Push the callsign and History change to connected browsers immediately; independently fetch/cache Wavelog and QRZ details. Old responses must never overwrite newer focus.
 - **Existing QSO logging stays untouched initially.** WaveLogGate remains the sole live Wavelog submitter. The new app starts read-only/passive. Later logging replacement requires substantial testing and explicit production cutover.
 - **Visual alignment, not technology imitation.** Bootstrap/Wavelog-like visual sensibility is useful, but do not copy Wavelog's legacy PHP/CodeIgniter technology merely for similarity.
@@ -88,7 +88,8 @@ The older Python parser supports Heartbeat (0), Status (1), Decode (2), and list
 - Originating WSJT-X rig and current known band/mode, where relevant.
 - Wavelog-backed 'worked before' status, count, most recent QSO, unique bands/modes, and **every matching QSO record** (scrollable and optionally filterable/sortable) rather than just a summary of three contacts.
 - Dates/times in clearly indicated UTC or explicitly user-selected time zone, band, mode, reports, and later LoTW/eQSL/QRZ confirmation fields if API supports them.
-- Clickable individual QSO details.
+- Clickable individual QSO details. Sort every displayed data column with visible/accessibility direction state; default newest first, dates/reports by underlying values, bands by frequency.
+- Current-band status evaluates the focused station’s latest selection band across all modes. Only complete history can show worked count or new-on-band; zero total QSOs also identifies a new callsign. Pending, failed, incomplete and unknown-band states must remain explicit.
 - Display immediately on selection with independent Wavelog/QRZ loading/error states. Never mark a station 'not worked' on a timeout, authorization failure or incomplete pagination; show 'unavailable'.
 
 ### Right panel: Focus History
@@ -97,7 +98,7 @@ The older Python parser supports Heartbeat (0), Status (1), Decode (2), and list
 - Chronological most-recent-first, scrollable, clickable, photo thumbnail where available, callsign, brief location, QSO count/status, originating rig, selection time.
 - If the same callsign is selected again, move it to the top, do not create duplicate cards; update originating rig and time.
 - Clicking an older card displays it on the left. Do **not** send commands to or change the selected callsign within WSJT-X.
-- Browser navigation is itself deliberate focus. Keep a coherent global active focus across clients. Consider whether browsing an old history entry should reorder it: proposed yes for recency consistency, but label as a minor UX decision.
+- Browser navigation changes displayed focus only. Preserve the existing list order, selection timestamps, selection band and rig provenance; highlight the displayed entry wherever it sits. Only a subsequent WSJT-X selection moves a callsign to the top and updates radio provenance. Keep a coherent global displayed focus across clients in the future shared-state milestone.
 - Ordinary decodes may populate *separate internal Heard History/statistics later*; they must not insert Focus History entries or steal active focus.
 - Reuse cached results instantly on returning to a previous callsign, refreshing them asynchronously according to explicit TTL policy.
 
