@@ -1,8 +1,10 @@
 # WSJT-X Dashboard
 
-A desktop-first station companion with dark and light themes built with Vue 3, TypeScript and Bootstrap 5. **Milestone 1 demonstration only:** fictional profiles, illustrative portrait placeholders, sample QSOs and three simulated rig identities. No live services, credentials, radio commands or QSO submissions. WaveLogGate is untouched.
+A desktop-first station companion with dark and light themes built with Vue 3, TypeScript and Bootstrap 5. **Milestone 2 radio focus with sample enrichment:** fictional profiles, illustrative portrait placeholders and sample QSOs. Live rig identities come from WSJT-X; the separate demo uses three simulated rigs. Demo mode remains fully offline; explicit live mode receives WSJT-X selection data and synchronizes browsers. Profiles and QSO history remain samples. No Wavelog/QRZ connections, credentials, radio commands or QSO submissions. WaveLogGate is untouched.
 
-## Start and review
+See [Milestone 2 startup, architecture and validation](docs/milestone-2.md) for Mac development, GitHub release installation/updates and manual Ubuntu start/stop commands. Development and Codex stay on the Mac; Ubuntu is the runtime host. The station browser URL is **http://10.176.1.6:8000/?mode=live** after the documented installation. Open `/?mode=live` only when using the central backend; `/` keeps the separate accepted demo.
+
+## Start and review (separate demo)
 
 Install Node.js **24.15 or newer** (Node 24 LTS recommended), then open a terminal:
 
@@ -23,7 +25,7 @@ npm run dev -- --port 5173 --strictPort
 
 The temporary runtime may disappear after system cleanup; install Node for ongoing development.
 
-## Try the interface
+## Try the separate demo interface
 
 - The compact header keeps **Demo · No live connections** visible. **Station Desk** starts collapsed and remembers your open/closed preference locally; expand it to inspect all three simulated radio summaries. **Theme** switches dark/light and remembers that preference too. Storage restrictions fall back to session-only preferences. Focus/history remain tab-local and reset on reload.
 - Start with JA2HDE: a generous portrait placeholder and all 24 sample contacts in an independently scrolling table. Click a contact date or arrow for details; Escape closes the dialog.
@@ -59,9 +61,11 @@ Playwright starts a loopback Vite server if one is not already running. Tests us
 - `src/qso.ts`: value-based sorting and completeness-aware current-band status.
 - `src/providers.ts`: independent asynchronous mock profile/QSO providers; no network calls.
 - `src/fixtures.ts`, `src/types.ts`: fictional data and typed contracts.
+- `backend/protocol.py`, `backend/receiver.py`, `backend/state.py`, `backend/app.py`: opt-in receive-only WSJT-X parser/socket, central state and SSE/snapshot/navigation API.
+- `src/live.ts`: live-mode connection/reconnection and complete snapshot recovery.
 - `src/App.vue`, `src/components/`, `src/style.css`: presentation and demo controls.
 - `tests/`: state/component tests and browser smoke test.
 
-Every accepted deliberate simulated selection updates radio provenance; dashboard browsing updates the displayed station and separate browsing time only, preserving list order and radio provenance. History order uses a selection-only sequence. The selection snapshots its band; browsing does not borrow another rig’s band. QSO providers return records plus an explicit completeness flag; incomplete results stay unknown, even if empty. Monotonic sequence numbers order interactions even when wall-clock timestamps tie. Profiles/QSOs reset to pending on navigation and reload independently; caching and persistence are deferred. The fixture set bounds demo history to six stations. There is no WSJT-X Status parser, backend, cross-browser synchronization or logging gateway.
+Every accepted deliberate simulated selection updates radio provenance; dashboard browsing updates the displayed station and separate browsing time only, preserving list order and radio provenance. History order uses a selection-only sequence. The selection snapshots its band; browsing does not borrow another rig’s band. QSO providers return records plus an explicit completeness flag; incomplete results stay unknown, even if empty. Monotonic sequence numbers order interactions even when wall-clock timestamps tie. Profiles/QSOs reset to pending on navigation and reload independently; caching and persistence are deferred. The fixture set bounds demo history to six stations. This paragraph describes demo mode only. The separate live mode uses the Python Status receiver and centrally synchronized snapshots; no logging gateway exists.
 
-See [project handoff](docs/project-handoff.md) and [current checkpoint](docs/current-checkpoint.md). **Stop for UI review before Milestone 2.**
+See [project handoff](docs/project-handoff.md) and [current checkpoint](docs/current-checkpoint.md). **Milestone 1 accepted and pushed as `8a8c0df`; Milestone 2 has offline coverage and observed live reception from both rigs plus an operator-confirmed IC7300 selection. Full station/browser acceptance remains pending.**

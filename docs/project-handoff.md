@@ -2,7 +2,7 @@
 ## Project vision, decisions, and Codex handoff
 
 **Prepared:** 2026-10-11  
-**Status:** Architecture and roadmap; Milestone 1 mock demo implemented locally. Operator refinements on 2026-10-11 supersede the original browsing-order proposal.
+**Status:** Milestone 1 interaction behavior reviewed, accepted and pushed as `8a8c0df`. Milestone 2 authorized on 2026-10-11 and implemented with offline checks and observed live reception from both rigs plus an operator-confirmed IC7300 selection; full station/browser acceptance pending. Development stays on macOS, GitHub transfers source and prebuilt frontend releases, and Ubuntu is the runtime host. See `docs/current-checkpoint.md` and `docs/milestone-2.md`. Operator refinements supersede the original browsing-order proposal.
 **Working repository name:** `wsjtx-dashboard`  
 **Display name:** **WSJT-X Dashboard**  
 **Alternative name retained:** WSJT-X Station Hub

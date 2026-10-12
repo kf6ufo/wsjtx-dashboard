@@ -21,7 +21,7 @@ export function sortQsos(qsos: Qso[], column: SortColumn, direction: SortDirecti
  })
 }
 export function currentBandStatus(history: Lookup<Qso[]>, band: string | null | undefined) {
- if (!band?.trim()) return { kind: 'unknown', title: 'Current band unknown', detail: 'Latest simulated selection has no known band.' }
+ if (!band?.trim()) return { kind: 'unknown', title: 'Current band unknown', detail: 'Latest selection has no known band.' }
  const label = bandLabel(band)
  if (history.status === 'pending') return { kind: 'checking', title: `Checking ${label}…`, detail: 'Waiting for complete sample history.' }
  if (history.status === 'error' || (history.status === 'loaded' && history.complete !== true)) return { kind: 'unavailable', title: `Status unavailable on ${label}`, detail: 'History failed or is incomplete · worked status unknown.' }
