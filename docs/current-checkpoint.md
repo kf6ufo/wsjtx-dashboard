@@ -5,7 +5,7 @@
 
 ## Accepted baseline
 
-Milestone 1 was committed and pushed to `origin/main` as **`8a8c0df`** before Milestone 2 implementation. It preserves the reviewed compact console, collapsed/persisted Station Desk, separate accessible Demo tools dialog, immediate dialog closure on simulated selection, sortable QSO columns, completeness-aware sample band status, independent scrolling, and stable radio-only history ordering after browsing. Milestone 2 is being published as GitHub validation release `m2-validation-20261012`. The release target and embedded frontend metadata record its exact commit; release notes and the delivery message record the full hash after commit/push. A commit cannot contain its own hash.
+Milestone 1 was committed and pushed to `origin/main` as **`8a8c0df`** before Milestone 2 implementation. It preserves the reviewed compact console, collapsed/persisted Station Desk, separate accessible Demo tools dialog, immediate dialog closure on simulated selection, sortable QSO columns, completeness-aware sample band status, independent scrolling, and stable radio-only history ordering after browsing. Milestone 2 was committed and pushed as **`f06ba397b9f508b0e5722b856295d6c9064c85fc`** and published as GitHub validation release `m2-validation-20261012`. Both frontend assets were downloaded from GitHub and verified against their checksum and embedded source revision. Later documentation commits retain that pinned application release.
 
 ## Milestone 2 delivered
 
@@ -21,7 +21,7 @@ Milestone 1 was committed and pushed to `origin/main` as **`8a8c0df`** before Mi
 
 ## Startup
 
-Exact Mac and Ubuntu commands, configuration variables, SSH tunnel/browser URLs, and offline checks are in [docs/milestone-2.md](milestone-2.md).
+Exact Mac and Ubuntu commands, configuration variables, LAN browser URLs, and offline checks are in [docs/milestone-2.md](milestone-2.md).
 
 Mac development: create `.venv`, install `requirements-dev.txt`, start `backend.app:app` on loopback port 8000 with `WSJTX_RECEIVER=off`, and run Vite on port 5173. Open `http://127.0.0.1:5173/?mode=live` for the central UI or `/` for the separate demo. Vite proxies `/api` to the backend. A production frontend build can be served directly by FastAPI. The Mac development backend was launched on port 8000 with UDP explicitly disabled for review; the separate demo remains available on port 5173.
 
@@ -78,3 +78,10 @@ Observed live results remain limited to receipt of both rig IDs and the operator
 
 
 Publication checks on 2026-10-12: 14 Python cases passed (receiver/state/API plus frontend release commit/path/link validation); 14 frontend tests passed; production build passed; all 3 accepted demo Chrome workflows and the offline two-browser live synchronization/reconnection workflow passed again. `sh -n scripts/start-station.sh` and `git diff --check` passed. The installer itself has not yet been executed on Ubuntu; these offline checks do not assert successful GitHub authentication, LAN HTTP reachability, or the remaining live acceptance checks. Python tests retain the documented Starlette/httpx adapter deprecation warning.
+
+
+## Published fresh-install instructions
+
+README now prominently links to [Install on Ubuntu](install-ubuntu.md), the numbered fresh-install procedure used for operator validation. It includes read-only process/path inventory, stopping only an identified dashboard, preserving an existing stable directory by renaming it into a unique backup folder, prerequisites and private GitHub authentication, pinned source plus complete prebuilt frontend/backend installation, dependency/revision checks, manual start/stop, exact Mac LAN URL and expected output at each step. No implementation was restarted. Application release remains `m2-validation-20261012` at `f06ba397b9f508b0e5722b856295d6c9064c85fc`; required release assets remain published. Ubuntu process identity, existing stable directory, shutdown, rename and fresh installation have not yet been checked/performed by the operator. No station changes were made during documentation preparation.
+
+Documentation verification: shell command blocks passed `sh -n`, embedded Python snippets compiled, local Markdown targets resolved, and `git diff --check` passed. Application tests were not repeated for this documentation-only change; the previously recorded implementation checks remain the evidence.

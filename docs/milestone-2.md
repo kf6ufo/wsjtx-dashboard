@@ -54,6 +54,8 @@ A static build can instead be served by FastAPI: run `npm run build`, start the 
 
 ## GitHub installation and updates (Ubuntu runtime only)
 
+For a fresh installation, follow **[Install on Ubuntu](install-ubuntu.md)**. It includes identifying/stopping an old dashboard, preserving an existing checkout, prerequisites, GitHub authentication, installation of both backend and prebuilt frontend, verification, and manual operation. The publication and update details below are for maintainers.
+
 Development, builds, checks and Codex stay on **macOS**. GitHub transfers committed source and a matching **prebuilt frontend release asset**. Ubuntu runs Python only; it needs neither Node nor a ChatGPT/Codex app. Never copy the Mac virtual environment. The former temporary archive workflow is retired; retain its files for now.
 
 ### Mac: publish a checked version

@@ -1,5 +1,9 @@
 # WSJT-X Dashboard
 
+## [Install on Ubuntu](docs/install-ubuntu.md)
+
+Complete GitHub installation of the backend **and prebuilt frontend**, with manual start/stop and Mac LAN browser access. **No Node, Codex or ChatGPT app is required on Ubuntu.**
+
 A desktop-first station companion with dark and light themes built with Vue 3, TypeScript and Bootstrap 5. **Milestone 2 radio focus with sample enrichment:** fictional profiles, illustrative portrait placeholders and sample QSOs. Live rig identities come from WSJT-X; the separate demo uses three simulated rigs. Demo mode remains fully offline; explicit live mode receives WSJT-X selection data and synchronizes browsers. Profiles and QSO history remain samples. No Wavelog/QRZ connections, credentials, radio commands or QSO submissions. WaveLogGate is untouched.
 
 See [Milestone 2 startup, architecture and validation](docs/milestone-2.md) for Mac development, GitHub release installation/updates and manual Ubuntu start/stop commands. Development and Codex stay on the Mac; Ubuntu is the runtime host. The station browser URL is **http://10.176.1.6:8000/?mode=live** after the documented installation. Open `/?mode=live` only when using the central backend; `/` keeps the separate accepted demo.
