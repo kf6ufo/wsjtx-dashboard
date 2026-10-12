@@ -4,7 +4,7 @@ A browser dashboard for live WSJT-X station selections across your radios. **Rad
 
 ## Install on Ubuntu
 
-Ubuntu **24.04+**, Python **3.12+**, Git and a user with sudo access are required. Run these commands **on Ubuntu as your ordinary user**, not as root. The repository is private; use an account with GitHub clone access. [Complete installation details](docs/install-ubuntu.md).
+Ubuntu **24.04+**, Python **3.12+**, Git and a user with sudo access are required. Run these commands **on Ubuntu as your ordinary user**, not as root. The repository is private; HTTPS cloning requires a personal access token at the password prompt ([authentication steps](docs/install-ubuntu.md#github-authentication-for-https-cloning)). [Complete installation details](docs/install-ubuntu.md).
 
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard

@@ -15,6 +15,14 @@ Run `./install.sh` **without sudo**. It checks the host, configuration, service 
 
 The installer creates/refreshes `.venv`, installs Python requirements, runs `npm ci` and `npm run build`, verifies the generated unit with `systemd-analyze verify`, then uses sudo to install `/etc/systemd/system/wsjtx-dashboard.service` and reload systemd. The server runs as the user who installed it, **not root**. Sudo may request your Ubuntu password. No package-wide upgrade, radio/firewall/router changes, service start/stop, or automatic boot enablement is performed.
 
+## GitHub authentication for HTTPS cloning
+
+GitHub account passwords do not work at Git's HTTPS password prompt. For this private repository, use a [fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens), or reuse already configured GitHub SSH access.
+
+On a Mac browser, sign in to GitHub as `kf6ufo` and open [Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new). Give the token a recognizable name and expiry. Choose resource owner `kf6ufo`, **Only select repositories → wsjtx-dashboard**, and repository permission **Contents → Read-only**. Generate and keep the token in your password manager; GitHub displays it once. This read-only permission is enough for cloning and later pulls.
+
+On Ubuntu, run the documented `git clone` command. At the prompts enter username `kf6ufo` and paste the **token** at the password prompt. Terminal input is hidden. Do not use your account password, embed the token in a URL/command, or paste it into chat. If authentication fails, verify repository access, token expiry and Contents permission before retrying. If a retry reports that the destination exists, inspect/preserve it rather than deleting it.
+
 ## Existing installations and migration
 
 Use stable directory **`~/wsjtx-dashboard`** (`/home/jerry/wsjtx-dashboard` for our station). If it already exists, do not clone over it or delete it. Inspect it first. If you want a fresh checkout, stop only an identified dashboard and rename the existing directory to a unique backup before cloning. Preserve `config.toml` from any existing installation. Leave all temporary validation folders intact.
