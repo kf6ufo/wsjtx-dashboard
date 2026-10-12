@@ -1,0 +1,25 @@
+# Managed by WSJT-X Dashboard installer
+[Unit]
+Description=WSJT-X Dashboard (receive-only, sample enrichment)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@GROUP@
+WorkingDirectory="@ROOT@"
+ExecStart="@PYTHON@" -m backend.server --config "@CONFIG@"
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

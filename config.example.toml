@@ -1,0 +1,12 @@
+# Copy to config.toml and edit for the Ubuntu host. Updates preserve config.toml.
+[http]
+# Bind only to the station LAN address. Do not expose through a router.
+host = "10.176.1.6"
+port = 8000
+
+[wsjtx]
+enabled = true
+group = "239.255.0.73"
+port = 2238
+# Local Ubuntu IPv4 address used to join multicast, not a sending radio's IP.
+interface = "10.176.1.6"

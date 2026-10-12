@@ -226,5 +226,6 @@ playwright-report/
 test-results/
 .env.*
 
-# Interrupted frontend release installation staging
-.frontend-install-*/
+# Local station configuration and isolated build runtime
+config.toml
+.tools/

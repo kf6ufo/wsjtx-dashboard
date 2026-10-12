@@ -2,7 +2,7 @@
 ## Project vision, decisions, and Codex handoff
 
 **Prepared:** 2026-10-11  
-**Status:** Milestone 1 interaction behavior reviewed, accepted and pushed as `8a8c0df`. Milestone 2 authorized on 2026-10-11 and implemented with offline checks and observed live reception from both rigs plus an operator-confirmed IC7300 selection; full station/browser acceptance pending. Development stays on macOS, GitHub transfers source and prebuilt frontend releases, and Ubuntu is the runtime host. See `docs/current-checkpoint.md` and `docs/milestone-2.md`. Operator refinements supersede the original browsing-order proposal.
+**Status:** Milestone 1 interaction behavior reviewed, accepted and pushed as `8a8c0df`. Milestone 2 authorized on 2026-10-11 and implemented with offline checks and observed live reception from both rigs plus an operator-confirmed IC7300 selection; full station/browser acceptance pending. Development stays on macOS; Ubuntu installs from GitHub source, builds the frontend locally, and runs the systemd service using one preserved TOML configuration. Release assets are not required. See `docs/current-checkpoint.md` and `docs/milestone-2.md`. Operator refinements supersede the original browsing-order proposal.
 **Working repository name:** `wsjtx-dashboard`  
 **Display name:** **WSJT-X Dashboard**  
 **Alternative name retained:** WSJT-X Station Hub
@@ -39,7 +39,7 @@ A successful user experience matters as much as the data pipeline. The user prev
 | Amateur-radio helper | `pyhamtools` (selectively) | DXCC/country/zone lookups, grid heading/distance, band calculation, QRZ XML access where supported |
 | Browser live updates | Server-Sent Events (SSE) initially | Server-to-browser focus and lookup result notifications |
 | Small persistent store | SQLite when justified | Settings, possibly Focus History, and future durable outbound queue; never mirror the Wavelog QSO database |
-| Deployment | Docker Compose on Ubuntu | Central operation alongside existing Wavelog Docker deployment |
+| Deployment | Native Ubuntu + systemd | Operator-requested source installation alongside untouched existing station services |
 | Tests | Pytest + frontend component/end-to-end tests | Offline fixtures and regressions, no radios required in CI |
 
 Why Python? `https://github.com/dh1tw/pyhamtools` is a credible MIT-licensed library for ham-radio calculations and lookups. It supports callsign country/DXCC exceptions using sources such as country files and Club Log and includes locator/frequency calculations. Verify actual maintained APIs, dependencies and source licensing before adopting features. It does **not** replace Wavelog QSO history or guarantee QRZ profile photo access. Go remains a possible choice if a measured need emerges, but do not build a Go/Python two-service architecture speculatively.
