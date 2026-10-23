@@ -33,7 +33,7 @@ test('built workspace synchronizes windows, preserves browsing provenance and re
  await expect(first.getByLabel('Station title')).toHaveValue('Step 0 review desk')
  await first.getByLabel('Saved appearance').selectOption('light')
  await first.getByRole('button', { name: 'Save workspace settings' }).click()
- await expect(first.getByRole('status')).toContainText('Saved on this server')
+ await expect(first.getByRole('form', { name: 'Workspace preferences' }).getByRole('status')).toContainText('Saved on this server')
  await expect(second.locator('.workspace-bar h2')).toHaveText('Step 0 review desk')
  await expect(second.locator('.app-shell')).toHaveClass(/theme-light/)
  await second.reload()
