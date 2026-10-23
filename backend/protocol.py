@@ -55,18 +55,31 @@ class Packet:
     fields: dict = field(default_factory=dict, compare=False)
 
 
-def parse_packet(data: bytes) -> Packet:
+def read_header(data: bytes):
     if len(data) > 65507:
         raise PacketError("oversized datagram")
     r = Reader(data)
     if r.number('I') != 0xADBCCBDA:
         raise PacketError("invalid magic")
-    schema = r.number('I')
-    if schema not in (2, 3):
-        raise PacketError("unsupported schema")
-    kind, rig_id = r.number('I'), r.text(128)
+    schema, kind, rig_id = r.number('I'), r.number('I'), r.text(128)
     if not rig_id.strip() or any(ord(c) < 32 or ord(c) == 127 for c in rig_id):
         raise PacketError("invalid network ID")
+    return r, schema, kind, rig_id
+
+
+def diagnostic_header(data: bytes):
+    # A trustworthy header can still identify a malformed payload/unknown schema.
+    try:
+        _reader, schema, kind, rig_id = read_header(data)
+        return dict(schema=schema, kind=kind, instance=rig_id)
+    except PacketError:
+        return {}
+
+
+def parse_packet(data: bytes) -> Packet:
+    r, schema, kind, rig_id = read_header(data)
+    if schema not in (2, 3):
+        raise PacketError("unsupported schema")
     fields = {}
     if kind == 0 and r.pos < len(data):
         fields['maximumSchema'] = r.number('I')

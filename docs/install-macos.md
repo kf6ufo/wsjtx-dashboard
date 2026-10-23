@@ -44,7 +44,7 @@ git rev-parse HEAD
 .venv/bin/python -m backend.server
 ```
 
-Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops cleanly; the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
+Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
 
 `./install.sh` creates `config.toml` exclusively only if missing. Existing files are validated and preserved byte-for-byte. The installer never opens a receiver socket. On startup, an enabled receiver in config is honored; review preserved settings before starting. For a rebuild alongside an older station installation, use the new checkout's default config; leave the old checkout/config untouched.
 

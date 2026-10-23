@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "test:e2e:live": "playwright test --config playwright.live.config.ts",
     "test:e2e:foundation": "playwright test --config playwright.foundation.config.ts",
-    "test:e2e:receiver": "playwright test --config playwright.receiver.config.ts"
+    "test:e2e:receiver": "playwright test --config playwright.receiver.config.ts",
+    "test:e2e:station": "playwright test --config playwright.station.config.ts"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",

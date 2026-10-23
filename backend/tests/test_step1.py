@@ -160,3 +160,18 @@ def test_real_loopback_udp_runtime_and_settings_restart(tmp_path):
         assert client.put('/api/receiver', json=disabled).json()['receiver']['status'] == 'disabled'
         assert not client.get('/api/snapshot').json()['sample']
         assert load_config(config).receiver.enabled is False
+
+
+def test_malformed_payload_retains_valid_header_identity_without_selecting(tmp_path):
+    state = WorkspaceState(tmp_path / 'workspace.sqlite3')
+    state.enter_radio_workspace()
+    ingest(header(rig='Radio A', kind=1) + b'broken payload', state, ('127.0.0.1', 2222))
+    row = state.diagnostic_rows()['rows'][0]
+    assert row['instance'] == 'Radio A' and row['kind'] == 1 and row['schema'] == 2
+    assert row['error']
+    assert state.rigs == {} and state.history == []
+    ingest(header(rig='Radio B', kind=1, schema=99), state)
+    row = state.diagnostic_rows()['rows'][0]
+    assert row['schema'] == 99 and row['instance'] == 'Radio B'
+    assert row['error'] == 'unsupported schema'
+    state.close()

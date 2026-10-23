@@ -9,6 +9,7 @@ import sqlite3
 import time
 from .foundation import FoundationState
 from .state import FocusState
+from .protocol import diagnostic_header
 
 PACKET_NAMES = {0: 'Heartbeat', 1: 'Status', 2: 'Decode', 3: 'Clear', 4: 'Reply', 5: 'QSO Logged',
                 6: 'Close', 7: 'Replay', 8: 'Halt Tx', 9: 'Free Text', 10: 'WSPR Decode',
@@ -103,10 +104,11 @@ class WorkspaceState(FoundationState):
     def record_datagram(self, data, source, packet=None, error=None, at=None):
         now = at if at is not None else int(time.time() * 1000)
         self.diagnostic_sequence += 1
+        header = dict(instance=packet.rig_id, kind=packet.kind, schema=packet.schema) if packet else diagnostic_header(data)
         self.diagnostics.append(dict(id=self.diagnostic_sequence, at=now, source=f'{source[0]}:{source[1]}',
-            instance=packet.rig_id if packet else None, kind=packet.kind if packet else None,
-            name=PACKET_NAMES.get(packet.kind, 'Unknown') if packet else 'Parse failure',
-            schema=packet.schema if packet else None, size=len(data), error=error,
+            instance=header.get('instance'), kind=header.get('kind'),
+            name=PACKET_NAMES.get(header['kind'], 'Unknown') if header else 'Parse failure',
+            schema=header.get('schema'), size=len(data), error=error,
             fields=packet.fields if packet else {}, raw=data))
         if packet:
             if packet.rig_id not in self.rigs and len(self.rigs) < self.rig_limit:
