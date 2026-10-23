@@ -37,7 +37,7 @@ test('built workspace synchronizes windows, preserves browsing provenance and re
  await expect(second.locator('.workspace-bar h2')).toHaveText('Step 0 review desk')
  await expect(second.locator('.app-shell')).toHaveClass(/theme-light/)
  await second.reload()
- await expect(second.getByTestId('focused-call')).toHaveText('VK3DEMO')
+ await expect(second.getByTestId('focused-call')).toHaveText('DL1DEMO')
  await second.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await expect(second.getByRole('heading', { name: 'Diagnostics', exact: true })).toBeVisible()
  await expect(second.getByText('Not implemented in Step 0')).toBeVisible()
