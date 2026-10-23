@@ -1,12 +1,12 @@
 # Codex instructions for WSJT-X Dashboard
 
 ## Mission
-Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, integrated with Wavelog. Read `docs/project-handoff.md` before planning or implementing any substantial work. The project is new and UI-first. The existing `kf6ufo/wsjtx-station-utility` is a reference implementation, not a codebase to overwrite.
+Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, integrated with Wavelog. Read `WSJTX-REBUILD-HANDOFF.md` and the current checkpoint before substantial work. The project develops through reviewed, visual milestones. The existing `kf6ufo/wsjtx-station-utility` is a reference implementation, not a codebase to overwrite.
 
 ## Current authority and development order
-Read `WSJTX-REBUILD-HANDOFF.md`, `README.md`, `docs/project-handoff.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work; use the rebuild branch.
+Read `WSJTX-REBUILD-HANDOFF.md`, `README.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work. `main` holds the reviewed implementation; use feature branches for future steps.
 
-Step 0 was reviewed/accepted; Step 1 is authorized. Use `rebuild/step-1`, preserving `rebuild/step-0`. Show Step 1 for review before Step 2.
+Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Step 1 is the current published scope. Do not begin Step 2 until requested.
 
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
@@ -17,7 +17,7 @@ Step 0 was reviewed/accepted; Step 1 is authorized. Use `rebuild/step-1`, preser
 6. Optional enriched QSO submission with durable queue, isolated validation and approved production cutover.
 7. Optional one-way UDP forwarding with verified destination formats.
 
-Support the same source/server/build/config/persistence on macOS and Ubuntu. Native foreground operation is sufficient initially; Docker is optional. Validate clean installation at an identified commit and upgrades preserving operator configuration/state. Report actual OS evidence separately from simulation. Do not change station services during Step 0.
+Support the same source/server/build/config/persistence on macOS and Ubuntu. Native foreground operation is sufficient initially; Docker is optional. Validate clean installation at an identified commit and upgrades preserving operator configuration/state. Report actual OS evidence separately from simulation. Keep production station services unchanged throughout early development.
 
 ## Core interaction contract
 - Left panel: current focused callsign, operator details/profile image when available, and full scrollable previous Wavelog QSO history.
@@ -29,8 +29,8 @@ Support the same source/server/build/config/persistence on macOS and Ubuntu. Nat
 - Display separate pending, empty, unavailable/error, and loaded states. API failures must never be interpreted as zero QSOs.
 
 ## Known radio behavior
-- Historical station examples (verify at Step 1): multicast group `239.255.0.73:2238`; Ubuntu receiver interface `10.176.1.6`.
-- Existing senders include `WSJT-X - IC7300` (`10.176.1.5`) and `WSJT-X - QRPLabsQDX` (`10.176.1.7`). Additional rigs are expected. Identify instances by WSJT-X network ID rather than sender IP alone.
+- Verified Step 1 multicast group `239.255.0.73:2238`; Mac receiving interface `10.176.1.200`; Ubuntu interface `10.176.1.6` is historical and must be verified.
+- Step 1 observed `WSJT-X - IC9100` and `WSJT-X - IC7300`, both from `10.176.1.5`. QRPLabsQDX at `10.176.1.7` is historical context. Additional rigs are expected. Identify instances by WSJT-X network ID rather than sender IP alone.
 - WSJT-X Status `dx_call` changes were experimentally seen after clicks on both systems. A change is a practical selection signal, **not proof of a physical mouse click**. Treat initial Status as baseline; validate callsigns and handle cleared/unchanged values carefully.
 - Step 0 uses SSE or an equivalent server push mechanism with a snapshot endpoint for reconnects.
 

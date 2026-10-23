@@ -23,22 +23,11 @@ Use your configured GitHub credential manager or SSH key. For HTTPS prompts, ent
 
 ## Install
 
-**Until publication is approved**, the branch is local to the development Mac. For a durable independent installation on this Mac, use:
-
-```sh
-git clone --shared --branch rebuild/step-1 /Users/jerryjoplin/Documents/GitHub/wsjtx-dashboard ~/wsjtx-dashboard-rebuild
-cd ~/wsjtx-dashboard-rebuild
-./install.sh
-.venv/bin/python -m backend.server
-```
-
-This local clone shares the preserved repository's Git object storage to avoid copying cloud-evicted historical objects, but gets its own source files, dependencies, configuration and workspace. Keep the source repository intact. The server needs no editor. Normal GitHub clones below are independent repositories and become usable once the branch is published. Stop the temporary review server first, or choose another HTTP port in your new checkout's config.
-
 Run each command and stop if it fails. If the destination exists, choose a different directory; do not delete or reset it.
 
 ```sh
-git clone --branch rebuild/step-1 https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard-rebuild
-cd ~/wsjtx-dashboard-rebuild
+git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard
+cd ~/wsjtx-dashboard
 git rev-parse HEAD
 ./install.sh
 .venv/bin/python -m backend.server
@@ -46,7 +35,7 @@ git rev-parse HEAD
 
 Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
 
-`./install.sh` creates `config.toml` exclusively only if missing. Existing files are validated and preserved byte-for-byte. The installer never opens a receiver socket. On startup, an enabled receiver in config is honored; review preserved settings before starting. For a rebuild alongside an older station installation, use the new checkout's default config; leave the old checkout/config untouched.
+`./install.sh` creates `config.toml` exclusively only if missing. Existing files are validated and preserved byte-for-byte. The installer never opens a receiver socket. On startup, an enabled receiver in config is honored; review preserved settings before starting. For a new installation alongside an older station installation, use the new checkout's default config; leave the old checkout/config untouched.
 
 ## Configuration and saved settings
 
@@ -75,7 +64,7 @@ Settings saves station title, default appearance and compact strip visibility to
 Stop this foreground server with Ctrl+C. Restart with:
 
 ```sh
-cd ~/wsjtx-dashboard-rebuild
+cd ~/wsjtx-dashboard
 .venv/bin/python -m backend.server
 ```
 
@@ -95,9 +84,17 @@ git pull --ff-only
 .venv/bin/python -m backend.server
 ```
 
-This update command assumes the tracking rebuild branch. For a detached reviewed commit, choose the next reviewed commit explicitly with `git fetch origin` and `git checkout --detach COMMIT`. Stop on local changes, divergent Git history or any installer error. Do not recopy example defaults. Failed installs are not automatically rolled back; do not start a partially built update. Repeated installs preserve configuration/state. No service is stopped/started by the installer.
+This update command assumes the tracking `main` branch. For a detached reviewed commit, choose the next reviewed commit explicitly with `git fetch origin` and `git checkout --detach COMMIT`. Stop on local changes, divergent Git history or any installer error. Do not recopy example defaults. Failed installs are not automatically rolled back; do not start a partially built update. Repeated installs preserve configuration/state. No service is stopped/started by the installer.
 
-For rollback, stop the dashboard, preserve the failed checkout and current data, check out the recorded prior **rebuild** commit (or clone it separately), restore that revision's backed-up config/data, rerun `./install.sh`, then start. Never use `git reset --hard` or delete user work. A pre-rebuild rollback uses the preserved predecessor checkout and its historical installation procedure; do not point predecessor code at the new workspace database. No predecessor persistent history existed to migrate. For a Step 0 installation, stop only that dashboard, back up config/data, then `git fetch origin` and `git switch --track origin/rebuild/step-1` (after publication). In an unpublished local clone, origin is the source repository and the same commands work locally. Run the installer, then start. Old config keys require no manual migration; sample history/preferences are retained and live history starts empty. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
+For rollback, stop the dashboard, preserve the failed checkout and current data, check out the recorded prior reviewed commit (or clone it separately), restore that revision's backed-up config/data, rerun `./install.sh`, then start. Never use `git reset --hard` or delete user work. A pre-rebuild rollback uses the preserved predecessor checkout and its historical installation procedure; do not point predecessor code at the new workspace database. No predecessor persistent history existed to migrate. For an existing Step 0 or `rebuild/step-1` checkout, stop only that dashboard, back up config/data, then switch to the reviewed installation branch:
+
+```sh
+git fetch origin
+git switch main
+git pull --ff-only
+```
+
+If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences are retained and live history starts empty. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
 
 ## Moving to Ubuntu
 

@@ -4,7 +4,7 @@ Step 0 was reviewed and accepted. This step adds a **receive-only** primary UDP 
 
 ## Start and configure
 
-Install/start using the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) guide. Source branch: `rebuild/step-1` (local until publication is approved). Open http://127.0.0.1:8787/ and **Settings → WSJT-X receiver**.
+Install/start using the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) guide. Install the reviewed source from `main`. Open http://127.0.0.1:8787/ and **Settings → WSJT-X receiver**.
 
 - **Enabled:** opt-in, defaults false. Enabling opens only this dashboard's receiver.
 - **Listen address:** normally `0.0.0.0` to receive multicast. A specific loopback/private IPv4 is supported for unicast. The configured address must exist locally; bind/join failures are visible. HTTP remains loopback by default, independently of UDP binding.
