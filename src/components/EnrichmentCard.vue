@@ -5,14 +5,8 @@ const props = defineProps<{ enrichment?: EnrichmentState; call: string }>()
 const result = computed(() => props.enrichment?.result)
 const fields = computed(() => result.value?.call === props.call ? result.value.fields ?? {} : {})
 const data = computed(() => result.value?.call === props.call ? result.value : undefined)
-const operator = computed(() => [fields.value.fname, fields.value.name].filter(Boolean).join(' '))
-const location = computed(() => [fields.value.addr2, fields.value.state, fields.value.country].filter(Boolean).join(', '))
-const license = computed(() => [fields.value.license_class ? `Class ${fields.value.license_class}` : '', fields.value.expdate ? `Expires ${fields.value.expdate}` : ''].filter(Boolean).join(' · '))
 function value(raw: unknown) { return typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : String(raw ?? '—') }
 function utc(raw?: number) { return raw ? new Date(raw).toISOString().replace('T', ' ').slice(0,19) + ' UTC' : '' }
-const image = computed(() => {
- try { const url = new URL(String(fields.value.image ?? '')); return url.protocol === 'https:' && !url.username && !url.password ? url.href : '' } catch { return '' }
-})
 </script>
 <template>
  <section class="enrichment-card" aria-labelledby="radio-enrichment-title" aria-live="polite">
@@ -21,7 +15,6 @@ const image = computed(() => {
   <p v-else-if="data?.status === 'pending'" role="status">Looking up {{ call }}… Radio reception continues.</p>
   <template v-else-if="data && data.status !== 'disabled' && data.status !== 'idle'">
    <p v-if="data.message" class="error-text">{{ data.message }}</p>
-   <div class="enrichment-profile" v-if="operator || image"><img v-if="image" :src="image" :alt="`QRZ profile for ${call}`" referrerpolicy="no-referrer" @error="($event.target as HTMLImageElement).hidden = true"><div><h3 v-if="operator">{{ operator }}</h3><p v-if="location">{{ location }}</p><p v-if="license">{{ license }}</p><a v-if="data.providers?.qrz" :href="`https://www.qrz.com/db/${encodeURIComponent(call)}`" target="_blank" rel="noopener noreferrer">View QRZ profile</a></div></div>
    <dl class="enrichment-summary"><div v-if="fields.country"><dt>Country / entity</dt><dd>{{ fields.country }}</dd></div><div v-if="fields.adif"><dt>DXCC</dt><dd>{{ fields.adif }}</dd></div><div v-if="fields.continent"><dt>Continent</dt><dd>{{ fields.continent }}</dd></div><div v-if="fields.cqz || fields.ituz"><dt>CQ / ITU zone</dt><dd>{{ fields.cqz ?? '—' }} / {{ fields.ituz ?? '—' }}</dd></div><div v-if="data.locationGrid"><dt>Location grid</dt><dd>{{ data.locationGrid }}</dd></div><div v-if="data.computed?.distanceKm !== undefined"><dt>Short path</dt><dd>{{ data.computed.distanceKm.toLocaleString() }} km · {{ data.computed.heading }}°</dd></div></dl>
    <p v-if="data.locationSource" class="enrichment-note">{{ data.locationSource }}<span v-if="data.stationGrid"> · From {{ data.stationGrid }} ({{ data.stationGridSource }})</span></p>
    <p v-else class="enrichment-note">No station grid available. Country coordinates are not treated as a reported operating location.</p>

@@ -360,10 +360,18 @@ class EnrichmentService:
                     result = await asyncio.to_thread(providers.enrich, context)
                 except Exception:
                     result = dict(status='error', call=context['call'], message='Enrichment failed; check provider settings.')
+            qrz = result.get('providers', {}).get('qrz', {})
+            photo_changed = (providers is self.providers and qrz.get('status') == 'loaded'
+                and self.state.remember_photo(context['call'], qrz.get('fields', {}).get('image', '')))
             if token == self.generation:
                 self.result = result
                 self.health = deepcopy(providers.health)
-                self.state.flush()
+                if photo_changed:
+                    self.state.publish()
+                else:
+                    self.state.flush()
+            elif photo_changed:
+                self.state.publish()
 
     def configure(self, settings, *, refresh=False):
         self.settings = settings

@@ -7,6 +7,7 @@ from dataclasses import asdict
 import json
 import sqlite3
 import time
+from urllib.parse import urlsplit
 from .foundation import FoundationState
 from .state import FocusState
 from .protocol import diagnostic_header
@@ -22,6 +23,7 @@ class WorkspaceState(FoundationState):
         super().__init__(path)
         self.sample_payload = deepcopy(self._saved)
         self.sample = True
+        self.photo_urls = {}
         self.diagnostics = deque(maxlen=200)
         self.counters['receiverErrors'] = 0
         self.diagnostic_sequence = 0
@@ -44,7 +46,31 @@ class WorkspaceState(FoundationState):
         self.sample = False
         self.call, self.source = data['call'], data['source']
         self.history, self.selection_sequence = data['history'], data['sequence']
+        calls = {entry['call'] for entry in self.history}
+        self.photo_urls = {call: url for call, url in data.get('photoUrls', {}).items()
+                           if call in calls and self.valid_photo_url(url)}
         self.rigs, self.previous = {}, {}  # Telemetry and baselines never survive restart.
+
+    @staticmethod
+    def valid_photo_url(value):
+        try:
+            parsed = urlsplit(value) if isinstance(value, str) and len(value) <= 4096 else None
+            return bool(parsed and parsed.scheme == 'https' and parsed.hostname and not parsed.username and not parsed.password)
+        except ValueError:
+            return False
+
+    def remember_photo(self, call, url):
+        """Keep only public image URLs, separate from radio selection provenance."""
+        if not any(entry['call'] == call for entry in self.history):
+            return False
+        url = url if self.valid_photo_url(url) else ''
+        if self.photo_urls.get(call, '') == url:
+            return False
+        if url:
+            self.photo_urls[call] = url
+        else:
+            self.photo_urls.pop(call, None)
+        return True
 
     def enter_radio_workspace(self):
         if self.sample:
@@ -56,6 +82,7 @@ class WorkspaceState(FoundationState):
         if not self.ready:
             return snapshot
         snapshot.update(sample=self.sample, step=2, storageError=self.storage_error,
+                        photoUrls=dict(self.photo_urls),
                         diagnostics=dict(generation=self.diagnostic_generation, latest=self.diagnostic_sequence,
                                          retained=len(self.diagnostics), limit=self.diagnostics.maxlen))
         if getattr(self, 'enrichment_service', None):
@@ -68,8 +95,10 @@ class WorkspaceState(FoundationState):
         sample = deepcopy(self.sample_payload) if not self.sample else dict(call=self.call, source=self.source,
             history=self.history, rigs=self.rigs, sequence=self.selection_sequence)
         sample['preferences'] = self.preferences
+        calls = {entry['call'] for entry in self.history}
+        self.photo_urls = {call: url for call, url in self.photo_urls.items() if call in calls}
         live = None if self.sample else dict(call=self.call, source=self.source, history=self.history,
-                                             sequence=self.selection_sequence)
+                                             sequence=self.selection_sequence, photoUrls=self.photo_urls)
         changed = sample != self._saved or live != self.saved_live
         try:
             if changed:

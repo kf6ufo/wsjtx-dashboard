@@ -29,3 +29,7 @@
 
 /* Enrichment can grow as provider fields arrive; keep identity and results in normal flow. */
 .workspace-bar~.desk.radio-desk{height:auto}.radio-desk .station-overview{grid-template-columns:minmax(0,1fr);flex-shrink:0}.radio-desk .enrichment-card{flex-shrink:0}.radio-desk .qso-scroll{flex:auto;max-height:340px}.radio-desk .history-panel{align-self:start;position:sticky;top:18px}.radio-desk .history-scroll{height:520px;flex:auto;max-height:65vh}@media(max-width:700px){.radio-desk .history-panel{position:static}.radio-desk .history-scroll{height:370px}}
+
+/* The current station gets a readable photo; history keeps compact, uncropped thumbnails. */
+.radio-desk .station-overview.has-radio-photo{grid-template-columns:minmax(150px,30%) minmax(0,1fr);align-items:start}.has-radio-photo>.station-photo{max-width:260px}.radio-callbook-identity h3{margin:8px 0 10px}.radio-license{font-size:13px;color:var(--muted);margin:10px 0}.radio-callbook-identity a{font-size:12px;color:var(--mint)}.radio-desk .history-entry{align-items:flex-start}
+@media(max-width:1100px){.radio-desk .station-overview.has-radio-photo{grid-template-columns:minmax(0,1fr)}.has-radio-photo .station-identity{order:-1}.has-radio-photo>.station-photo{max-width:220px}}

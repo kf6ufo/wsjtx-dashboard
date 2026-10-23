@@ -166,7 +166,8 @@ def test_slow_old_lookup_cannot_replace_new_focus_and_decodes_remain_live(tmp_pa
             if context['call'] == 'K1SLOW':
                 started.set()
                 release.wait(2)
-            return dict(status='loaded', call=context['call'], fields={'country': 'Fixture'})
+            return dict(status='loaded', call=context['call'], fields={'country': 'Fixture'},
+                providers={'qrz': dict(status='loaded', fields={'image': f"https://photos.example.invalid/{context['call']}.jpg"})})
         monkeypatch.setattr(Providers, 'enrich', lookup)
         service = EnrichmentService(state, EnrichmentSettings(enabled=True), tmp_path)
         state.enrichment_service = service
@@ -184,9 +185,30 @@ def test_slow_old_lookup_cannot_replace_new_focus_and_decodes_remain_live(tmp_pa
         while service.result['status'] == 'pending' and time.monotonic() < deadline: await asyncio.sleep(.01)
         assert service.result['call'] == 'K2FAST' and service.result['status'] == 'loaded'
         assert state.history[0]['call'] == 'K2FAST'
+        assert set(state.photo_urls) == {'K1SLOW', 'K2FAST'}
         await service.stop()
         state.close()
     asyncio.run(scenario())
+
+
+def test_history_photo_urls_survive_restart_without_changing_selection_provenance(tmp_path):
+    path = tmp_path / 'workspace.sqlite3'
+    state = WorkspaceState(path)
+    state.enter_radio_workspace()
+    ingest(status(call='K0BASE'), state)
+    ingest(status(call='K1ABC'), state)
+    before = json.loads(json.dumps(state.history))
+    assert state.remember_photo('K1ABC', 'https://photos.example.invalid/station.jpg')
+    assert not state.remember_photo('K2OTHER', 'https://photos.example.invalid/other.jpg')
+    state.publish()
+    state.close()
+    restored = WorkspaceState(path)
+    assert restored.history == before
+    assert restored.snapshot()['photoUrls'] == {'K1ABC': 'https://photos.example.invalid/station.jpg'}
+    assert restored.remember_photo('K1ABC', 'https://user:password@example.invalid/private.jpg')
+    restored.publish()
+    assert restored.snapshot()['photoUrls'] == {}
+    restored.close()
 
 
 def test_clublog_xml_uses_private_intermediate_and_preserves_operator_file(tmp_path):

@@ -3,7 +3,7 @@ import { rigs } from './fixtures'
 import { mockProviders } from './providers'
 import type { Entry, Lookup, Profile, Providers, Qso, LiveRig, Snapshot, Preferences } from './types'
 export function createDashboard(providers: Providers = mockProviders, live = false) {
- const state = reactive({ enrichment: undefined as import('./types').EnrichmentState | undefined, radioWorkspace: false, storageError: '' as string | null, counters: { packets: 0, malformed: 0, decodes: 0 } as Snapshot['counters'], sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
+ const state = reactive({ photoUrls: {} as Record<string, string>, enrichment: undefined as import('./types').EnrichmentState | undefined, radioWorkspace: false, storageError: '' as string | null, counters: { packets: 0, malformed: 0, decodes: 0 } as Snapshot['counters'], sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
  let generation = 0, sequence = 0
  function load(call: string, profileDelay?: number, qsoDelay?: number) {
   const token = ++generation
@@ -61,6 +61,7 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   state.counters = snapshot.counters
   state.storageError = snapshot.storageError ?? null
   state.enrichment = snapshot.enrichment
+  state.photoUrls = snapshot.photoUrls ?? {}
   if (snapshot.call && (changedEpoch || wasRadio !== state.radioWorkspace || state.call !== snapshot.call)) load(snapshot.call)
   else if (!snapshot.call && (state.call || changedEpoch)) {
    ++generation; state.call = ''; state.profile = { status: 'pending' }; state.qsos = { status: 'pending' }
