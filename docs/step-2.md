@@ -33,7 +33,7 @@ QRZ image URLs are displayed when they use HTTPS. Actual image availability depe
 | Field preference | QRZ first or primary first; the other source fills missing fields |
 | Approximate coordinates | Off by default. Allows a labeled estimate from provider coordinates if no valid station grid is available. Entity coordinates can be far from a station. |
 
-**Refresh provider data** clears the in-memory lookup cache and reloads providers for the current selection, or on the next selection/test. It does not restart UDP reception, reset Status baselines, or rewrite history. Downloaded country data is retained in `data/enrichment/`; if refreshing fails, the last usable data remains available with a stale warning. A supplied local file is reread, never replaced by a download. Lookup caches are memory-only; restart discards them.
+**Refresh provider data** clears the in-memory lookup cache and reloads providers for the current selection, or on the next selection/test. It does not restart UDP reception, reset Status baselines, or rewrite history. Downloaded country data is retained in `data/enrichment/`; if refreshing fails, the last usable data remains available with a stale warning. A supplied local file is reread, never replaced by a download. Lookup caches are memory-only; restart discards them. An in-flight provider request may delay process exit until its network timeout completes.
 
 pyhamtools' Redis backend is a storage adapter, not an additional information source. This dashboard uses its own bounded cache and does not require or configure a Redis server. Logging/debug internals and upstream download switches are handled by the application rather than exposed as operator settings.
 
