@@ -11,6 +11,11 @@ test('running station receiver reports actual traffic in both browser windows', 
  const a = await browser.newContext(), b = await browser.newContext()
  const first = await a.newPage(), second = await b.newPage()
  await first.goto(baseURL!); await second.goto(baseURL!)
+ for (const page of [first, second]) {
+  if (snapshot.call) await expect(page.getByTestId('focused-call')).toHaveText(snapshot.call)
+  await expect(page.locator('.history-entry')).toHaveCount(snapshot.history.length)
+  expect(await page.locator('.history-entry').evaluateAll(entries => entries.map(entry => entry.getAttribute('data-testid')))).toEqual(snapshot.history.map((entry: { call: string }) => `history-${entry.call}`))
+ }
  await first.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await second.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  for (const page of [first, second]) {
@@ -21,6 +26,7 @@ test('running station receiver reports actual traffic in both browser windows', 
  await first.screenshot({ path: 'test-results/step1-actual-station.png', fullPage: true })
  await first.getByRole('button', { name: 'Station', exact: true }).click()
  if (!snapshot.call) await expect(first.getByRole('heading', { name: 'Waiting for a WSJT-X selection' })).toBeVisible()
+ if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
  // Read-only check: no settings, focus or radio commands are sent.
  await a.close(); await b.close()
 })

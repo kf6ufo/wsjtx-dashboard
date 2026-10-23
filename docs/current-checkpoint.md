@@ -2,7 +2,7 @@
 
 **October 23, 2026 · Step 1 implemented and running for review.** Branch: `rebuild/step-1`. Step 0 was reviewed/accepted and remains preserved at `rebuild/step-0`, commit `3d2f9a61b2e255df12d1deb605d72b1fd202c8d3` ([Step 0 checkpoint](checkpoint-step0.md)). Main and existing history are unchanged. **Do not begin Step 2 before Step 1 review.**
 
-Application/browser-test revision validated: **`efea6c25391d23e84203bbb1486882e8f87cfa34`**. The following checkpoint documentation commit changes no application behavior. GitHub publication remains pending explicit authorization after the earlier automatic approval rejection; no push was attempted during Step 1. Install locally using the [macOS guide](install-macos.md); GitHub branch clone instructions become usable after publication.
+Application/browser-test revision validated: **`efea6c25391d23e84203bbb1486882e8f87cfa34`**. Subsequent checkpoint and read-only station-test updates change no application behavior. GitHub publication remains pending explicit authorization after the earlier automatic approval rejection; no push was attempted during Step 1. Install locally using the [macOS guide](install-macos.md); GitHub branch clone instructions become usable after publication.
 
 ## Running result and operation
 
@@ -24,7 +24,17 @@ Mac **26.6.1 / arm64**, Python **3.13.1**, Node **24.21.0**, installed Google Ch
 - Actual network IDs **`WSJT-X - IC9100`** and **`WSJT-X - IC7300`**, both from **10.176.1.5** with different source ports, demonstrate identity by network ID rather than sender IP. QRPLabsQDX has not been observed in this session.
 - Observed **schema 2** Heartbeat, Status and Decode packets. Parsed Status includes frequency, mode, DX Call, report, TX/decoding flags, DF, DE call/grid and DX grid. The initial trial reached **1,531 packets / 1,045 Decodes / zero malformed / zero receiver errors** before its controlled restart onto the final code. Counters reset on restart by design; the final build resumed actual reception from both IDs with zero errors at the recorded checks.
 - Initial Status established baselines without seeding radio history. Repeated Status and ordinary Decode traffic left focus/history empty. A read-only Chrome check opened **two independent browser contexts** against the actual receiver and verified both displayed live receiver state, actual packet sources and both IDs. The Diagnostics screenshot was visually reviewed.
-- **Actual changed-DX-call selection acceptance remains pending operator action.** No real radio DX Call changed during the observed period, and no physical click has been claimed. The operator was invited to select a different valid call and report its rig/callsign. Real selection latency, post-selection decode stability, browsing and reconnect after real station selections should be confirmed before declaring full Step 1 station acceptance. Those behaviors passed via actual loopback UDP with synthetic protocol fixtures below.
+- **Operator-confirmed real selections verified:** the operator reported clicking WB2MLY and NA6Y in IC9100, then JA2FJP in IC7300. The receiver recorded exactly those three selections, in order, with correct network IDs and provenance:
+
+  | Selection order | Callsign | Instance | Band / mode | Received selection time · UTC |
+  | --- | --- | --- | --- | --- |
+  | 1 | WB2MLY | WSJT-X - IC9100 | 17m / FT8 | 21:56:10.200 |
+  | 2 | NA6Y | WSJT-X - IC9100 | 17m / FT8 | 21:58:05.193 |
+  | 3 | JA2FJP | WSJT-X - IC7300 | 12m / FT8 | 21:59:21.146 |
+
+  Shared Focus History is newest-first: **JA2FJP → NA6Y → WB2MLY**. Current displayed focus is **JA2FJP**. Later browsing timestamps exist for all three entries while selection order, original timestamps, rig and band are preserved. The displayed source is `browse`, consistent with revisiting history after the radio selections.
+- The read-only actual-station browser check was extended and passed: **two fresh independent browser contexts restored JA2FJP and the same three-entry history order** from the running production server. No focus/settings/radio commands were sent by the check. A read-only SQLite query confirmed saved live history/focus exactly matched the snapshot. Between follow-up snapshots, **71 additional packets including 48 real Decodes** arrived without changing the focused call or selection history. At that check: **1,877 packets / 1,280 Decodes / zero malformed / zero receiver errors**.
+- The original click-to-browser latency was not measured contemporaneously, and missed-update reconnect during a real selection has not been separately observed. Those behaviors passed with actual loopback UDP carrying synthetic fixtures. Ubuntu acceptance remains untested. This evidence verifies real selection reception/correct ordering/provenance, restoration in two browser windows, saved state, and subsequent real Decode stability; Step 1 still awaits overall operator review before Step 2.
 
 ## Installation, upgrade and checks completed
 
