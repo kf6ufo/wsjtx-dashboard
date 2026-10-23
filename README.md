@@ -6,6 +6,8 @@ A self-hosted companion for the operating desk. **Rebuild Step 0 is ready for re
 
 ## Install and run
 
+**Publication pending:** the rebuild branch currently exists locally. Automatic approval review requires explicit authorization before pushing the private source/checkpoint to GitHub. Until published, use the local clone option in the macOS guide; the GitHub clone below becomes usable after publication.
+
 Use a **separate checkout**, preserving any existing installation. Requires Git, Python **3.12–3.14**, and Node **24 LTS, 24.15+** with npm. Dependencies build on the target host. No editor, Codex, Docker, release asset or privileged installer is required.
 
 [Complete macOS installation](docs/install-macos.md) · [Ubuntu installation](docs/install-ubuntu.md)

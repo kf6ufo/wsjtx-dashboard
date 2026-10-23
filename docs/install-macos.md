@@ -23,6 +23,17 @@ Use your configured GitHub credential manager or SSH key. For HTTPS prompts, ent
 
 ## Install
 
+**Until publication is approved**, the branch is local to the development Mac. For a durable independent installation on this Mac, use:
+
+```sh
+git clone --shared --branch rebuild/step-0 /Users/jerryjoplin/Documents/GitHub/wsjtx-dashboard ~/wsjtx-dashboard-rebuild
+cd ~/wsjtx-dashboard-rebuild
+./install.sh
+.venv/bin/python -m backend.server
+```
+
+This local clone shares the preserved repository's Git object storage to avoid copying cloud-evicted historical objects, but gets its own source files, dependencies, configuration and workspace. Keep the source repository intact. The server needs no editor. Normal GitHub clones below are independent repositories and become usable once the branch is published. Stop the temporary review server first, or choose another HTTP port in your new checkout's config.
+
 Run each command and stop if it fails. If the destination exists, choose a different directory; do not delete or reset it.
 
 ```sh

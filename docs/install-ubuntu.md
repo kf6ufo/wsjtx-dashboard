@@ -1,5 +1,7 @@
 # Native Ubuntu installation — Step 0
 
+**Publication pending:** the rebuild branch is local until GitHub push is explicitly approved; the GitHub clone commands below require that publication first.
+
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Previous receiver experiments do not validate Step 0 installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
 Target Ubuntu 24.04+ with Python 3.12–3.14, Git, Node 24 LTS (24.15+) and npm. Install prerequisites as needed:
