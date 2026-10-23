@@ -22,6 +22,10 @@ Actual host: **macOS 26.6.1 arm64, Python 3.13.1, Node 24.21.0**, installed Chro
 
 Original physical-click-to-browser latency was not measured contemporaneously. Reconnect while missing an actual radio selection remains unobserved; the full missed-update path passed using actual loopback UDP with synthetic packets. No automated test sends to station multicast.
 
+## Publication cleanup checks
+
+The cleaned source was validated from a fresh checkout at `a22039a` in `/private/tmp/wsjtx-publish-validation`: native install and production build passed, **38 Python tests**, **15 frontend tests**, and **all five retained offline browser workflows** passed again. The installed-server test also verified that obsolete environment settings cannot override or break TOML startup. One existing Starlette/httpx test-adapter warning remains. All current Markdown links, shell syntax, whitespace checks and tracked-file hygiene passed. No credentials, runtime databases, logs, dependency directories or build output are tracked. No Step 2 changes are included.
+
 ## Running review installation
 
 The existing live review server remains at **http://127.0.0.1:8789/** from `/private/tmp/wsjtx-step1-native`, with reception enabled. The separate upgraded sample installation at port **8787** retains reception disabled. These temporary validation installations are not changed by repository publication. Use the [macOS installation guide](install-macos.md) for a durable checkout; default HTTP is loopback **8787** and receiver defaults disabled. [Step 1 behavior/settings](step-1.md) and [developer checks](development.md) document operation and limitations.

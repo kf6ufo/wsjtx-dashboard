@@ -188,4 +188,3 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
     if serve_frontend and dist.is_dir():
         app.mount('/', StaticFiles(directory=dist, html=True), name='dashboard')
     return app
-
