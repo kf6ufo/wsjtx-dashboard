@@ -28,6 +28,7 @@ test('running station receiver reports actual traffic in both browser windows', 
   await expect(first.getByRole('button', { name: 'Station', exact: true })).toHaveAttribute('aria-current', 'page')
   if (snapshot.call) await expect(first.getByRole('region', { name: 'Focused station', exact: true })).toBeVisible()
  if (!snapshot.call) await expect(first.getByRole('heading', { name: 'Waiting for a WSJT-X selection' })).toBeVisible()
+  if (snapshot.call) await first.getByTestId(`history-${snapshot.call}`).scrollIntoViewIfNeeded()
  if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
  // Read-only check: no settings, focus or radio commands are sent.
  await a.close(); await b.close()
