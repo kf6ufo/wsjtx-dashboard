@@ -1,3 +1,5 @@
+> **Historical reference — superseded October 23, 2026.** The [rebuild handoff](../WSJTX-REBUILD-HANDOFF.md), [current roadmap](roadmap.md), [native installation](install-macos.md), and [checkpoint](current-checkpoint.md) govern current work. Old milestone numbers, live-mode URLs, deployment instructions and acceptance claims below describe the predecessor only. Do not use them to install or enable integrations.
+
 # Offline demonstration
 
 Launch using the [Mac development instructions](development.md) and open http://127.0.0.1:5173/. No backend or radio is needed. This is separate from the Ubuntu live installation.

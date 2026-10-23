@@ -1,54 +1,27 @@
-# Mac development
+# Development and checks
 
-Development and Codex stay on macOS. Ubuntu source installation is documented separately in [Install on Ubuntu](install-ubuntu.md).
-
-## Frontend development
-
-Install Node.js **24.15 or newer** (Node 24 LTS recommended), then open a terminal:
+The installed production path is [native macOS](install-macos.md) / [Ubuntu](install-ubuntu.md). For development, first run `./install.sh`. The backend still owns workspace state:
 
 ```sh
-cd /Users/jerryjoplin/Documents/GitHub/wsjtx-dashboard
-npm ci
+.venv/bin/python -m backend.server
+```
+
+For hot reload, in another terminal:
+
+```sh
 npm run dev -- --port 5173 --strictPort
 ```
 
-Open **http://127.0.0.1:5173/** in your browser. The server binds to loopback only. Stop with Ctrl+C. For a production-build preview, run `npm run build`, then `npm run preview -- --port 4173` and open http://127.0.0.1:4173/.
-
-This work session used a temporary Node runtime because Node was absent from PATH. While that runtime remains available, use:
+Vite proxies `/api` to loopback **8787**. Open http://127.0.0.1:5173/. The installed server at http://127.0.0.1:8787/ always serves `dist`. An explicitly isolated historical tab-local demo is still available at `/?mode=demo` for regression checks; it is not the shared installed workspace. Legacy radio/parser tests remain offline and do not authorize Step 1.
 
 ```sh
-export PATH="/private/tmp/node-v24.21.0-darwin-arm64/bin:$PATH"
-npm run dev -- --port 5173 --strictPort
-```
-
-The temporary runtime may disappear after system cleanup; install Node for ongoing development.
-
-
-## Python backend (UDP disabled)
-
-```sh
-python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
-WSJTX_RECEIVER=off .venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --workers 1
-```
-
-Vite proxies `/api` to this backend. Use `http://127.0.0.1:5173/?mode=live` for synchronized fixture-free live mode waiting for events, or `/` for the separate [offline demo](demo.md). The installed Ubuntu service uses `config.toml`; these developer commands keep UDP explicitly disabled.
-
-## Checks
-
-```sh
 .venv/bin/python -m pytest backend/tests -q
 npm test
 npm run build
 npx playwright install chromium
 npm run test:e2e
-npm run test:e2e:live
+npm run test:e2e:foundation
 ```
 
-For existing macOS Chrome instead of downloading Chromium:
-
-```sh
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:e2e
-```
-
-Playwright starts a loopback Vite server if one is not already running. Tests use offline fixtures and never access radio services. Screenshots and build outputs are ignored by Git.
+Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` when using installed macOS Chrome. The foundation browser suite runs the real installed server against a temporary config/database and production build. See the checkpoint for actual results. The old `test:e2e:live` command tests synthetic receiver packets against the dormant predecessor transport, not Step 0 or real radio reception.

@@ -1,3 +1,5 @@
+> **Historical reference — superseded October 23, 2026.** The [rebuild handoff](../WSJTX-REBUILD-HANDOFF.md), [current roadmap](roadmap.md), [native installation](install-macos.md), and [checkpoint](current-checkpoint.md) govern current work. Old milestone numbers, live-mode URLs, deployment instructions and acceptance claims below describe the predecessor only. Do not use them to install or enable integrations.
+
 # Milestone 2: receiver and synchronized focus
 
 Milestone 1 was reviewed and accepted, then committed and pushed to `origin/main` as **8a8c0df** before this implementation began. This phase receives radio focus only. Operator identities, portraits, QSO records, worked-before and band comparisons remain **sample data**. No Wavelog/QRZ access, credentials, QSO storage/submissions, radio commands or production configuration changes exist here.

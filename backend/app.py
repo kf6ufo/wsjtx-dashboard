@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from .receiver import Settings, create_socket, receive
 from .state import FocusState
+from .foundation import FoundationState
 
 
 class BrowseRequest(BaseModel):
@@ -38,9 +39,47 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                     await task
             if sock:
                 sock.close()
+            if isinstance(state, FoundationState):
+                state.database.close()
 
     app = FastAPI(title='WSJT-X focus service', lifespan=lifespan)
     app.state.focus = state
+
+    @app.middleware('http')
+    async def same_origin(request: Request, call_next):
+        if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+            origin = request.headers.get('origin')
+            if (origin and origin != str(request.base_url).rstrip('/')) or request.headers.get('sec-fetch-site') == 'cross-site':
+                from fastapi.responses import JSONResponse
+                return JSONResponse({'detail': 'Use the dashboard on the same origin'}, status_code=403)
+        return await call_next(request)
+
+    if isinstance(state, FoundationState):
+        if settings.enabled:
+            raise ValueError('Step 0 cannot enable UDP reception')
+
+        class SampleSelection(BrowseRequest):
+            rigId: str = Field(max_length=80)
+
+        class Preferences(BaseModel):
+            model_config = {'extra': 'forbid'}
+            title: str = Field(min_length=1, max_length=60, pattern=r'^[^\x00-\x1f]+$')
+            appearance: str = Field(pattern=r'^(dark|light)$')
+            radioStrip: bool = Field(strict=True)
+
+        @app.post('/api/sample/select')
+        async def sample_select(body: SampleSelection):
+            try:
+                state.select_sample(body.call, body.rigId)
+            except ValueError as exc:
+                raise HTTPException(422, str(exc))
+            return state.snapshot()
+
+        @app.put('/api/settings')
+        async def preferences(body: Preferences):
+            state.preferences = body.model_dump()
+            state.publish()
+            return state.snapshot()
 
     @app.get('/api/snapshot')
     async def snapshot():

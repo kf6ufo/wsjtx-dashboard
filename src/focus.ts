@@ -1,9 +1,9 @@
 import { reactive } from 'vue'
 import { rigs } from './fixtures'
 import { mockProviders } from './providers'
-import type { Entry, Lookup, Profile, Providers, Qso, LiveRig, Snapshot } from './types'
+import type { Entry, Lookup, Profile, Providers, Qso, LiveRig, Snapshot, Preferences } from './types'
 export function createDashboard(providers: Providers = mockProviders, live = false) {
- const state = reactive({ call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
+ const state = reactive({ sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
  let generation = 0, sequence = 0
  function load(call: string, profileDelay?: number, qsoDelay?: number) {
   const token = ++generation
@@ -46,6 +46,8 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   if (snapshot.epoch === epoch && snapshot.revision <= revision) return
   const changedEpoch = snapshot.epoch !== epoch
   epoch = snapshot.epoch; revision = snapshot.revision
+  state.sample = snapshot.sample ?? false
+  if (snapshot.preferences) state.preferences = snapshot.preferences
   state.history = snapshot.history
   state.liveRigs = snapshot.rigs
   state.rigSelections = Object.fromEntries(snapshot.rigs.map(r => [r.id, r.call]))
@@ -59,6 +61,19 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   // Same-call radio selections update provenance through history, without
   // restarting independent lookups for every telemetry/Decode snapshot.
  }
- return { state, select, browse, decode, retry, race, applySnapshot }
+ async function selectSample(call: string, rigId: string) {
+  state.navigationError = ''
+  try {
+   const response = await fetch('/api/sample/select', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ call, rigId }) })
+   if (!response.ok) throw new Error('Selection failed')
+   applySnapshot(await response.json(), false)
+  } catch { state.navigationError = 'Sample selection unavailable. Check the server connection and try again.' }
+ }
+ async function saveSettings(preferences: Preferences) {
+  const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(preferences) })
+  if (!response.ok) throw new Error('Settings could not be saved. Check values and connection.')
+  applySnapshot(await response.json(), false)
+ }
+ return { state, selectSample, saveSettings, select, browse, decode, retry, race, applySnapshot }
 }
 export type Dashboard = ReturnType<typeof createDashboard>

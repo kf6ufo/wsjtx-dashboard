@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:e2e:live": "playwright test --config playwright.live.config.ts"
+    "test:e2e:live": "playwright test --config playwright.live.config.ts",
+    "test:e2e:foundation": "playwright test --config playwright.foundation.config.ts"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",

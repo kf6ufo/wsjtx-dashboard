@@ -1,3 +1,5 @@
+> **Historical reference — superseded October 23, 2026.** The [rebuild handoff](../WSJTX-REBUILD-HANDOFF.md), [current roadmap](roadmap.md), [native installation](install-macos.md), and [checkpoint](current-checkpoint.md) govern current work. Old milestone numbers, live-mode URLs, deployment instructions and acceptance claims below describe the predecessor only. Do not use them to install or enable integrations.
+
 # Historical Milestone 2 validation and deployment notes
 
 **Archive only. These former archive/release-based deployment directions are superseded by [Install on Ubuntu](install-ubuntu.md). They are not installation instructions.** No temporary station files have been removed.

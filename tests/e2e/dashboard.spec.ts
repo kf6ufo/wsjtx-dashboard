@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 test('operator workflow, provenance, quiet decodes and delayed lookups', async ({ page }) => {
  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message))
- await page.goto('/'); await expect(page.getByTestId('focused-call')).toHaveText('JA2HDE')
+ await page.goto('/?mode=demo'); await expect(page.getByTestId('focused-call')).toHaveText('JA2HDE')
  await expect(page.locator('tbody tr')).toHaveCount(24)
  await page.screenshot({ path: 'test-results/desktop-initial.png', fullPage: true })
  await page.getByRole('button', { name: 'Station Desk' }).click()
@@ -42,7 +42,7 @@ test('operator workflow, provenance, quiet decodes and delayed lookups', async (
 
 test('quiet console defaults, saved Station Desk preference and accessible demo dialog', async ({ page }) => {
  await page.setViewportSize({ width: 1920, height: 1080 })
- await page.goto('/')
+ await page.goto('/?mode=demo')
  const desk = page.getByRole('button', { name: 'Station Desk' })
  const tools = page.getByRole('button', { name: 'Demo tools', exact: true })
  await expect(desk).toHaveAttribute('aria-expanded', 'false')
@@ -88,7 +88,7 @@ test('quiet console defaults, saved Station Desk preference and accessible demo 
 
 
 test('station selection closes demo tools immediately while slow lookups continue', async ({ page }) => {
- await page.goto('/')
+ await page.goto('/?mode=demo')
  await expect(page.locator('tbody tr')).toHaveCount(24)
  const opener = page.getByRole('button', { name: 'Demo tools', exact: true })
  await opener.click()

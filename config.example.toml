@@ -1,12 +1,11 @@
-# Copy to config.toml and edit for the Ubuntu host. Updates preserve config.toml.
+# Native macOS/Ubuntu Step 0. Copied only when config.toml does not exist.
 [http]
-# Bind only to the station LAN address. Do not expose through a router.
-host = "10.176.1.6"
-port = 8000
+host = "127.0.0.1"
+port = 8787
 
+# Reserved for Step 1. Step 0 refuses enabled=true; no radio socket opens.
 [wsjtx]
-enabled = true
+enabled = false
 group = "239.255.0.73"
 port = 2238
-# Local Ubuntu IPv4 address used to join multicast, not a sending radio's IP.
-interface = "10.176.1.6"
+interface = "127.0.0.1"
