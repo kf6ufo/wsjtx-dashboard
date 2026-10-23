@@ -5,7 +5,7 @@ The complete requirements and acceptance criteria are in [WSJTX-REBUILD-HANDOFF.
 | Step | Scope | Status |
 | --- | --- | --- |
 | 0 | Visual Station/Diagnostics/Settings, shared sample state, persistent preferences/history, SSE/reconnect, native installation | Reviewed and accepted; preserved on rebuild/step-0 |
-| 1 | Configurable primary WSJT-X UDP reception; per-network-ID baselines, selection changes, bounded packet diagnostics | Implemented; validation/review in progress |
+| 1 | Configurable primary WSJT-X UDP reception; per-network-ID baselines, selection changes, bounded packet diagnostics | Running for review; actual Mac reception verified, changed-call operator check pending |
 | 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Roadmap |
 | 3 | Wavelog authoritative complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Roadmap |
 | 4 | Complete real profile/photo/license, QSO details/sorting, worked indicators based on complete history | Roadmap |

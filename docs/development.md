@@ -26,3 +26,11 @@ npm run test:e2e:receiver
 ```
 
 Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` when using installed macOS Chrome. The foundation browser suite runs the real installed server against a temporary config/database and production build. See the checkpoint for actual results. The receiver browser suite starts the installed entry point with loopback UDP 18238 and HTTP 8792; it sends synthetic protocol fixtures through an actual UDP socket. This validates socket/parse/state/browser behavior, not real WSJT-X or multicast. The old `test:e2e:live` command remains a predecessor transport regression check.
+
+Optional read-only actual station check (requires the running receiver and real traffic):
+
+```sh
+STATION_URL=http://127.0.0.1:8789 npm run test:e2e:station
+```
+
+This check reads actual station diagnostics in two browser windows without changing configuration or focus. It does not substitute for an operator changing the DX Call in WSJT-X. Its current source assertion targets the observed 10.176.1.x station LAN; adapt it for another LAN.
