@@ -29,6 +29,10 @@ test('running station receiver reports actual traffic in both browser windows', 
   if (snapshot.call) await expect(first.getByRole('region', { name: 'Focused station', exact: true })).toBeVisible()
  if (!snapshot.call) await expect(first.getByRole('heading', { name: 'Waiting for a WSJT-X selection' })).toBeVisible()
   if (snapshot.call) await first.getByTestId(`history-${snapshot.call}`).scrollIntoViewIfNeeded()
+  if (snapshot.photoUrls?.[snapshot.call]) {
+    const photos = first.getByRole('img', { name: `QRZ profile for ${snapshot.call}`, exact: true })
+    await expect.poll(() => photos.evaluateAll(images => images.length >= 2 && images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 15000 }).toBe(true)
+  }
  if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
  // Read-only check: no settings, focus or radio commands are sent.
  await a.close(); await b.close()
