@@ -1,4 +1,4 @@
-# Native Ubuntu installation — Step 0
+# Native Ubuntu installation — Step 1
 
 **Publication pending:** the rebuild branch is local until GitHub push is explicitly approved; the GitHub clone commands below require that publication first.
 
@@ -16,7 +16,7 @@ Install Node 24 LTS for your architecture using [official Node instructions/down
 Follow the [private GitHub authentication instructions](install-macos.md#private-repository-access), then run:
 
 ```sh
-git clone --branch rebuild/step-0 https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard-rebuild
+git clone --branch rebuild/step-1 https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard-rebuild
 cd ~/wsjtx-dashboard-rebuild
 git rev-parse HEAD
 ./install.sh
@@ -33,4 +33,4 @@ Open **http://127.0.0.1:8788/** on the Mac. Replace host/user with authorized SS
 
 [Configuration, operations, updates, backup, migration, rollback and troubleshooting](install-macos.md#configuration-and-saved-settings) apply identically. For an occupied port use `ss -ltnp '( sport = :8787 )'` to identify it and select another port. Leave the old dashboard/WaveLogGate service untouched. A future optional systemd service needs its own validation, especially write access for persistent data; the old unit/installer is historical and must not be used for the rebuild.
 
-Pending actual Ubuntu validation: prerequisites, dependency installation, production build, foreground start/stop/restart, saved settings/history, update preservation, LAN/tunnel access, and two-browser SSE/reconnection. UDP/multicast is intentionally absent in Step 0 and must be tested independently on each OS in Step 1.
+Pending actual Ubuntu validation: prerequisites, dependency installation, production build, foreground start/stop/restart, saved settings/history, update preservation, LAN/tunnel access, and two-browser SSE/reconnection. UDP/multicast must be validated on each actual OS/interface. Mac results do not establish Ubuntu reception or socket sharing.

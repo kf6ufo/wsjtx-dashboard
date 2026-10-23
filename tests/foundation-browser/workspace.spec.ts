@@ -40,7 +40,7 @@ test('built workspace synchronizes windows, preserves browsing provenance and re
  await expect(second.getByTestId('focused-call')).toHaveText('DL1DEMO')
  await second.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await expect(second.getByRole('heading', { name: 'Diagnostics', exact: true })).toBeVisible()
- await expect(second.getByText('Not implemented in Step 0')).toBeVisible()
+ await expect(second.getByText('No received instances yet. Enable/configure the receiver in Settings.')).toBeVisible()
  await second.screenshot({ path: 'test-results/step0-diagnostics.png', fullPage: true })
  await second.getByRole('button', { name: 'Station', exact: true }).click()
  await second.getByTestId('history-JA2HDE').click()

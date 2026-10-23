@@ -1,11 +1,15 @@
-# Native macOS/Ubuntu Step 0. Copied only when config.toml does not exist.
+# Native macOS/Ubuntu Step 1. Copied only when config.toml does not exist.
 [http]
 host = "127.0.0.1"
 port = 8787
 
-# Reserved for Step 1. Step 0 refuses enabled=true; no radio socket opens.
+# Receive-only; enable in Settings after choosing the receiving host interface.
 [wsjtx]
 enabled = false
 group = "239.255.0.73"
 port = 2238
 interface = "127.0.0.1"
+# Wildcard bind is normally needed for multicast. Empty group selects unicast.
+listen = "0.0.0.0"
+# In-memory diagnostic packets; never a permanent QSO log.
+retention = 200

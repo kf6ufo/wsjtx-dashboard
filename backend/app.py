@@ -9,20 +9,28 @@ from pydantic import BaseModel, Field
 from .receiver import Settings, create_socket, receive
 from .state import FocusState
 from .foundation import FoundationState
+from .workspace import WorkspaceState
+from .runtime import ReceiverRuntime
+from .config import save_receiver_config
+from dataclasses import asdict
 
 
 class BrowseRequest(BaseModel):
     call: str = Field(min_length=3, max_length=15)
 
 
-def create_app(settings: Settings | None = None, state: FocusState | None = None, *, serve_frontend=True):
+def create_app(settings: Settings | None = None, state: FocusState | None = None, *, serve_frontend=True, config_path: Path | None = None):
     settings, state = settings or Settings.from_env(), state or FocusState()
+
+    runtime = ReceiverRuntime(state) if isinstance(state, WorkspaceState) else None
 
     @asynccontextmanager
     async def lifespan(_app):
         task, sock = None, None
         state.receiver.update(group=settings.group, port=settings.port, interface=settings.interface)
-        if settings.enabled:
+        if runtime:
+            await runtime.apply(settings)
+        elif settings.enabled:
             try:
                 sock = create_socket(settings)
                 state.receiver['status'] = 'listening'
@@ -33,13 +41,17 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         try:
             yield
         finally:
+            if runtime:
+                await runtime.stop()
             if task:
                 task.cancel()
                 with suppress(asyncio.CancelledError):
                     await task
             if sock:
                 sock.close()
-            if isinstance(state, FoundationState):
+            if isinstance(state, WorkspaceState):
+                state.close()
+            elif isinstance(state, FoundationState):
                 state.database.close()
 
     app = FastAPI(title='WSJT-X focus service', lifespan=lifespan)
@@ -55,7 +67,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         return await call_next(request)
 
     if isinstance(state, FoundationState):
-        if settings.enabled:
+        if settings.enabled and not runtime:
             raise ValueError('Step 0 cannot enable UDP reception')
 
         class SampleSelection(BrowseRequest):
@@ -79,7 +91,64 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         async def preferences(body: Preferences):
             state.preferences = body.model_dump()
             state.publish()
+            if getattr(state, 'storage_error', None):
+                raise HTTPException(503, state.storage_error)
             return state.snapshot()
+
+    if runtime:
+        class ReceiverRequest(BaseModel):
+            model_config = {'extra': 'forbid'}
+            enabled: bool = Field(strict=True)
+            listen: str
+            port: int = Field(ge=1024, le=65535, strict=True)
+            group: str
+            interface: str
+            retention: int = Field(ge=50, le=500, strict=True)
+
+        @app.put('/api/receiver')
+        async def receiver_settings(body: ReceiverRequest):
+            if config_path is None:
+                raise HTTPException(503, 'Receiver settings require the installed config.toml entry point')
+            try:
+                new = Settings(**body.model_dump())
+            except ValueError as exc:
+                raise HTTPException(422, str(exc))
+            async with runtime.lock:
+                try:
+                    save_receiver_config(config_path, new)
+                except (ValueError, OSError) as exc:
+                    raise HTTPException(503, f'Configuration not saved: {exc}')
+                old = asdict(runtime.settings)
+                updated = asdict(new)
+                if {k: v for k, v in old.items() if k != 'retention'} == {k: v for k, v in updated.items() if k != 'retention'}:
+                    runtime.settings = new
+                    state.configure_receiver(new)
+                    state.flush()
+                else:
+                    await runtime.apply(new)
+            return state.snapshot()
+
+        @app.post('/api/receiver/restart')
+        async def receiver_restart():
+            async with runtime.lock:
+                await runtime.apply(runtime.settings)
+            return state.snapshot()
+
+        @app.get('/api/diagnostics')
+        async def diagnostics():
+            return state.diagnostic_rows()
+
+        @app.get('/api/diagnostics/{sequence}')
+        async def diagnostic_detail(sequence: int):
+            detail = state.diagnostic_detail(sequence)
+            if detail is None:
+                raise HTTPException(404, 'Packet has expired from diagnostic retention')
+            return detail
+
+        @app.delete('/api/diagnostics')
+        async def clear_diagnostics():
+            state.clear_diagnostics()
+            return state.diagnostic_rows()
 
     @app.get('/api/snapshot')
     async def snapshot():

@@ -6,6 +6,8 @@ Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, int
 ## Current authority and development order
 Read `WSJTX-REBUILD-HANDOFF.md`, `README.md`, `docs/project-handoff.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work; use the rebuild branch.
 
+Step 0 was reviewed/accepted; Step 1 is authorized. Use `rebuild/step-1`, preserving `rebuild/step-0`. Show Step 1 for review before Step 2.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

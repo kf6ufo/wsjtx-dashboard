@@ -30,13 +30,13 @@ def test_invalid_config(tmp_path, old, new):
         load_config(path)
 
 
-def test_server_refuses_radio_before_opening_socket(tmp_path, monkeypatch, capsys):
+def test_step0_config_is_accepted_with_receiver_defaults(tmp_path):
     config = tmp_path / 'config.toml'
-    config.write_text((ROOT / 'config.example.toml').read_text().replace('enabled = false', 'enabled = true'))
-    monkeypatch.setattr('sys.argv', ['server', '--config', str(config)])
-    assert server.main() == 1
-    assert 'Step 0 requires' in capsys.readouterr().err
-    assert not (tmp_path / 'data').exists()
+    config.write_text('[http]\nhost="127.0.0.1"\nport=8787\n[wsjtx]\nenabled=false\ngroup="239.255.0.73"\nport=2238\ninterface="127.0.0.1"\n')
+    parsed = load_config(config)
+    assert parsed.receiver.listen == '0.0.0.0'
+    assert parsed.receiver.retention == 200
+    assert not parsed.receiver.enabled
 
 
 def test_repeat_install_preserves_config_and_workspace(tmp_path, monkeypatch):

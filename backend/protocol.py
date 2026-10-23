@@ -3,7 +3,7 @@
 Field encoding verified against Network/NetworkMessage.hpp and the local
 wsjtx-station-utility Reader/parse_status/parse_decode implementation.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 import struct
 
@@ -51,6 +51,8 @@ class Packet:
     dx_call: str = ''
     frequency: int = 0
     mode: str = ''
+    schema: int = field(default=2, compare=False)
+    fields: dict = field(default_factory=dict, compare=False)
 
 
 def parse_packet(data: bytes) -> Packet:
@@ -59,38 +61,39 @@ def parse_packet(data: bytes) -> Packet:
     r = Reader(data)
     if r.number('I') != 0xADBCCBDA:
         raise PacketError("invalid magic")
-    if r.number('I') not in (2, 3):
+    schema = r.number('I')
+    if schema not in (2, 3):
         raise PacketError("unsupported schema")
     kind, rig_id = r.number('I'), r.text(128)
     if not rig_id.strip() or any(ord(c) < 32 or ord(c) == 127 for c in rig_id):
         raise PacketError("invalid network ID")
+    fields = {}
+    if kind == 0 and r.pos < len(data):
+        fields['maximumSchema'] = r.number('I')
+        fields['version'] = r.text(128)
+        fields['revision'] = r.text(128)
     if kind == 1:
         frequency, mode, call = r.number('Q'), r.text(64), r.text(64)
-        r.text(64)  # Report
-        r.text(64)  # Tx mode
-        for _ in range(3):
-            r.boolean()
-        r.number('I')  # Rx DF
-        r.number('I')  # Tx DF
-        for _ in range(3):
-            r.text(128)  # DE call, DE grid, DX grid
-        # Later Status fields are append-only. We deliberately consume just
-        # the stable mandatory prefix and ignore extensions (including future ones).
-        return Packet(kind, rig_id, call, frequency, mode)
+        fields.update(frequency=frequency, mode=mode, dxCall=call, report=r.text(64), txMode=r.text(64))
+        for name in ('txEnabled', 'transmitting', 'decoding'):
+            fields[name] = r.boolean()
+        fields['rxDf'], fields['txDf'] = r.number('I'), r.number('I')
+        for name in ('deCall', 'deGrid', 'dxGrid'):
+            fields[name] = r.text(128)
+        # Status extensions are append-only. Preserve original bytes for details.
+        return Packet(kind, rig_id, call, frequency, mode, schema, fields)
     if kind == 2:
-        r.boolean()
-        milliseconds = r.number('I')
-        r.number('i')  # SNR
-        dt = r.number('d')
-        r.number('I')  # DF
-        r.text(64)
-        r.text()
+        fields['new'] = r.boolean()
+        milliseconds = fields['milliseconds'] = r.number('I')
+        fields['snr'] = r.number('i')
+        dt = fields['deltaTime'] = r.number('d')
+        fields['deltaFrequency'] = r.number('I')
+        fields['mode'], fields['message'] = r.text(64), r.text()
         if milliseconds >= 86400000 or not math.isfinite(dt):
             raise PacketError("invalid decode fields")
-        # No decoded text is retained or used to select a station.
-    # Heartbeat, Close, unknown types and QSO messages have no interpreted
-    # payload here. In particular, types 5 and 12 never submit/store a QSO.
-    return Packet(kind, rig_id)
+    # Other message payloads remain uninterpreted, bounded diagnostic bytes only.
+    # In particular, types 5/12 never store or submit a permanent QSO.
+    return Packet(kind, rig_id, schema=schema, fields=fields)
 
 
 def band_from_hz(frequency: int) -> str | None:

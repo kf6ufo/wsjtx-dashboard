@@ -34,6 +34,13 @@ describe('centrally owned live snapshots', () => {
   expect(d.state.call).toBe('DL1DEMO')
   expect(d.state.profile).toMatchObject({ status: 'loaded', data: { name: 'Lena Fischer' } })
  })
+ it('never displays fixture identities or QSOs for actual Step 1 radio calls, even a catalog match', async () => {
+  const d = createDashboard(undefined, true)
+  d.applySnapshot({ ...snapshot(1), step: 1, sample: false })
+  await Promise.resolve(); await Promise.resolve()
+  expect(d.state.profile.status).toBe('empty')
+  expect(d.state.qsos).toMatchObject({ status: 'error', message: expect.stringContaining('not connected') })
+ })
  it('does not fabricate a sample logbook for a live callsign absent from the catalog', async () => {
   await expect(mockProviders.qsos('K1UNSEEN', 0)).rejects.toThrow('No sample QSO fixture')
  })

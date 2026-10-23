@@ -3,13 +3,15 @@ import { rigs } from './fixtures'
 import { mockProviders } from './providers'
 import type { Entry, Lookup, Profile, Providers, Qso, LiveRig, Snapshot, Preferences } from './types'
 export function createDashboard(providers: Providers = mockProviders, live = false) {
- const state = reactive({ sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
+ const state = reactive({ radioWorkspace: false, storageError: '' as string | null, counters: { packets: 0, malformed: 0, decodes: 0 } as Snapshot['counters'], sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
  let generation = 0, sequence = 0
  function load(call: string, profileDelay?: number, qsoDelay?: number) {
   const token = ++generation
   state.call = call; state.profile = { status: 'pending' }; state.qsos = { status: 'pending' }
-  providers.profile(call, profileDelay).then(data => { if (token === generation) state.profile = data ? { status: 'loaded', data } : { status: 'empty' } }).catch(() => { if (token === generation) state.profile = { status: 'error', message: 'Sample profile lookup unavailable.' } })
-  providers.qsos(call, qsoDelay).then(data => { if (token === generation) state.qsos = data.records.length || !data.complete ? { status: 'loaded', data: data.records, complete: data.complete } : { status: 'empty' } }).catch(error => { if (token === generation) state.qsos = { status: 'error', message: error instanceof Error ? error.message : 'Sample QSO lookup unavailable.' } })
+  const profileLookup = state.radioWorkspace ? Promise.resolve(null) : providers.profile(call, profileDelay)
+  const qsoLookup = state.radioWorkspace ? Promise.reject(new Error('Wavelog history is not connected yet (Step 3). Worked-before status is unknown.')) : providers.qsos(call, qsoDelay)
+  profileLookup.then(data => { if (token === generation) state.profile = data ? { status: 'loaded', data } : { status: 'empty' } }).catch(() => { if (token === generation) state.profile = { status: 'error', message: 'Sample profile lookup unavailable.' } })
+  qsoLookup.then(data => { if (token === generation) state.qsos = data.records.length || !data.complete ? { status: 'loaded', data: data.records, complete: data.complete } : { status: 'empty' } }).catch(error => { if (token === generation) state.qsos = { status: 'error', message: error instanceof Error ? error.message : 'Sample QSO lookup unavailable.' } })
  }
  function sort() { state.history.sort((a,b) => b.recency - a.recency) }
  function select(raw: string, rigId: string, options: { at?: number; profileDelay?: number; qsoDelay?: number; band?: string | null } = {}) {
@@ -46,6 +48,8 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   if (snapshot.epoch === epoch && snapshot.revision <= revision) return
   const changedEpoch = snapshot.epoch !== epoch
   epoch = snapshot.epoch; revision = snapshot.revision
+  const wasRadio = state.radioWorkspace
+  state.radioWorkspace = snapshot.step === 1 && !snapshot.sample
   state.sample = snapshot.sample ?? false
   if (snapshot.preferences) state.preferences = snapshot.preferences
   state.history = snapshot.history
@@ -54,7 +58,9 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   state.source = snapshot.source
   state.decodes = snapshot.counters.decodes
   state.receiver = snapshot.receiver
-  if (snapshot.call && (changedEpoch || state.call !== snapshot.call)) load(snapshot.call)
+  state.counters = snapshot.counters
+  state.storageError = snapshot.storageError ?? null
+  if (snapshot.call && (changedEpoch || wasRadio !== state.radioWorkspace || state.call !== snapshot.call)) load(snapshot.call)
   else if (!snapshot.call && (state.call || changedEpoch)) {
    ++generation; state.call = ''; state.profile = { status: 'pending' }; state.qsos = { status: 'pending' }
   }
@@ -69,11 +75,24 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
    applySnapshot(await response.json(), false)
   } catch { state.navigationError = 'Sample selection unavailable. Check the server connection and try again.' }
  }
+ async function configureReceiver(settings: import('./types').ReceiverConfig) {
+  const response = await fetch('/api/receiver', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) })
+  if (!response.ok) {
+   const body = await response.json().catch(() => ({}))
+   throw new Error(typeof body.detail === 'string' ? body.detail : 'Receiver settings are invalid or could not be saved.')
+  }
+  applySnapshot(await response.json(), false)
+ }
+ async function restartReceiver() {
+  const response = await fetch('/api/receiver/restart', { method: 'POST' })
+  if (!response.ok) throw new Error('Receiver restart failed. Check server connection.')
+  applySnapshot(await response.json(), false)
+ }
  async function saveSettings(preferences: Preferences) {
   const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(preferences) })
   if (!response.ok) throw new Error('Settings could not be saved. Check values and connection.')
   applySnapshot(await response.json(), false)
  }
- return { state, selectSample, saveSettings, select, browse, decode, retry, race, applySnapshot }
+ return { state, configureReceiver, restartReceiver, selectSample, saveSettings, select, browse, decode, retry, race, applySnapshot }
 }
 export type Dashboard = ReturnType<typeof createDashboard>

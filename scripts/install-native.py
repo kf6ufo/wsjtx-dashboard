@@ -26,8 +26,6 @@ def main():
                 target.write((ROOT / 'config.example.toml').read_text())
             print('Created config.toml from example', flush=True)
         settings = load_config(config)
-        if settings.receiver.enabled:
-            raise ValueError('Step 0 requires wsjtx.enabled = false; preserve existing station installations and use a separate checkout')
         for command in ([sys.executable, '-m', 'venv', '.venv'],
                         [str(ROOT / '.venv/bin/python'), '-m', 'pip', 'install', '-r', 'requirements.lock'],
                         ['npm', 'ci'], ['npm', 'run', 'build']):

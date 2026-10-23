@@ -81,7 +81,7 @@ class FocusState:
             previous = self.previous.get(packet.rig_id)
             self.previous[packet.rig_id] = call
             band = band_from_hz(packet.frequency)
-            self.rigs[packet.rig_id] = dict(id=packet.rig_id, name=packet.rig_id.removeprefix('WSJT-X - '),
+            self.rigs[packet.rig_id] = dict(self.rigs.get(packet.rig_id, {}), id=packet.rig_id, name=packet.rig_id.removeprefix('WSJT-X - '),
                                           band=band, mode=packet.mode, frequency=packet.frequency,
                                           call=call or '', lastSeen=now, online=True, color='#70c9bd')
             if not baseline and call and call != previous:
