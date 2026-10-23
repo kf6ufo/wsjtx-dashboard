@@ -2,7 +2,6 @@
 import asyncio
 from dataclasses import dataclass
 import ipaddress
-import os
 import socket
 from .protocol import PacketError, parse_packet
 from .state import FocusState
@@ -38,13 +37,6 @@ class Settings:
         if self.enabled and self.group and not self.interface:
             raise ValueError('Set the receiving host interface IPv4 address explicitly for multicast')
 
-    @classmethod
-    def from_env(cls):
-        enabled = os.getenv('WSJTX_RECEIVER', 'off')
-        if enabled not in ('on', 'off'):
-            raise ValueError('WSJTX_RECEIVER must be on or off')
-        return cls(enabled=enabled == 'on', group=os.getenv('WSJTX_GROUP', '239.255.0.73'),
-                   port=int(os.getenv('WSJTX_PORT', '2238')), interface=os.getenv('WSJTX_INTERFACE'))
 
 
 def create_socket(settings: Settings):

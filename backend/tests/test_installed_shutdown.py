@@ -1,5 +1,6 @@
 """Regression for foreground shutdown while a browser holds an SSE connection."""
 from pathlib import Path
+import os
 import signal
 import socket
 import subprocess
@@ -19,8 +20,10 @@ def test_installed_server_stops_with_open_browser_stream(tmp_path):
         port = reserve.getsockname()[1]
     config = tmp_path / 'config.toml'
     config.write_text((ROOT / 'config.example.toml').read_text().replace('8787', str(port)))
+    # Retired environment settings must not override or break the TOML install.
+    environment = dict(os.environ, WSJTX_RECEIVER='retired-value', WSJTX_PORT='invalid')
     child = subprocess.Popen([sys.executable, '-m', 'backend.server', '--config', str(config)],
-                             cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                             cwd=ROOT, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stream = None
     try:
         deadline = time.monotonic() + 10

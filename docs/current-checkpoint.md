@@ -8,7 +8,7 @@ Responsive Station / Diagnostics / Settings dashboard, saved preferences and sep
 
 No callbook/Wavelog connection, QSO submissions, forwarding or radio commands. Live profiles and worked-before status remain explicitly unavailable. Production station services remain unchanged.
 
-The clean source tree retains only current application modules, fixture data/tests, install tools, current documentation and the user-approved [rebuild handoff](../WSJTX-REBUILD-HANDOFF.md). Superseded milestone/deployment notes, the old checkpoint copy, and the replaced packet-injection browser harness are removed. Their previous versions remain in Git history. Active protocol/state tests and the current fixture demo are retained because they support this implementation. Runtime data, configuration, credentials, dependencies and build outputs stay excluded from Git.
+The clean source tree retains only current application modules, fixture data/tests, install tools, current documentation and the user-approved [rebuild handoff](../WSJTX-REBUILD-HANDOFF.md). Superseded milestone/deployment notes, the old checkpoint copy, the replaced packet-injection browser harness, and the unused environment-based server entry point are removed. Installed configuration has one TOML entry point. Their previous versions remain in Git history. Active protocol/state tests and the current fixture demo are retained because they support this implementation. Runtime data, configuration, credentials, dependencies and build outputs stay excluded from Git.
 
 ## Verified on macOS
 

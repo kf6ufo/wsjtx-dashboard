@@ -1,3 +1,5 @@
+> Repository note, October 23, 2026: Steps 0 and 1 are reviewed. Superseded project notes referenced below now live in Git history; read [the current checkpoint](docs/current-checkpoint.md) and [installation guide](docs/install-macos.md) for present status. The approved requirements below are retained in full.
+
 # WSJT-X Dashboard: complete rebuild handoff
 
 Prepared October 23, 2026. This document consolidates the user's latest decisions. It is a specification for a fresh rebuild, not evidence that the new features have been implemented or deployed.

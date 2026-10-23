@@ -20,7 +20,7 @@ class BrowseRequest(BaseModel):
 
 
 def create_app(settings: Settings | None = None, state: FocusState | None = None, *, serve_frontend=True, config_path: Path | None = None):
-    settings, state = settings or Settings.from_env(), state or FocusState()
+    settings, state = settings or Settings(), state or FocusState()
 
     runtime = ReceiverRuntime(state) if isinstance(state, WorkspaceState) else None
 
@@ -189,5 +189,3 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         app.mount('/', StaticFiles(directory=dist, html=True), name='dashboard')
     return app
 
-
-app = create_app()
