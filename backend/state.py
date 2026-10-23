@@ -83,11 +83,13 @@ class FocusState:
             band = band_from_hz(packet.frequency)
             self.rigs[packet.rig_id] = dict(self.rigs.get(packet.rig_id, {}), id=packet.rig_id, name=packet.rig_id.removeprefix('WSJT-X - '),
                                           band=band, mode=packet.mode, frequency=packet.frequency,
-                                          call=call or '', lastSeen=now, online=True, color='#70c9bd')
+                                          call=call or '', dxGrid=packet.fields.get('dxGrid', ''),
+                                          deGrid=packet.fields.get('deGrid', ''), lastSeen=now, online=True, color='#70c9bd')
             if not baseline and call and call != previous:
                 self.selection_sequence += 1
                 entry = dict(call=call, rigId=packet.rig_id, selectedAt=now, band=band,
-                             mode=packet.mode, frequency=packet.frequency, recency=self.selection_sequence)
+                             mode=packet.mode, frequency=packet.frequency, recency=self.selection_sequence,
+                             dxGrid=packet.fields.get('dxGrid', ''), deGrid=packet.fields.get('deGrid', ''))
                 self.history = [entry] + [e for e in self.history if e['call'] != call]
                 del self.history[self.history_limit:]
                 self.call, self.source = call, 'radio'

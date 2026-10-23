@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test('running station receiver reports actual traffic in both browser windows', async ({ browser, request, baseURL }) => {
  const response = await request.get('/api/snapshot')
  const snapshot = await response.json()
- expect(snapshot.step).toBe(1)
+ expect(snapshot.step).toBeGreaterThanOrEqual(1)
  expect(snapshot.sample).toBe(false)
  expect(snapshot.receiver.status).toBe('listening')
  expect(snapshot.counters.packets).toBeGreaterThan(0)

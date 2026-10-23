@@ -55,9 +55,11 @@ class WorkspaceState(FoundationState):
         snapshot = super().snapshot()
         if not self.ready:
             return snapshot
-        snapshot.update(sample=self.sample, step=1, storageError=self.storage_error,
+        snapshot.update(sample=self.sample, step=2, storageError=self.storage_error,
                         diagnostics=dict(generation=self.diagnostic_generation, latest=self.diagnostic_sequence,
                                          retained=len(self.diagnostics), limit=self.diagnostics.maxlen))
+        if getattr(self, 'enrichment_service', None):
+            snapshot['enrichment'] = self.enrichment_service.snapshot()
         return snapshot
 
     def publish(self):
@@ -80,6 +82,8 @@ class WorkspaceState(FoundationState):
         except sqlite3.Error:
             # Read-only reception must continue even if workspace persistence fails.
             self.storage_error = 'Workspace could not be saved. Check disk space and data directory permissions.'
+        if getattr(self, 'enrichment_service', None):
+            self.enrichment_service.observe()
         # Selections/preferences/browsing push immediately. Telemetry is coalesced
         # at 5 Hz; no database commits are made for ordinary packet traffic.
         if changed or time.monotonic() - self.last_broadcast >= .2:

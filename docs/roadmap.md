@@ -6,14 +6,14 @@ The complete requirements and acceptance criteria are in [WSJTX-REBUILD-HANDOFF.
 | --- | --- | --- |
 | 0 | Visual Station/Diagnostics/Settings, shared sample state, persistent preferences/history, SSE/reconnect, native installation | Reviewed and accepted; preserved in Git history |
 | 1 | Configurable primary WSJT-X UDP reception; per-network-ID baselines, selection changes, bounded packet diagnostics | Reviewed; actual selections from both rigs, ordering and Decode stability verified on Mac |
-| 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Roadmap |
+| 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Implemented on feature branch; awaiting operator review |
 | 3 | Wavelog authoritative complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Roadmap |
 | 4 | Complete real profile/photo/license, QSO details/sorting, worked indicators based on complete history | Roadmap |
 | 5 | Complete shared bounded lookup history, thumbnails, retention/clear, preserved selection provenance while browsing | Roadmap |
 | 6 | Optional enriched QSO submissions; type 5/12 deduplication, durable queue, mapping, isolated tests and controlled sole-uploader cutover | Roadmap |
 | 7 | Optional one-way UDP forwarding; multiple independent destinations, loop prevention, supported enriched formats, actual destination tests | Roadmap |
 
-Step 0 reuses the predecessor's tested Vue components and snapshot transport, with a new persistent sample workspace and native installation path. Step 1 activates the receiver only when explicitly enabled in the saved TOML/Settings. It adds bounded in-memory diagnostics, per-instance health and separate persistent radio history. No credentials, external providers, QSO submissions or forwarding are activated.
+Step 0 reuses the predecessor's tested Vue components and snapshot transport, with a new persistent sample workspace and native installation path. Step 1 activates the receiver only when explicitly enabled in the saved TOML/Settings. It adds bounded in-memory diagnostics, per-instance health and separate persistent radio history. Step 2 adds opt-in external providers and server-side credentials; QSO submissions and forwarding remain inactive.
 
 One process owns displayed focus and history; latest accepted server interaction wins across browsers. History is bounded at 200, deduplicated by callsign. Sample selection updates rig/time/band and moves the entry first. Browsing changes only displayed focus/browsing time. Complete snapshots coalesce in bounded one-item queues (maximum 32 streams), heartbeat every 15 seconds; reconnect includes a full snapshot and epoch/revision guards. Slow clients skip intermediate snapshots. Independent fixture lookups use generation guards. Step 1 connects actual UDP selections to this foundation; telemetry snapshots are coalesced at 5 Hz while selection/browsing/preference updates publish immediately.
 

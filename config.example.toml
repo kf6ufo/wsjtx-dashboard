@@ -13,3 +13,21 @@ interface = "127.0.0.1"
 listen = "0.0.0.0"
 # In-memory diagnostic packets; never a permanent QSO log.
 retention = 200
+
+# Optional Step 2. Older configuration files remain valid without this section.
+[enrichment]
+enabled = false
+source = "countryfile"
+filename = ""
+station_grid = ""
+refresh_hours = 24
+cache_minutes = 1440
+cache_limit = 200
+qrz_enabled = false
+qrz_version = "current"
+field_priority = "qrz_first"
+allow_country_estimate = false
+# Set credentials using Settings, or in this ignored server-only file.
+clublog_key = ""
+qrz_username = ""
+qrz_password = ""
