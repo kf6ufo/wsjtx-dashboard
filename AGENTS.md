@@ -6,7 +6,7 @@ Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, int
 ## Current authority and development order
 Read `WSJTX-REBUILD-HANDOFF.md`, `README.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work. `main` holds the reviewed implementation; use feature branches for future steps.
 
-Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Step 1 is the reviewed published scope. The operator requested Step 2 with all available provider fields, configurable pyhamtools sources/options, and QRZ XML setup. Step 2 is implemented on `feature/step-2-enrichment` for review; do not begin Step 3 until requested.
+Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Step 1 is the reviewed published scope. The operator requested Step 2 with all available provider fields, configurable pyhamtools sources/options, and QRZ XML setup. Step 2 and its profile-photo follow-up are implemented on `feature/step-2-enrichment`. The operator tested QRZ and explicitly requested Step 3 Wavelog configuration and QSO history. Step 3 is implemented on the stacked `feature/step-3-wavelog` branch; its review PR targets Step 2 until that branch is merged. Do not proceed to later integration stages without the operator’s review.
 
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.

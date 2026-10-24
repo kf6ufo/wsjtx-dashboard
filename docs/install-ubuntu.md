@@ -1,4 +1,4 @@
-# Native Ubuntu installation — Steps 0–2
+# Native Ubuntu installation — Steps 0–3
 
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
@@ -16,6 +16,7 @@ Follow the [private GitHub authentication instructions](install-macos.md#private
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard
 cd ~/wsjtx-dashboard
+git switch feature/step-3-wavelog
 git rev-parse HEAD
 ./install.sh
 .venv/bin/python -m backend.server
@@ -36,3 +37,11 @@ Pending actual Ubuntu validation: prerequisites, dependency installation, produc
 ## Step 2 preview and configuration
 
 For the unreviewed Step 2 preview, select `feature/step-2-enrichment` after cloning and before running the installer. Existing Step 0/1 TOML and workspace data remain compatible; enrichment defaults disabled until configured. Follow the [Step 2 guide](step-2.md) for providers, QRZ XML credentials, cache policy and operator review. Back up config/data before upgrading; restoring a Step 1 revision also requires its pre-upgrade configuration backup because Step 1 does not accept the new enrichment section. QRZ and Club Log credentials in config/backups need the same care as other account passwords.
+
+## Step 3 preview and configuration
+
+The current preview branch is **`feature/step-3-wavelog`**, including Step 2 enrichment/photos. Choose it after cloning and before installation. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin` and `git switch feature/step-3-wavelog`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+
+Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
+
+The installation commands select the preview branch. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.

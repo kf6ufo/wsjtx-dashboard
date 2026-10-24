@@ -31,3 +31,18 @@ allow_country_estimate = false
 clublog_key = ""
 qrz_username = ""
 qrz_password = ""
+
+# Optional Step 3. API v2 reads only; never submits or changes QSOs.
+[wavelog]
+enabled = false
+url = ""
+token = ""
+scope_mode = "all"
+station_ids = []
+logbook_id = 0
+cache_minutes = 5
+cache_limit = 20
+page_size = 100
+max_pages = 100
+max_records = 10000
+timeout_seconds = 8

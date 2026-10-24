@@ -1,12 +1,12 @@
 # WSJT-X Dashboard
 
-A self-hosted companion for the operating desk. **Feature preview — Step 2:** a responsive Station / Diagnostics / Settings dashboard, clearly labeled fictional profiles and contacts, shared server selections, live browser updates, saved workspace preferences/history, and configurable receive-only WSJT-X UDP with packet diagnostics, configurable pyhamtools enrichment, and optional QRZ XML callbook details.
+A self-hosted companion for the operating desk. **Feature preview — Step 3:** a responsive Station / Diagnostics / Settings dashboard, clearly labeled fictional profiles and contacts, shared server selections, live browser updates, saved workspace preferences/history, and configurable receive-only WSJT-X UDP with packet diagnostics, configurable pyhamtools enrichment, optional QRZ XML callbook details, and read-only Wavelog QSO history.
 
-**UDP reception and enrichment are opt-in. QRZ requires local configuration; Wavelog is not connected.** Production radios, WaveLogGate and station services remain unchanged. There are no QSO submissions, radio commands or forwarding. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) replace the old milestone and Ubuntu-only assumptions; [Steps 3–7 remain the roadmap](docs/roadmap.md).
+**UDP reception, enrichment and Wavelog history are opt-in. Configure credentials locally in Settings.** Production radios, WaveLogGate and station services remain unchanged. There are no QSO submissions, radio commands or forwarding. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) replace the old milestone and Ubuntu-only assumptions; [Steps 4–7 remain the roadmap](docs/roadmap.md).
 
 ## Install and run
 
-Steps 0 and 1 are reviewed on **`main`**. Step 2 is available for review on **`feature/step-2-enrichment`**. For this preview, run `git switch feature/step-2-enrichment` after cloning and before `./install.sh`. Previous attempts remain available in Git history; obsolete documentation and the superseded test server are removed from the current tree.
+Steps 0 and 1 are reviewed on **`main`**. Step 3 is available for review on **`feature/step-3-wavelog`**, including Step 2 enrichment and photos. For this preview, run `git switch feature/step-3-wavelog` after cloning and before `./install.sh`. Previous attempts remain available in Git history; obsolete documentation and the superseded test server are removed from the current tree.
 
 Use a **separate checkout**, preserving any existing installation. Requires Git, Python **3.12–3.14**, and Node **24 LTS, 24.15+** with npm. Dependencies build on the target host. No editor, Codex, Docker, release asset or privileged installer is required.
 
@@ -15,6 +15,7 @@ Use a **separate checkout**, preserving any existing installation. Requires Git,
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard
 cd ~/wsjtx-dashboard
+git switch feature/step-3-wavelog
 ./install.sh
 .venv/bin/python -m backend.server
 ```
@@ -35,4 +36,8 @@ Before first enabling reception, sample profiles/contacts load independently fro
 
 Open **Settings → pyhamtools enrichment**. Enable Country-files.com for account-free DXCC/country/zone details. Optionally add QRZ XML and enter your QRZ username/password locally. Save, then test the saved provider settings. All returned fields, provenance, freshness, calculated band/distance/bearings and partial provider failures are visible in the station view. [Step 2 setup, source options and review guide](docs/step-2.md).
 
-Step 2 awaits operator review. Step 3 has not begun.
+## Try Step 3
+
+Open **Settings → Wavelog QSO history**. Save the application URL and a dedicated Wavelog **API v2 token** with `qso:read` and `station:read`, then test the saved connection. An ending `/api` is accepted and removed automatically. Leave scope at **All authorized station locations** to include former and current station callsigns. Optional `confirmation:read` supplies QSL details; `logbook:read` enables logbook selection where supported. [Step 3 setup and review guide](docs/step-3.md).
+
+Radio selections and Focus History browsing load complete paginated contacts independently from QRZ. Failed or partial history never claims a new callsign/band. Contacts are cached only in memory. This preview does not submit QSOs or replace WaveLogGate. See the checkpoint for verified and still untested behavior.
