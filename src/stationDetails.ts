@@ -81,23 +81,22 @@ export function stationKeyFacts(data: EnrichmentResult): StationField[] {
  if (computed.heading !== undefined) facts.push({ key: 'heading', label: 'Azimuth', value: `${computed.heading}°` })
  if (data.locationGrid) facts.push({ key: 'grid', label: data.reportedGrid ? 'Operating grid' : data.callbookGrid ? 'Home grid' : 'Estimated grid', value: data.locationGrid, source: data.locationSource })
  const qsl = stationGroups(data).flatMap(group => group.fields)
- for (const key of ['lotw', 'eqsl']) {
-  const field = qsl.find(field => field.key === key)
-  if (field) facts.push(field)
- }
+ const lotw = qsl.find(field => field.key === 'lotw')
+ if (lotw) facts.push(lotw)
+ if (data.call) facts.push({ key: 'qrz', label: 'QRZ', value: data.providers?.qrz?.status === 'loaded' ? 'Profile ↗' : 'Lookup ↗', href: `https://www.qrz.com/db/${encodeURIComponent(data.call)}`, source: 'Opens the QRZ callsign page; not a confirmation status' })
  return facts
 }
 
 export function stationTableRows(data: EnrichmentResult): StationField[] {
  const fields = data.fields ?? {}, sources = data.fieldSources ?? {}
- const rows = stationGroups(data).flatMap(group => group.fields)
+ const rows = stationGroups(data).flatMap(group => group.fields).filter(field => !['eqsl', 'eqsl_user'].includes(field.key))
  const add = (key: string, label: string, raw: unknown, source?: string) => {
   if (hasValue(raw)) rows.push({ key, label, value: fieldText(raw), source })
  }
  add('dxcc', 'DXCC', [fields.adif, fields.country].filter(hasValue).map(fieldText).join(' · '), sources.adif || sources.country)
  add('cqz', 'CQ zone', fields.cqz, sources.cqz)
  add('ituz', 'ITU zone', fields.ituz, sources.ituz)
- for (const fact of stationKeyFacts(data)) if (fact.key !== 'grid' && !rows.some(row => row.key === fact.key)) rows.push(fact)
- const order = ['license_class', 'codes', 'efdate', 'expdate', 'aliases', 'p_call', 'dxcc', 'reportedGrid', 'callbookGrid', 'distance', 'heading', 'lotw', 'eqsl', 'mqsl', 'email', 'url', 'qslmgr', 'county', 'state', 'fips', 'timezone', 'gmtoffset', 'latitude', 'longitude']
+ for (const fact of stationKeyFacts(data)) if (!['grid', 'qrz'].includes(fact.key) && !rows.some(row => row.key === fact.key)) rows.push(fact)
+ const order = ['license_class', 'codes', 'efdate', 'expdate', 'aliases', 'p_call', 'dxcc', 'reportedGrid', 'callbookGrid', 'distance', 'heading', 'lotw', 'mqsl', 'email', 'url', 'qslmgr', 'county', 'state', 'fips', 'timezone', 'gmtoffset', 'latitude', 'longitude']
  return rows.sort((a,b) => (order.indexOf(a.key) < 0 ? 100 : order.indexOf(a.key)) - (order.indexOf(b.key) < 0 ? 100 : order.indexOf(b.key)))
 }

@@ -85,7 +85,7 @@ test('QRZ photos appear beside the callsign and as shared history thumbnails', a
  await expect(details).toContainText('License class')
  await expect(details.getByRole('link', { name: 'fixture@example.invalid ↗' })).toHaveAttribute('href', 'mailto:fixture%40example.invalid')
  await expect(details).not.toContainText('State / province')
- await expect(details.locator('tr[data-field="eqsl"]')).toContainText('No')
+ await expect(details.locator('tr[data-field="eqsl"]')).toHaveCount(0)
  expect(await details.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true)
  const summaryBox = await first.locator('.worked-summary').boundingBox(), detailBox = await first.locator('.enrichment-card').boundingBox()
  expect(summaryBox!.x + summaryBox!.width).toBeLessThan(detailBox!.x)
@@ -94,6 +94,17 @@ test('QRZ photos appear beside the callsign and as shared history thumbnails', a
  expect(keyBox!.y).toBeGreaterThan(summaryBox!.y + summaryBox!.height)
  const imageBox = await first.locator('.station-overview > .station-photo').boundingBox(), identityBox = await first.locator('.station-identity').boundingBox(), primaryBox = await first.locator('.station-primary').boundingBox()
  expect(identityBox!.y).toBeGreaterThanOrEqual(imageBox!.y + imageBox!.height)
+ const centered = await first.locator('.station-identity').evaluate(el => {
+  const title = el.querySelector('.callsign-row')!.getBoundingClientRect(), name = el.querySelector('h3')!.getBoundingClientRect()
+  return (Math.min(title.left, name.left) + Math.max(title.right, name.right)) / 2
+ })
+ expect(Math.abs(centered - imageBox!.x - imageBox!.width / 2)).toBeLessThan(3)
+ const topbar = first.locator('.topbar')
+ for (const name of ['Station', 'Diagnostics', 'Settings', 'Theme: Dark']) await expect(topbar.getByRole('button', { name, exact: true })).toBeVisible()
+ await expect(topbar.getByRole('button', { name: 'Station Desk', exact: true })).toHaveCount(0)
+ await expect(first.locator('.workspace-bar, .foundation-banner, .panel-heading')).toHaveCount(0)
+ const headerBox = await topbar.boundingBox(), panelBox = await first.locator('.station-panel').boundingBox()
+ expect(panelBox!.y - headerBox!.y - headerBox!.height).toBeLessThan(20)
  expect(Math.abs(detailBox!.height - primaryBox!.height)).toBeLessThan(3)
  expect(primaryBox!.y + primaryBox!.height - imageBox!.y - imageBox!.height).toBeLessThan(300)
  const scrolling = await details.evaluate(el => {
@@ -124,7 +135,8 @@ test('QRZ photos appear beside the callsign and as shared history thumbnails', a
  expect(await details.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
  await vertical.focus(); await first.keyboard.press('Home')
 
- await expect(first.locator('.station-key-facts [data-field="eqsl"]')).toContainText('No')
+ await expect(first.locator('.station-key-facts [data-field="eqsl"]')).toHaveCount(0)
+ await expect(first.locator('.station-key-facts [data-field="qrz"] a')).toHaveAttribute('href', 'https://www.qrz.com/db/K1ACT')
  await first.screenshot({ path: 'test-results/step4-station-desktop.png', fullPage: true })
  await first.getByRole('button', { name: 'Theme: Dark', exact: true }).click()
  await first.screenshot({ path: 'test-results/step4-station-light.png', fullPage: true })

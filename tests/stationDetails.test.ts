@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { stationGroups, webLink, operatorName } from '../src/stationDetails'
+import { stationGroups, webLink, operatorName, stationKeyFacts, stationTableRows } from '../src/stationDetails'
 import EnrichmentCard from '../src/components/EnrichmentCard.vue'
 import ContactDetails from '../src/components/ContactDetails.vue'
 import type { EnrichmentState } from '../src/types'
@@ -18,6 +18,9 @@ describe('station presentation', () => {
   expect(fields.find(f => f.key === 'gmtoffset')?.value).toBe('0')
   expect(fields.find(f => f.key === 'lotw')?.value).toBe('Yes')
   expect(fields.find(f => f.key === 'eqsl')?.value).toBe('No')
+  expect(stationKeyFacts(enrichment.result).find(f => f.key === 'qrz')).toMatchObject({ label: 'QRZ', value: 'Profile ↗', href: 'https://www.qrz.com/db/K1ABC' })
+  expect(stationKeyFacts(enrichment.result).some(f => f.key === 'eqsl')).toBe(false)
+  expect(stationTableRows(enrichment.result).some(f => f.key === 'eqsl')).toBe(false)
   expect(fields.find(f => f.key === 'mqsl')?.value).toBe('No')
   expect(fields.some(f => ['email', 'state', 'nickname'].includes(f.key))).toBe(false)
   expect(groups[0]?.title).toBe('Contact & QSL')
