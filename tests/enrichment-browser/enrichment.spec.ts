@@ -21,7 +21,7 @@ test('enrichment arrives in two browsers, settings retain provenance, missing QR
  await second.getByTestId('history-K1ACT').click()
  await expect(card.locator('.station-details-table').getByText('United States', { exact: true })).toBeVisible()
  expect((await (await request.get('/api/snapshot')).json()).history.map(({ browsedAt, ...entry }: any) => entry)).toEqual(before)
- const overview = await first.locator('.station-overview').boundingBox(), enrichment = await card.boundingBox()
+ const overview = await first.locator('.station-primary').boundingBox(), enrichment = await card.boundingBox()
  expect(Math.abs(enrichment!.y - overview!.y)).toBeLessThan(3)
  expect(enrichment!.x).toBeGreaterThan(overview!.x + overview!.width)
  await first.screenshot({ path: 'test-results/step2-enrichment.png', fullPage: true })
@@ -95,6 +95,7 @@ test('QRZ photos appear beside the callsign and as shared history thumbnails', a
  const imageBox = await first.locator('.station-overview > .station-photo').boundingBox(), identityBox = await first.locator('.station-identity').boundingBox(), primaryBox = await first.locator('.station-primary').boundingBox()
  expect(identityBox!.y).toBeGreaterThanOrEqual(imageBox!.y + imageBox!.height)
  expect(Math.abs(detailBox!.height - primaryBox!.height)).toBeLessThan(3)
+ expect(primaryBox!.y + primaryBox!.height - imageBox!.y - imageBox!.height).toBeLessThan(300)
  const scrolling = await details.evaluate(el => {
   const style = getComputedStyle(el)
   el.scrollLeft = 40; el.scrollTop = 40
