@@ -1,6 +1,21 @@
-# Current checkpoint — Step 2 preview
+# Current checkpoint — Step 2
 
-**October 23, 2026. Steps 0 and 1 are reviewed on `main`.** The operator requested Step 2 with the full available pyhamtools/callbook fields, configurable provider options and QRZ XML setup. Implementation is on **`feature/step-2-enrichment`**, awaiting operator review. Step 3 has not begun.
+**October 23, 2026. Step 2 is the reviewed publication scope for `main`.** The operator requested review and publication of the Work Session implementation from PR #1 (`feature/step-2-enrichment`). Step 3 Wavelog work exists separately in PR #2 and is excluded from this release.
+
+The live-station observations below were recorded by the earlier Work Session. They are retained as prior evidence, not claimed as repeated during this code review.
+
+## Publication code review
+
+Reviewed Step 2 PR #1 at `3fdd97cd4f2b722d638407c3eb1bf3f2049c4eca` against Step 1 `9f7729224a1611776baa0499d7583654ebbae11b`. No blocking code findings. Review covered background lookup ordering, shared focus/history, cache bounds, provider failure states, reported versus callbook grids, credential redaction/storage, configuration compatibility and photo persistence. Documentation corrections promote the installation path to `main`, remove outdated QRZ verification statements, clarify LAN access to saved-provider operations and provider-timeout shutdown behavior, and keep Step 3 outside this release.
+
+Fresh macOS validation in `/private/tmp/wsjtx-step2-review-clean` at that Step 2 commit:
+
+- Documented native installer and production build passed with Python 3.13.1 / Node 24.21.0.
+- **57 Python tests**, **16 frontend tests**, and **all seven offline browser workflows** passed using installed Chrome. The Python suite retains the existing Starlette/httpx adapter deprecation warning.
+- Synthetic state created by the actual Step 1 code was carried through a repeated native install: custom TOML and SQLite database stayed byte-for-byte unchanged during installation. Step 2 production startup preserved focus, history/browsing provenance and preferences; production HTML/assets, disabled receiver/enrichment defaults, SQLite integrity and shutdown passed on isolated HTTP port 18787.
+- Whitespace, local Markdown links, shell syntax and tracked-file hygiene were checked. No runtime databases, credentials, dependencies or build outputs are tracked.
+
+Initial tests using this workspace's existing dependency directories stalled (frontend workers timed out); the independently installed checkout above completed successfully. No new live provider or actual-radio acceptance tests were performed during publication review. Earlier Work Session evidence follows. Ubuntu and live Club Log account access remain unverified. Existing station installations and production services were left running unchanged.
 
 ## Current implementation
 
@@ -25,20 +40,18 @@ The actual Step 1 review server was stopped, its config/data backed up, and the 
 
 A durable copy of the cold pre-upgrade backup is retained in the feature source checkout's ignored `backups/before-step2-20261023/`; `/private/tmp/wsjtx-step2-upgrade-record.json` records the original temporary backup location. Installation verification used the identified implementation commit above; subsequent changes only update documentation and the read-only browser screenshot readiness assertion. At the initial preview no live QRZ or Club Log credentials had been supplied; that initial verification did not establish account/image access. The operator subsequently entered QRZ credentials locally and reported that configuration tests work. The live dashboard now returns a loaded QRZ record with a photo URL. Club Log live account access remains unverified. Ubuntu execution remains untested, including dependencies/build, upgrades, multicast and browser/tunnel access.
 
-## Existing station evidence and review server
+## Prior station evidence and temporary review installations
 
 Step 1 previously verified actual multicast **239.255.0.73:2238**, Mac receiving interface **10.176.1.200**, separate network IDs **WSJT-X - IC9100** and **WSJT-X - IC7300** from **10.176.1.5**, and operator-confirmed selections with shared newest-first history and Decode stability. These are prior Step 1 observations, not a new physical-click test of Step 2. QRPLabsQDX has not been observed in this session.
 
-The **Step 2 review server** is running at **http://127.0.0.1:8787/** in `/private/tmp/wsjtx-step2-native`, with the preserved multicast configuration. The operator has now selected QRZ XML and configured its credentials locally; the current QRZ lookup is loaded. The Step 0 and Step 1 review processes are stopped; port 8789 is no longer the review address. Original Step 1 config/data remain in their prior checkout and in the cold backup. These `/private/tmp` installations are temporary review copies, not durable service installations.
+The earlier Step 2 review ran at **http://127.0.0.1:8787/** in `/private/tmp/wsjtx-step2-native`. Temporary review paths, ports and running processes are historical observations; this publication review does not restart or replace them. Later Step 3 development has its own installation outside this release.
 
-The operator's VS Code checkout at `/Users/jerryjoplin/Documents/GitHub/wsjtx-dashboard` remains clean on `main`. The feature source is `/Users/jerryjoplin/Documents/ChatGPT/WSJT-X Dashboard/wsjtx-dashboard-step2` on the published `feature/step-2-enrichment` branch. To review that branch in the existing VS Code checkout, confirm there are no local changes, run `git fetch origin`, then `git switch feature/step-2-enrichment`. Follow the install guide before launching it. Stop the current review process before starting another copy on port 8787; migrating the current workspace requires copying its config/data while stopped, as documented.
-
-Use the [macOS installation guide](install-macos.md) or [Ubuntu directions](install-ubuntu.md), choosing the feature branch for this preview. Back up configuration and `data/` with the server stopped. Credentials, live workspace databases, dependencies and build outputs remain excluded from Git. Do not proceed to Wavelog integration until Step 2 is reviewed.
+Use `main` and the [macOS installation guide](install-macos.md) or [Ubuntu directions](install-ubuntu.md) for a durable installation. Back up configuration and `data/` with the dashboard stopped. Credentials, live workspace databases, dependencies and build outputs remain excluded from Git. Step 3 requires its own review before merging.
 
 ## Photo follow-up requested by the operator
 
 The operator requested small profile photos in Focus History and a larger photo in the main station area. The main header now places the photo beside the callsign, QRZ name/location/license details and radio provenance. History uses 58-pixel uncropped thumbnails and a neutral placeholder for missing or failed images. Valid HTTPS photo URLs are saved separately from selection provenance in the existing live workspace payload, retained only for callsigns still in bounded history. No image binaries or QRZ credentials are added to history. Browsing or receiving a delayed photo cannot reorder history or change selection time/rig.
 
-Validation: **57 Python tests**, **16 frontend tests**, the production build and both enrichment browser workflows pass. Coverage includes saved URLs after restart, rejecting unsafe image URLs, recovery after a failed image, late lookup photos without stealing focus, two-browser thumbnails, and desktop/tablet/mobile layout. Existing entries fill in after their next normal lookup; no background sweep of QRZ history is performed. Step 3 has not begun.
+Validation: **57 Python tests**, **16 frontend tests**, the production build and both enrichment browser workflows pass. Coverage includes saved URLs after restart, rejecting unsafe image URLs, recovery after a failed image, late lookup photos without stealing focus, two-browser thumbnails, and desktop/tablet/mobile layout. Existing entries fill in after their next normal lookup; no background sweep of QRZ history is performed. Step 3 is outside this release.
 
 The photo follow-up was installed at **`a5a319a8253deeab4719ec1091493886b59a7387`** through the documented native installer. The operator's QRZ configuration and complete database remained byte-for-byte unchanged through installation. Startup preserved the focused **NA6Y**, all **six history entries** with their browsing/selection provenance, and shared preferences. The actual QRZ record and photo loaded, and the photo URL was confirmed in both the server snapshot and saved workspace payload. The two-window read-only actual-station check passed again. The original configuration/database are backed up in ignored `backups/before-photos-20261023-172156/` in the feature source checkout. Only the dashboard review process was restarted; radio and Wavelog configuration were not changed.

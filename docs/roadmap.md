@@ -6,8 +6,8 @@ The complete requirements and acceptance criteria are in [WSJTX-REBUILD-HANDOFF.
 | --- | --- | --- |
 | 0 | Visual Station/Diagnostics/Settings, shared sample state, persistent preferences/history, SSE/reconnect, native installation | Reviewed and accepted; preserved in Git history |
 | 1 | Configurable primary WSJT-X UDP reception; per-network-ID baselines, selection changes, bounded packet diagnostics | Reviewed; actual selections from both rigs, ordering and Decode stability verified on Mac |
-| 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Implemented on feature branch; awaiting operator review |
-| 3 | Wavelog authoritative complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Roadmap |
+| 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Reviewed for publication on main; Country-files and QRZ/photo evidence recorded |
+| 3 | Wavelog authoritative complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Separate feature branch / PR #2; outside this release |
 | 4 | Complete real profile/photo/license, QSO details/sorting, worked indicators based on complete history | Roadmap |
 | 5 | Complete shared bounded lookup history, thumbnails, retention/clear, preserved selection provenance while browsing | Roadmap |
 | 6 | Optional enriched QSO submissions; type 5/12 deduplication, durable queue, mapping, isolated tests and controlled sole-uploader cutover | Roadmap |
