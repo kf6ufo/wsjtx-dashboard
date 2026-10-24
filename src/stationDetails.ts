@@ -23,6 +23,10 @@ export function webLink(value: unknown): string | undefined {
   if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password) return url.href
  } catch { /* Unusable links remain readable text. */ }
 }
+export function emailLink(value: unknown): string | undefined {
+ const text = fieldText(value)
+ return /^[^\s@\r\n]+@[^\s@\r\n]+$/.test(text) ? `mailto:${encodeURIComponent(text)}` : undefined
+}
 export function operatorName(fields: Record<string, unknown>): string {
  return fieldText(fields.name_fmt) || [fields.fname, fields.name].map(fieldText).filter(Boolean).join(' ')
 }
@@ -58,7 +62,7 @@ export function stationGroups(data: EnrichmentResult): StationGroup[] {
     if (['0', 'false', 'no'].includes(value.toLowerCase())) value = 'No'
     else if (['1', 'true', 'yes'].includes(value.toLowerCase())) value = 'Yes'
    }
-   const href = key === 'url' ? webLink(raw) : key === 'email' && /^[^\s@\r\n]+@[^\s@\r\n]+$/.test(value) ? `mailto:${encodeURIComponent(value)}` : undefined
+   const href = key === 'url' ? webLink(raw) : key === 'email' ? emailLink(raw) : undefined
    fields.push({ key, label, value, source: sources[key], href })
   }
   if (fields.length) groups.push({ title, fields })
@@ -68,4 +72,32 @@ export function stationGroups(data: EnrichmentResult): StationGroup[] {
   groups.splice(address < 0 ? groups.length : address, 0, { title: 'Operating location', fields: location })
  }
  return groups
+}
+
+export function stationKeyFacts(data: EnrichmentResult): StationField[] {
+ const fields = data.fields ?? {}, computed = data.computed ?? {}
+ const facts: StationField[] = []
+ if (computed.distanceKm !== undefined) facts.push({ key: 'distance', label: 'Distance', value: `${computed.distanceKm.toLocaleString()} km` })
+ if (computed.heading !== undefined) facts.push({ key: 'heading', label: 'Azimuth', value: `${computed.heading}°` })
+ if (data.locationGrid) facts.push({ key: 'grid', label: data.reportedGrid ? 'Operating grid' : data.callbookGrid ? 'Home grid' : 'Estimated grid', value: data.locationGrid, source: data.locationSource })
+ const qsl = stationGroups(data).flatMap(group => group.fields)
+ for (const key of ['lotw', 'eqsl']) {
+  const field = qsl.find(field => field.key === key)
+  if (field) facts.push(field)
+ }
+ return facts
+}
+
+export function stationTableRows(data: EnrichmentResult): StationField[] {
+ const fields = data.fields ?? {}, sources = data.fieldSources ?? {}
+ const rows = stationGroups(data).flatMap(group => group.fields)
+ const add = (key: string, label: string, raw: unknown, source?: string) => {
+  if (hasValue(raw)) rows.push({ key, label, value: fieldText(raw), source })
+ }
+ add('dxcc', 'DXCC', [fields.adif, fields.country].filter(hasValue).map(fieldText).join(' · '), sources.adif || sources.country)
+ add('cqz', 'CQ zone', fields.cqz, sources.cqz)
+ add('ituz', 'ITU zone', fields.ituz, sources.ituz)
+ for (const fact of stationKeyFacts(data)) if (fact.key !== 'grid' && !rows.some(row => row.key === fact.key)) rows.push(fact)
+ const order = ['license_class', 'codes', 'efdate', 'expdate', 'aliases', 'p_call', 'dxcc', 'reportedGrid', 'callbookGrid', 'distance', 'heading', 'lotw', 'eqsl', 'mqsl', 'email', 'url', 'qslmgr', 'county', 'state', 'fips', 'timezone', 'gmtoffset', 'latitude', 'longitude']
+ return rows.sort((a,b) => (order.indexOf(a.key) < 0 ? 100 : order.indexOf(a.key)) - (order.indexOf(b.key) < 0 ? 100 : order.indexOf(b.key)))
 }

@@ -4,9 +4,11 @@ The initial Step 4 preview is on **`feature/step-4-station-details`**. Reviewed 
 
 ## Station display
 
-The callsign, photo, operator name, location/license and selecting rig remain at the top. **Worked before / Not worked**, current-band status and available worked-band/mode/QSL summaries precede Station details. These assessments still require complete Wavelog history within the saved scope; missing confirmation access remains unavailable.
+On wide screens, the focused-station area follows the operator's supplied arrangement. The left column holds a large uncropped photo beside callsign, name, populated address/email and radio provenance. Below it, **Lookup status** holds the worked-before summary, band assessment and callsign assessment. **Key information** cards show available distance, azimuth, operating/home/estimated grid, LoTW and eQSL values. Distances retain the dashboard's existing kilometre units.
 
-Station details keeps country/DXCC, the applicable grid, distance/bearing and available zones visible. Below that, a keyboard-focusable scroll region groups contact/QSL information, license/identity, operating location and address/coordinates. Empty rows and empty groups disappear. Explicit negative values (such as eQSL: No), zero coordinates and a zero UTC offset remain visible. Unknown returned fields remain available under **All returned fields**. Selecting another callsign resets its detail region instead of inheriting the prior station's scroll position.
+A parallel right column contains a compact **Field / Value** details table with a sticky header and independent vertical scrolling. Biography and license/identity fields come first, followed by DXCC, operating versus callbook grids, distance/bearing, QSL and populated location/contact fields. Source attribution is available on rows and provider freshness/failures remain below the table. Empty fields are hidden; explicit No/false and zero values remain visible. Raw nonempty provider fields remain expandable at the end. Selecting another callsign resets that station's detail scroll position.
+
+Focus History remains a separate right-hand panel. Previous contacts span the focused-station area beneath the profile/details grid. At narrower desktop/tablet widths the two main columns stack, and mobile also stacks the photo and identity. Lookup status then appears before the Details panel. Only complete Wavelog history in the saved scope can establish a new callsign/band; unavailable, disabled and incomplete states stay explicit.
 
 Reported operating grids and callbook home grids stay separate. Coordinates are labeled as provider data, and entity estimates remain subject to the existing opt-in setting. Distances/bearings are calculations, not measured signal paths. The current record's provider source and retrieval time remain visible, along with cached/stale and partial-failure states.
 
@@ -36,7 +38,7 @@ For a frontend-only refresh of an existing server using the same backend, check 
 
 - Select a station with detailed QRZ information and another with sparse details. Only populated fields should appear; an explicit No must remain distinct from missing data.
 - Check the priority summary, then scroll through contact/QSL and license details without moving the entire page. Keyboard focus and arrow/Page Down scrolling should work.
-- Verify worked-before and current-band status stay above Station details while QRZ and Wavelog finish independently.
+- Verify Lookup status stays below identity in the left column on wide screens and before Details when stacked; QRZ and Wavelog still finish independently.
 - Browse an older station and switch rigs. Focus and history provenance must retain their existing behavior.
 - Open an actual QSO. Compare its UTC time, reports, station location, recorded operating grid and confirmations against Wavelog.
 - Inspect dark/light appearance and a narrow browser window. The map remains deferred; no external map service is loaded.
