@@ -31,6 +31,20 @@ test('complete and partial QSO history, scope settings and two-browser navigatio
  await first.locator('.qso-link').first().click()
  await expect(first.getByRole('dialog')).toContainText('WAVELOG CONTACT DETAILS')
  await expect(first.getByRole('dialog')).toContainText('Offline fixture K1MNY')
+
+ const beforeDialogDecodes = (await (await request.get('/api/snapshot')).json()).counters.decodes
+ execFileSync('.venv/bin/python', ['-c', "import socket\nfrom backend.tests.fixtures import decode\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\nfor _ in range(12): s.sendto(decode(),('127.0.0.1',18240))\ns.close()"])
+ await expect.poll(async () => (await (await request.get('/api/snapshot')).json()).counters.decodes).toBeGreaterThan(beforeDialogDecodes)
+ await expect(first.getByRole('dialog')).toContainText('Offline fixture K1MNY')
+ await expect(first.locator('.qso-table tbody tr')).toHaveCount(213)
+
+
+ await first.getByRole('button', { name: 'Close', exact: true }).focus()
+ await first.keyboard.press('Tab')
+ await expect(first.getByRole('region', { name: 'Scrollable contact details', exact: true })).toBeFocused()
+ await first.keyboard.press('Tab')
+ await expect(first.getByRole('button', { name: 'Close', exact: true })).toBeFocused()
+
  await first.getByRole('button', { name: 'Close', exact: true }).click()
  packet('K3ERR')
  await expect(first.locator('.qso-load-more')).toContainText('Incomplete history')

@@ -33,7 +33,7 @@ test('actual local UDP drives two browsers and bounded interactive diagnostics',
  await expect(first.getByTestId('focused-call')).toHaveText('K3ACT')
  await b.setOffline(false); await second.evaluate(() => window.dispatchEvent(new Event('online')))
  await expect(second.getByTestId('focused-call')).toHaveText('K3ACT')
- await expect(second.getByText('Available operator and license details appear in Station enrichment below.', { exact: false })).toBeVisible()
+ await expect(second.getByText('Available operator and license details appear in Station details below.', { exact: false })).toBeVisible()
  await expect(second.getByText('Wavelog history is disabled · worked-before status unknown')).toBeVisible()
  await first.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await expect(first.locator('.instance-table tbody tr')).toHaveCount(2)
