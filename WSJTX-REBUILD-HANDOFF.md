@@ -1,4 +1,4 @@
-> Repository note, October 23, 2026: Steps 0 and 1 are reviewed. Superseded project notes referenced below now live in Git history; read [the current checkpoint](docs/current-checkpoint.md) and [installation guide](docs/install-macos.md) for present status. The approved requirements below are retained in full.
+> Repository note, October 23, 2026: Steps 0 and 1 are reviewed; Step 2 has completed code review and publication checks. Superseded project notes referenced below now live in Git history; read [the current checkpoint](docs/current-checkpoint.md) and [installation guide](docs/install-macos.md) for present status. The approved requirements below are retained in full.
 
 # WSJT-X Dashboard: complete rebuild handoff
 

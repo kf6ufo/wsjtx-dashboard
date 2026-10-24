@@ -28,13 +28,12 @@ Run each command and stop if it fails. If the destination exists, choose a diffe
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard
 cd ~/wsjtx-dashboard
-git switch feature/step-3-wavelog
 git rev-parse HEAD
 ./install.sh
 .venv/bin/python -m backend.server
 ```
 
-Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
+Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams, plus any in-flight provider network timeout); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
 
 `./install.sh` creates `config.toml` exclusively only if missing. Existing files are validated and preserved byte-for-byte. The installer never opens a receiver socket. On startup, an enabled receiver in config is honored; review preserved settings before starting. For a new installation alongside an older station installation, use the new checkout's default config; leave the old checkout/config untouched.
 
@@ -54,7 +53,7 @@ listen = "0.0.0.0"
 retention = 200
 ```
 
-Edit the ignored `config.toml`, then restart the server to change the HTTP address/port. A specific private LAN IPv4 is allowed for trusted LAN clients; loopback is the default. No wildcard/public address, public hosting or router changes. The dashboard is unauthenticated, so anyone with access to the bound interface can select samples and edit workspace preferences. Browser writes reject cross-origin requests; this is not a substitute for LAN access control. Keep loopback unless you deliberately want trusted LAN access.
+Edit the ignored `config.toml`, then restart the server to change the HTTP address/port. A specific private LAN IPv4 is allowed for trusted LAN clients; loopback is the default. No wildcard/public address, public hosting or router changes. The dashboard is unauthenticated, so anyone with access to the bound interface can change receiver/provider settings and use saved provider credentials through lookups, as well as browse history and edit workspace preferences. Browser writes reject cross-origin requests; this is not a substitute for LAN access control. Keep loopback unless you deliberately want trusted LAN access.
 
 The `[wsjtx]` section is the actual receiver configuration. Step 0 files remain valid; new `listen` and `retention` keys default to `"0.0.0.0"` and `200`. Settings saves these fields into this same TOML and applies changes immediately. Choose the receiving host interface before enabling multicast. See the [Step 1 guide](step-1.md) for restart/baseline, coexistence, retention and troubleshooting behavior. Installed operation reads TOML, not old receiver environment variables.
 
@@ -95,7 +94,7 @@ git switch main
 git pull --ff-only
 ```
 
-If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences are retained and live history starts empty. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
+If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences and existing radio history are retained. A Step 0 workspace starts with empty radio history. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
 
 ## Moving to Ubuntu
 
@@ -117,10 +116,10 @@ Review with two windows using the [Step 1 acceptance procedure](step-1.md#operat
 
 Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2 guide](step-2.md) for provider options, QRZ XML credentials and cache policy. Existing Step 0/1 configurations remain valid, with enrichment disabled until configured. To roll back to Step 1, restore its pre-upgrade config/data backup because that revision rejects the enrichment section. Protect QRZ/Club Log credentials in config and backups.
 
-## Step 3 preview and configuration
+## Step 3 configuration
 
-The current preview branch is **`feature/step-3-wavelog`**, including Step 2 enrichment/photos. Choose it after cloning and before installation. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin` and `git switch feature/step-3-wavelog`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
 
 Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
 
-The installation commands select the preview branch. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
+The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.

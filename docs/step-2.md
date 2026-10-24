@@ -54,6 +54,6 @@ Reported grids are captured with new radio selection history entries. Browsing a
 5. Browse an earlier dashboard history entry; confirm its radio selection order/time stays fixed. Continue receiving Decodes and confirm they do not change focus.
 6. Disable enrichment and confirm the receiver continues listening. Re-enable and use Refresh; no radio restart or history reset should occur.
 
-Actual QRZ subscription/image access, Club Log live account access and Ubuntu operation remain unverified until tested on those services/hosts. See the [checkpoint](current-checkpoint.md) for recorded evidence.
+Actual QRZ lookup and photo access were verified in the earlier Work Session. Club Log live account access and Ubuntu operation remain unverified. See the [checkpoint](current-checkpoint.md) for the distinction between prior live evidence and publication checks.
 
 Implementation references: [pyhamtools API](https://pyhamtools.readthedocs.io/en/latest/reference.html), [QRZ XML specification](https://www.qrz.com/page/current_spec.html), [Country Files](https://www.country-files.com/).

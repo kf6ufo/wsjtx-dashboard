@@ -1,6 +1,14 @@
-# Current checkpoint — Step 3 preview
+# Current checkpoint — Step 3
 
-**October 23, 2026.** Steps 0/1 are reviewed on `main`. Step 2 enrichment and the profile-photo follow-up are on `feature/step-2-enrichment`; the operator tested QRZ and requested Step 3. The new **`feature/step-3-wavelog`** branch includes those changes and adds read-only Wavelog configuration/history. Its [draft PR #2](https://github.com/kf6ufo/wsjtx-dashboard/pull/2) is stacked against the Step 2 branch until that branch merges. Do not proceed to QSO submission or forwarding. [Prior Step 2 evidence](step-2-checkpoint.md).
+**October 23, 2026.** The operator approved publication of Step 3 and requested the worked-before-first layout. `main` includes configurable enrichment, QRZ photos and read-only Wavelog history. No QSO submissions or forwarding are enabled. [Prior Step 2 evidence and publication review](step-2-checkpoint.md).
+
+Prior Work Session live evidence is retained below and is distinct from publication checks. Temporary review-server paths and running-process observations are historical; this publication does not restart production station services.
+
+## Publication checks
+
+The operator approved Step 3 and the worked-before-first layout for `main`. The publication branch combines Step 3 `ae7c619`, layout commit `4e33010`, and the existing Step 2 main publication. Documentation now uses the standard `main` installation path and retains prior Step 2 publication evidence separately.
+
+Current macOS checks: **77 backend tests**, **17 frontend tests**, production build and **all eight offline browser workflows** passed. The Station screenshot was visually inspected with worked-before and current-band status above enrichment. The receiver browser assertion was updated to expect the explicit disabled-history state introduced by Step 3; its previous unavailable-state assertion was obsolete. One existing Starlette/httpx test-adapter warning remains. No new live provider, production radio or Ubuntu tests were performed for publication, and existing station services were not restarted.
 
 ## Implementation
 
@@ -28,9 +36,9 @@ Ubuntu execution remains untested, including dependencies/build, upgrades, multi
 
 ## Review installation
 
-The **Step 3 review server** is running at **http://127.0.0.1:8787/** in a temporary native checkout, with preserved QRZ and receiver settings. Step 2 is stopped; its original files and cold backup remain available. Temporary review copies are not durable service directories. The in-app browser has the new Settings page open for local token entry.
+The earlier **Step 3 review server** was running at **http://127.0.0.1:8787/** in a temporary native checkout, with preserved QRZ and receiver settings. At that time Step 2 was stopped, with its original files and cold backup retained. Temporary review copies are not durable service directories.
 
-The implementation branch is `feature/step-3-wavelog`. The operator’s existing VS Code checkout was left intact. For a clean checkout, fetch and switch to that branch, then follow the native installer. Stop the existing dashboard before starting another on port 8787; cold-copy config/data as documented when moving the workspace. Exact local paths and upgrade fingerprints are retained only in the ignored backup’s private upgrade record.
+The installation branch is `main`. For a clean checkout, follow the native installer. Stop the existing dashboard before starting another on port 8787; cold-copy config/data as documented when moving the workspace. Exact local paths and upgrade fingerprints are retained only in the ignored backup’s private upgrade record.
 
 Do not send tokens in chat. Use **Settings → Wavelog QSO history**, retain **All authorized station locations**, save the API v2 token with `qso:read` and `station:read` (optional `confirmation:read`/`logbook:read`), and test. Then enable history and select/browse a station. Review complete history against Wavelog before treating the integration as live-verified.
 
