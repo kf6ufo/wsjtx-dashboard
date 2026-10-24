@@ -20,12 +20,12 @@ export function sortQsos(qsos: Qso[], column: SortColumn, direction: SortDirecti
   return comparison * (direction === 'ascending' ? 1 : -1)
  })
 }
-export function currentBandStatus(history: Lookup<Qso[]>, band: string | null | undefined) {
+export function currentBandStatus(history: Lookup<Qso[]>, band: string | null | undefined, source = 'sample') {
  if (!band?.trim()) return { kind: 'unknown', title: 'Current band unknown', detail: 'Latest selection has no known band.' }
  const label = bandLabel(band)
- if (history.status === 'pending') return { kind: 'checking', title: `Checking ${label}…`, detail: 'Waiting for complete sample history.' }
+ if (history.status === 'pending') return { kind: 'checking', title: `Checking ${label}…`, detail: `Waiting for complete ${source} history.` }
  if (history.status === 'error' || (history.status === 'loaded' && history.complete !== true)) return { kind: 'unavailable', title: `Status unavailable on ${label}`, detail: 'History failed or is incomplete · worked status unknown.' }
  const records = history.status === 'loaded' ? history.data : []
  const count = records.filter(q => normalizeBand(q.band) === normalizeBand(band)).length
- return count ? { kind: 'worked', title: `Worked on ${label}`, detail: `${count} matching ${count === 1 ? 'QSO' : 'QSOs'} · all modes` } : { kind: 'new', title: `New on ${label}`, detail: records.length ? 'Complete sample history · no QSOs on this band' : 'New callsign · complete sample history · 0 QSOs' }
+ return count ? { kind: 'worked', title: `Worked on ${label}`, detail: `${count} matching ${count === 1 ? 'QSO' : 'QSOs'} · all modes` } : { kind: 'new', title: `New on ${label}`, detail: records.length ? `Complete ${source} history · no QSOs on this band` : `New callsign · complete ${source} history · 0 QSOs` }
 }

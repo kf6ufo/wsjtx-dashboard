@@ -11,7 +11,9 @@ from .state import FocusState
 from .foundation import FoundationState
 from .workspace import WorkspaceState
 from .runtime import ReceiverRuntime
-from .config import save_receiver_config, save_enrichment_config, load_config
+from .config import save_receiver_config, save_enrichment_config, save_wavelog_config, load_config
+from .wavelog import WavelogService, WavelogError
+from .wavelog_config import update_wavelog_settings
 from .enrichment import EnrichmentService, EnrichmentSettings, update_settings
 from .state import normalize_call
 from dataclasses import asdict
@@ -26,11 +28,14 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
 
     runtime = ReceiverRuntime(state) if isinstance(state, WorkspaceState) else None
     enrich = None
+    wavelog = None
     config_lock = asyncio.Lock()
     if runtime and config_path:
         enrichment_settings = enrichment_settings or load_config(config_path).enrichment
         enrich = EnrichmentService(state, enrichment_settings, config_path.parent / 'data' / 'enrichment')
         state.enrichment_service = enrich
+        wavelog = WavelogService(state, load_config(config_path).wavelog)
+        state.wavelog_service = wavelog
 
     @asynccontextmanager
     async def lifespan(_app):
@@ -40,6 +45,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
             await runtime.apply(settings)
             if enrich:
                 await enrich.start()
+            if wavelog:
+                await wavelog.start()
         elif settings.enabled:
             try:
                 sock = create_socket(settings)
@@ -51,6 +58,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         try:
             yield
         finally:
+            if wavelog:
+                await wavelog.stop()
             if enrich:
                 await enrich.stop()
             if runtime:
@@ -106,6 +115,38 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
             if getattr(state, 'storage_error', None):
                 raise HTTPException(503, state.storage_error)
             return state.snapshot()
+
+    if wavelog:
+        @app.put('/api/wavelog')
+        async def wavelog_config(request: Request):
+            try:
+                payload = await request.json()
+                async with config_lock:
+                    new = update_wavelog_settings(wavelog.settings, payload)
+                    save_wavelog_config(config_path, new)
+                    wavelog.configure(new)
+            except (ValueError, TypeError, OSError):
+                raise HTTPException(422, 'Wavelog settings could not be saved. Check the URL, API v2 token, scope, limits and file permissions.')
+            return state.snapshot()
+
+        @app.post('/api/wavelog/test')
+        async def wavelog_test():
+            try:
+                return await wavelog.test()
+            except WavelogError as error:
+                raise HTTPException(409, str(error))
+
+        @app.post('/api/wavelog/refresh')
+        async def wavelog_refresh():
+            wavelog.refresh()
+            return state.snapshot()
+
+        @app.get('/api/wavelog/history/{lookup_id}')
+        async def wavelog_history(lookup_id: str):
+            try:
+                return wavelog.history(lookup_id)
+            except WavelogError as error:
+                raise HTTPException(409, str(error))
 
     if runtime:
         class ReceiverRequest(BaseModel):

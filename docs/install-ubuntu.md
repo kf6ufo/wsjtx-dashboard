@@ -1,4 +1,4 @@
-# Native Ubuntu installation — Steps 0–2
+# Native Ubuntu installation — Steps 0–3
 
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
@@ -33,6 +33,14 @@ Open **http://127.0.0.1:8788/** on the Mac. Replace host/user with authorized SS
 
 Pending actual Ubuntu validation: prerequisites, dependency installation, production build, foreground start/stop/restart, saved settings/history, update preservation, LAN/tunnel access, and two-browser SSE/reconnection. UDP/multicast must be validated on each actual OS/interface. Mac results do not establish Ubuntu reception or socket sharing.
 
-## Step 2 configuration
+## Enrichment configuration
 
-Step 2 is included on `main`; use the standard clone/update commands above. Existing Step 0/1 TOML and workspace data remain compatible; enrichment defaults disabled until configured. Follow the [Step 2 guide](step-2.md) for providers, QRZ XML credentials, cache policy and operator review. Back up config/data before upgrading; restoring a Step 1 revision also requires its pre-upgrade configuration backup because Step 1 does not accept the new enrichment section. QRZ and Club Log credentials in config/backups need the same care as other account passwords.
+Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2 guide](step-2.md) for provider options, QRZ XML credentials and cache policy. Existing Step 0/1 configurations remain valid, with enrichment disabled until configured. To roll back to Step 1, restore its pre-upgrade config/data backup because that revision rejects the enrichment section. Protect QRZ/Club Log credentials in config and backups.
+
+## Step 3 configuration
+
+Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+
+Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
+
+The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.

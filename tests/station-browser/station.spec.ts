@@ -24,8 +24,9 @@ test('running station receiver reports actual traffic in both browser windows', 
   await expect(page.locator('.packet-table')).toContainText('10.176.1.')
  }
  await first.screenshot({ path: 'test-results/step1-actual-station.png', fullPage: true })
- await first.getByRole('button', { name: 'Station', exact: true }).click()
-  await expect(first.getByRole('button', { name: 'Station', exact: true })).toHaveAttribute('aria-current', 'page')
+ const stationTab = first.getByRole('navigation', { name: 'Workspace views' }).getByRole('button', { name: 'Station', exact: true })
+ await stationTab.click()
+  await expect(stationTab).toHaveAttribute('aria-current', 'page')
   if (snapshot.call) await expect(first.getByRole('region', { name: 'Focused station', exact: true })).toBeVisible()
  if (!snapshot.call) await expect(first.getByRole('heading', { name: 'Waiting for a WSJT-X selection' })).toBeVisible()
   if (snapshot.call) await first.getByTestId(`history-${snapshot.call}`).scrollIntoViewIfNeeded()
@@ -33,7 +34,15 @@ test('running station receiver reports actual traffic in both browser windows', 
     const photos = first.getByRole('img', { name: `QRZ profile for ${snapshot.call}`, exact: true })
     await expect.poll(() => photos.evaluateAll(images => images.length >= 2 && images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 15000 }).toBe(true)
   }
+ if (snapshot.wavelog?.result.complete && snapshot.wavelog.result.recordCount > 0) {
+   await expect(first.locator('.qso-heading')).toContainText(String(snapshot.wavelog.result.recordCount))
+   await expect(first.locator('.qso-table tbody tr')).toHaveCount(Math.min(100, snapshot.wavelog.result.recordCount))
+ }
  if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
+ if (snapshot.step >= 3) {
+   await first.getByRole('button', { name: 'Settings', exact: true }).click()
+   await first.getByRole('region', { name: 'Wavelog QSO history', exact: true }).screenshot({ path: 'test-results/step3-actual-wavelog-settings.png' })
+ }
  // Read-only check: no settings, focus or radio commands are sent.
  await a.close(); await b.close()
 })

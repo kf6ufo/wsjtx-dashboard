@@ -6,7 +6,7 @@ Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, int
 ## Current authority and development order
 Read `WSJTX-REBUILD-HANDOFF.md`, `README.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work. `main` holds the reviewed implementation; use feature branches for future steps.
 
-Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Step 2 enrichment and QRZ photos have completed code review and publication checks and are the current `main` scope. Step 3 Wavelog work exists separately in PR #2; do not merge it or begin further milestone work without a request.
+Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Steps 2 and 3, including QRZ photos and read-only Wavelog history, are approved for publication on `main`. Worked-before and current-band status appear above Station enrichment. Do not begin later milestones, QSO submissions or forwarding without a request.
 
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.

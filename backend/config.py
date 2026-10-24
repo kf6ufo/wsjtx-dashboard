@@ -5,6 +5,7 @@ from pathlib import Path
 import tomllib
 from .receiver import Settings
 from .enrichment_config import EnrichmentSettings
+from .wavelog_config import WavelogSettings
 
 
 @dataclass(frozen=True)
@@ -13,14 +14,15 @@ class ServerConfig:
     port: int
     receiver: Settings
     enrichment: EnrichmentSettings = field(default_factory=EnrichmentSettings)
+    wavelog: WavelogSettings = field(default_factory=WavelogSettings)
 
 
 def load_config(path: Path) -> ServerConfig:
     try:
         with path.open('rb') as source:
             data = tomllib.load(source)
-        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment'}:
-            raise ValueError('Expected [http], [wsjtx] and optional [enrichment] sections')
+        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment', 'wavelog'}:
+            raise ValueError('Expected [http], [wsjtx], optional [enrichment] and [wavelog] sections')
         http, radio = data['http'], data['wsjtx']
         if set(http) != {'host', 'port'} or not {'enabled', 'group', 'port', 'interface'} <= set(radio) or set(radio) - {'enabled', 'group', 'port', 'interface', 'listen', 'retention'}:
             raise ValueError('Use the keys shown in config.example.toml')
@@ -38,7 +40,7 @@ def load_config(path: Path) -> ServerConfig:
         if not any(address in ipaddress.IPv4Network(network) for network in private_networks):
             raise ValueError('http.host must be a specific private LAN or loopback IPv4 address')
         receiver = Settings(**radio)
-        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})))
+        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})), WavelogSettings(**data.get('wavelog', {})))
     except (OSError, ValueError, TypeError, KeyError) as exc:
         raise ValueError(f'Configuration error in {path}: {exc}') from exc
 
@@ -54,6 +56,11 @@ def save_receiver_config(path: Path, settings: Settings):
 def save_enrichment_config(path: Path, settings: EnrichmentSettings):
     from dataclasses import asdict
     _save_section(path, 'enrichment', asdict(settings))
+
+
+def save_wavelog_config(path: Path, settings: WavelogSettings):
+    from dataclasses import asdict
+    _save_section(path, 'wavelog', asdict(settings))
 
 
 def _save_section(path: Path, section_name: str, values: dict):
@@ -117,7 +124,7 @@ def _save_section(path: Path, section_name: str, values: dict):
             os.fsync(target.fileno())
         parsed = load_config(pending)
         from dataclasses import asdict
-        actual = asdict(parsed.receiver if section_name == 'wsjtx' else parsed.enrichment)
+        actual = asdict(getattr(parsed, 'receiver' if section_name == 'wsjtx' else section_name))
         if actual != values:
             raise ValueError('Configuration could not be written consistently')
         if path.read_text() != original:

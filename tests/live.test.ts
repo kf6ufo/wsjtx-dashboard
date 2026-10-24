@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createDashboard } from '../src/focus'
 import { mockProviders } from '../src/providers'
 import { profiles, sampleQsos } from '../src/fixtures'
@@ -43,5 +43,34 @@ describe('centrally owned live snapshots', () => {
  })
  it('does not fabricate a sample logbook for a live callsign absent from the catalog', async () => {
   await expect(mockProviders.qsos('K1UNSEEN', 0)).rejects.toThrow('No sample QSO fixture')
+ })
+ it('fetches each Wavelog result once and discards late HTTP data even after returning to the same call', async () => {
+  const pending: ((response: Response) => void)[] = []
+  const fetcher = vi.fn(() => new Promise<Response>(resolve => pending.push(resolve)))
+  vi.stubGlobal('fetch', fetcher)
+  try {
+   const d = createDashboard(undefined, true)
+   const real = (revision: number, call: string, lookupId: string): Snapshot => ({ ...snapshot(revision, call), step: 3, sample: false,
+    wavelog: { config: { enabled: true, url: 'http://fixture.invalid', scope_mode: 'all', station_ids: [], logbook_id: 0, cache_minutes: 5, cache_limit: 20, page_size: 100, max_pages: 100, max_records: 10000, timeout_seconds: 8 },
+     connection: { status: 'ready', scopes: [], stations: [], logbooks: [] }, result: { call, lookupId, status: 'loaded', complete: true, recordCount: 1 } } })
+   d.applySnapshot(real(1, 'K1ABC', 'old'))
+   d.applySnapshot(real(2, 'K1ABC', 'old'))
+   expect(fetcher).toHaveBeenCalledTimes(1)
+   d.applySnapshot(real(3, 'K2XYZ', 'other'))
+   d.applySnapshot(real(4, 'K1ABC', 'new'))
+   const response = (lookupId: string) => new Response(JSON.stringify({ call: 'K1ABC', lookupId, complete: true, records: [{ ...sampleQsos('JA2HDE')[0], id: lookupId }] }))
+   pending[2]!(response('new'))
+   await vi.waitFor(() => expect(d.state.qsos).toMatchObject({ status: 'loaded', data: [{ id: 'new' }] }))
+   pending[0]!(response('old'))
+   pending[1]!(new Response('error', { status: 500 }))
+   await new Promise(resolve => setTimeout(resolve, 0))
+   expect(d.state.qsos).toMatchObject({ status: 'loaded', data: [{ id: 'new' }] })
+   const disabled = real(5, 'K1ABC', 'disabled')
+   disabled.wavelog!.config.enabled = false
+   disabled.wavelog!.result = { status: 'disabled', call: '', complete: false }
+   d.applySnapshot(disabled)
+   expect(d.state.qsos).toMatchObject({ status: 'error', message: expect.stringContaining('history is disabled') })
+   expect(fetcher).toHaveBeenCalledTimes(3)
+  } finally { vi.unstubAllGlobals() }
  })
 })

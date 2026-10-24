@@ -1,4 +1,4 @@
-# Native macOS installation — Steps 0–2
+# Native macOS installation — Steps 0–3
 
 This installs a built frontend served by the Python server, independent of VS Code/Codex. Keep any existing station installation running and use a separate directory and unused HTTP port. The default is loopback port 8787. No radio/network/service settings are changed by the installer.
 
@@ -94,11 +94,11 @@ git switch main
 git pull --ff-only
 ```
 
-If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences and existing Step 1 radio history are retained. A Step 0 workspace starts with empty radio history. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
+If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences and existing radio history are retained. A Step 0 workspace starts with empty radio history. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
 
 ## Moving to Ubuntu
 
-With the server stopped, copy only `config.toml` and `data/` to a clean checkout of the same revision on Ubuntu. Adjust HTTP binding for that host; keep reception disabled. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. No pending-QSO queue exists in Step 2; Step 6 must document queue migration before enabling it. The application never imports production QSO logs.
+With the server stopped, copy only `config.toml` and `data/` to a clean checkout of the same revision on Ubuntu. Adjust HTTP binding for that host; keep reception disabled. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. No pending-QSO queue exists in Step 3; Step 6 must document queue migration before enabling it. The application never imports production QSO logs.
 
 ## Troubleshooting and validation
 
@@ -112,6 +112,14 @@ With the server stopped, copy only `config.toml` and `data/` to a clean checkout
 
 Review with two windows using the [Step 1 acceptance procedure](step-1.md#operator-check). Save receiver settings, inspect actual packets in Diagnostics, then change a DX Call in each WSJT-X instance; browse older entries and verify reconnect recovery. [Current checkpoint](current-checkpoint.md) records automated and actual platform evidence.
 
-## Step 2 configuration
+## Enrichment configuration
 
-Step 2 is included on `main`; use the standard clone/update commands above. Existing Step 0/1 TOML and workspace data remain compatible; enrichment defaults disabled until configured. Follow the [Step 2 guide](step-2.md) for providers, QRZ XML credentials, cache policy and operator review. Back up config/data before upgrading; restoring a Step 1 revision also requires its pre-upgrade configuration backup because Step 1 does not accept the new enrichment section. QRZ and Club Log credentials in config/backups need the same care as other account passwords.
+Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2 guide](step-2.md) for provider options, QRZ XML credentials and cache policy. Existing Step 0/1 configurations remain valid, with enrichment disabled until configured. To roll back to Step 1, restore its pre-upgrade config/data backup because that revision rejects the enrichment section. Protect QRZ/Club Log credentials in config and backups.
+
+## Step 3 configuration
+
+Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+
+Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
+
+The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
