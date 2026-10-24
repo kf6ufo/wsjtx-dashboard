@@ -17,6 +17,8 @@ Wavelog’s station listing may show only locations in its active logbook. The d
 
 ## What the station view shows
 
+The worked-before summary and current-band status appear directly below the focused station details, ahead of Station enrichment, so prior-contact status is visible first during live operation.
+
 Previous contacts are sorted newest first and include UTC time, band, mode/submode, reports, station callsign and QSL state. Columns can be sorted; opening a contact shows read-only details returned by Wavelog. All API pages are fetched before declaring history complete. The browser initially renders 100 rows; **Show next 100 contacts** reveals more from the fully loaded result.
 
 **Pending**, **complete with no contacts**, **complete with contacts**, **incomplete** and **unavailable** are distinct. Only a complete result can establish worked-before/current-band status, within the selected scope. A failed later page retains available contacts with an incomplete warning; it never means a new callsign or band. Missing confirmation scope or a confirmation-read failure leaves QSL details **Unavailable**, while separately complete QSO history can still be used. No confirmation is inferred from missing fields.

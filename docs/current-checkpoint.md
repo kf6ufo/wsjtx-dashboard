@@ -41,3 +41,9 @@ The operator reported successful configuration tests but unavailable contact his
 Validation: 17 frontend tests, production build, and the Wavelog browser workflow, extended to test a successful connection while disabled followed by enabling history and loading contacts. Existing backend behavior is unchanged; the previously recorded backend checks apply. Live authenticated reads and browser rendering were verified without changing or submitting Wavelog contacts. Exact operator contact details and credentials remain outside Git.
 
 The enablement follow-up is installed at **`fa88a918723bce6e132c7033a81c3a43141a4e46`** through the documented native installer. Enabled Wavelog configuration, credentials and every saved data file were verified byte-for-byte unchanged through installation; the dashboard was then restarted. The two-window read-only actual-station browser check passed again with authenticated contact history visible. QRZ enrichment and UDP reception continue.
+
+## Worked-before layout follow-up
+
+At the operator’s request, the worked-before summary and current-band status now appear directly after the station identity/radio details, above Station enrichment. The same pending, empty, disabled, incomplete and loaded states remain in place. A small gap separates the band status from enrichment.
+
+Validation: all 17 frontend tests, the production build and the existing offline Wavelog browser workflow passed. Its desktop screenshot was visually inspected; worked-before and current-band status precede enrichment. The workflow also checks mobile width, two-browser history and partial/empty/disabled results. This layout follow-up changes no provider, receiver or persistence behavior.
