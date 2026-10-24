@@ -10,6 +10,8 @@ The operator approved Step 3 and the worked-before-first layout for `main`. The 
 
 Current macOS checks: **77 backend tests**, **17 frontend tests**, production build and **all eight offline browser workflows** passed. The Station screenshot was visually inspected with worked-before and current-band status above enrichment. The receiver browser assertion was updated to expect the explicit disabled-history state introduced by Step 3; its previous unavailable-state assertion was obsolete. One existing Starlette/httpx test-adapter warning remains. No new live provider, production radio or Ubuntu tests were performed for publication, and existing station services were not restarted.
 
+A fresh native install at `c3e85e5b9d662ccb2b82517742461d429f51dc10` in `/private/tmp/wsjtx-step3-publication-check` passed the documented installer and production build. On an isolated loopback port, Step 3 API defaults, disabled receiver/Wavelog, HTML, JS/CSS assets and completed application shutdown were verified. The temporary smoke harness initially required exit code zero; Uvicorn can preserve SIGTERM after completing shutdown, as the existing installed-server regression already permits. The shutdown log confirmed completion.
+
 ## Implementation
 
 Settings adds the Wavelog application URL, write-only API v2 token, station/logbook scope, connection testing and bounded cache/pagination controls. Old Step 0–2 configs load without migration; Wavelog defaults disabled. Saves preserve receiver and QRZ settings atomically. Server-side credentials never return in snapshots or contact results. [Setup and operator review](step-3.md).
