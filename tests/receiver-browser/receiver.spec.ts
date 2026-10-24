@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockMapTiles } from '../mapTiles'
 import { execFileSync } from 'node:child_process'
 
 // Sends only to the dedicated loopback test socket, never station multicast.
@@ -9,6 +10,7 @@ function packet(expression: string, count = 1) {
 test('actual local UDP drives two browsers and bounded interactive diagnostics', async ({ browser, request, baseURL }) => {
  const a = await browser.newContext(), b = await browser.newContext()
  const first = await a.newPage(), second = await b.newPage()
+ await mockMapTiles(first); await mockMapTiles(second)
  const errors: string[] = []
  first.on('pageerror', e => errors.push(e.message)); second.on('pageerror', e => errors.push(e.message))
  await first.goto(baseURL!); await second.goto(baseURL!)

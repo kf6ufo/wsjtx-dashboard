@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockMapTiles } from '../mapTiles'
 import { execFileSync } from 'node:child_process'
 function packet(call: string) {
  execFileSync('.venv/bin/python', ['-c', `import socket\nfrom backend.tests.fixtures import status\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\ns.sendto(status(call='${call}',rig='Wavelog fixture'),('127.0.0.1',18240))\ns.close()`])
@@ -6,6 +7,7 @@ function packet(call: string) {
 test('complete and partial QSO history, scope settings and two-browser navigation', async ({ browser, request, baseURL }) => {
  const a = await browser.newContext(), b = await browser.newContext()
  const first = await a.newPage(), second = await b.newPage()
+ await mockMapTiles(first); await mockMapTiles(second)
  const errors: string[] = [];first.on('pageerror', error => errors.push(error.message));second.on('pageerror', error => errors.push(error.message))
  let historyRequests = 0
  first.on('request', req => { if (req.url().includes('/api/wavelog/history/')) historyRequests++ })
