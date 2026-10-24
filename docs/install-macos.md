@@ -1,4 +1,4 @@
-# Native macOS installation — Step 1
+# Native macOS installation — Steps 0–2
 
 This installs a built frontend served by the Python server, independent of VS Code/Codex. Keep any existing station installation running and use a separate directory and unused HTTP port. The default is loopback port 8787. No radio/network/service settings are changed by the installer.
 
@@ -33,7 +33,7 @@ git rev-parse HEAD
 .venv/bin/python -m backend.server
 ```
 
-Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
+Compare the commit to the current checkpoint. For an exact reviewed commit, run `git checkout --detach COMMIT` before installation, substituting its full hash. Success prints `Installation complete`, the start command and URL. Open **http://127.0.0.1:8787/**. This is the server serving the production build, not Vite. Keep the terminal open. Ctrl+C stops (allow up to five seconds for open browser streams, plus any in-flight provider network timeout); the application does not depend on an editor. A foreground command is the supported initial macOS installation, with no launchd/autostart changes.
 
 `./install.sh` creates `config.toml` exclusively only if missing. Existing files are validated and preserved byte-for-byte. The installer never opens a receiver socket. On startup, an enabled receiver in config is honored; review preserved settings before starting. For a new installation alongside an older station installation, use the new checkout's default config; leave the old checkout/config untouched.
 
@@ -53,11 +53,11 @@ listen = "0.0.0.0"
 retention = 200
 ```
 
-Edit the ignored `config.toml`, then restart the server to change the HTTP address/port. A specific private LAN IPv4 is allowed for trusted LAN clients; loopback is the default. No wildcard/public address, public hosting or router changes. The dashboard is unauthenticated, so anyone with access to the bound interface can select samples and edit workspace preferences. Browser writes reject cross-origin requests; this is not a substitute for LAN access control. Keep loopback unless you deliberately want trusted LAN access.
+Edit the ignored `config.toml`, then restart the server to change the HTTP address/port. A specific private LAN IPv4 is allowed for trusted LAN clients; loopback is the default. No wildcard/public address, public hosting or router changes. The dashboard is unauthenticated, so anyone with access to the bound interface can change receiver/provider settings and use saved provider credentials through lookups, as well as browse history and edit workspace preferences. Browser writes reject cross-origin requests; this is not a substitute for LAN access control. Keep loopback unless you deliberately want trusted LAN access.
 
 The `[wsjtx]` section is the actual receiver configuration. Step 0 files remain valid; new `listen` and `retention` keys default to `"0.0.0.0"` and `200`. Settings saves these fields into this same TOML and applies changes immediately. Choose the receiving host interface before enabling multicast. See the [Step 1 guide](step-1.md) for restart/baseline, coexistence, retention and troubleshooting behavior. Installed operation reads TOML, not old receiver environment variables.
 
-Settings saves station title, default appearance and compact strip visibility to `data/workspace.sqlite3` alongside the config. Shared sample history is retained separately from the new persistent radio history. Preferences and both histories survive restart; packet logs, telemetry and receiver baselines are memory-only. Installation configuration and browser preferences are separate scopes in one documented configuration system. No credentials are collected. Sample contacts are fixtures, not a second logbook. Each history is deduplicated and bounded (200 entries; six sample calls available). After the first receiver activation, the radio workspace remains active on disable/restart; it never seeds sample selections. Seed data is created only for a new workspace. Header Theme/Station Desk buttons preview locally; Save in Settings establishes shared defaults.
+Settings saves station title, default appearance and compact strip visibility to `data/workspace.sqlite3` alongside the config. Shared sample history is retained separately from the new persistent radio history. Preferences and both histories survive restart; packet logs, telemetry and receiver baselines are memory-only. Installation configuration and browser preferences are separate scopes in one documented configuration system. Optional callbook credentials are configured in Settings and saved only on the server; see [Step 2](step-2.md). Sample contacts are fixtures, not a second logbook. Each history is deduplicated and bounded (200 entries; six sample calls available). After the first receiver activation, the radio workspace remains active on disable/restart; it never seeds sample selections. Seed data is created only for a new workspace. Header Theme/Station Desk buttons preview locally; Save in Settings establishes shared defaults.
 
 ## Operation and updates
 
@@ -94,11 +94,11 @@ git switch main
 git pull --ff-only
 ```
 
-If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences are retained and live history starts empty. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
+If Git reports local changes or divergence, stop and inspect; do not reset or force it. Run the installer, then start. Old config keys require no manual migration; sample history/preferences and existing Step 1 radio history are retained. A Step 0 workspace starts with empty radio history. To roll back to Step 0, disable reception before stopping and restore its pre-upgrade config/data backup.
 
 ## Moving to Ubuntu
 
-With the server stopped, copy only `config.toml` and `data/` to a clean checkout of the same revision on Ubuntu. Adjust HTTP binding for that host; keep reception disabled. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. No pending-QSO queue exists in Step 1; Step 6 must document queue migration before enabling it. The application never imports production QSO logs.
+With the server stopped, copy only `config.toml` and `data/` to a clean checkout of the same revision on Ubuntu. Adjust HTTP binding for that host; keep reception disabled. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. No pending-QSO queue exists in Step 2; Step 6 must document queue migration before enabling it. The application never imports production QSO logs.
 
 ## Troubleshooting and validation
 
@@ -111,3 +111,7 @@ With the server stopped, copy only `config.toml` and `data/` to a clean checkout
 - Database error: stop, back up `data/`, check permissions/free disk. Unknown schema versions fail without replacing data. Do not delete a database as an automatic repair.
 
 Review with two windows using the [Step 1 acceptance procedure](step-1.md#operator-check). Save receiver settings, inspect actual packets in Diagnostics, then change a DX Call in each WSJT-X instance; browse older entries and verify reconnect recovery. [Current checkpoint](current-checkpoint.md) records automated and actual platform evidence.
+
+## Step 2 configuration
+
+Step 2 is included on `main`; use the standard clone/update commands above. Existing Step 0/1 TOML and workspace data remain compatible; enrichment defaults disabled until configured. Follow the [Step 2 guide](step-2.md) for providers, QRZ XML credentials, cache policy and operator review. Back up config/data before upgrading; restoring a Step 1 revision also requires its pre-upgrade configuration backup because Step 1 does not accept the new enrichment section. QRZ and Club Log credentials in config/backups need the same care as other account passwords.

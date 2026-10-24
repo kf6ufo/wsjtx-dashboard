@@ -11,7 +11,9 @@ from .state import FocusState
 from .foundation import FoundationState
 from .workspace import WorkspaceState
 from .runtime import ReceiverRuntime
-from .config import save_receiver_config
+from .config import save_receiver_config, save_enrichment_config, load_config
+from .enrichment import EnrichmentService, EnrichmentSettings, update_settings
+from .state import normalize_call
 from dataclasses import asdict
 
 
@@ -19,10 +21,16 @@ class BrowseRequest(BaseModel):
     call: str = Field(min_length=3, max_length=15)
 
 
-def create_app(settings: Settings | None = None, state: FocusState | None = None, *, serve_frontend=True, config_path: Path | None = None):
+def create_app(settings: Settings | None = None, state: FocusState | None = None, *, serve_frontend=True, config_path: Path | None = None, enrichment_settings: EnrichmentSettings | None = None):
     settings, state = settings or Settings(), state or FocusState()
 
     runtime = ReceiverRuntime(state) if isinstance(state, WorkspaceState) else None
+    enrich = None
+    config_lock = asyncio.Lock()
+    if runtime and config_path:
+        enrichment_settings = enrichment_settings or load_config(config_path).enrichment
+        enrich = EnrichmentService(state, enrichment_settings, config_path.parent / 'data' / 'enrichment')
+        state.enrichment_service = enrich
 
     @asynccontextmanager
     async def lifespan(_app):
@@ -30,6 +38,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         state.receiver.update(group=settings.group, port=settings.port, interface=settings.interface)
         if runtime:
             await runtime.apply(settings)
+            if enrich:
+                await enrich.start()
         elif settings.enabled:
             try:
                 sock = create_socket(settings)
@@ -41,6 +51,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         try:
             yield
         finally:
+            if enrich:
+                await enrich.stop()
             if runtime:
                 await runtime.stop()
             if task:
@@ -113,7 +125,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 new = Settings(**body.model_dump())
             except ValueError as exc:
                 raise HTTPException(422, str(exc))
-            async with runtime.lock:
+            async with config_lock, runtime.lock:
                 try:
                     save_receiver_config(config_path, new)
                 except (ValueError, OSError) as exc:
@@ -134,6 +146,36 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 await runtime.apply(runtime.settings)
             return state.snapshot()
 
+    if enrich:
+        @app.put('/api/enrichment')
+        async def enrichment_config(request: Request):
+            try:
+                body = await request.json()
+                async with config_lock:
+                    new = update_settings(enrich.settings, body)
+                    save_enrichment_config(config_path, new)
+                    enrich.configure(new)
+            except (ValueError, TypeError, OSError):
+                raise HTTPException(422, 'Enrichment settings could not be saved. Check values, ranges and file permissions.')
+            return state.snapshot()
+
+        @app.post('/api/enrichment/refresh')
+        async def enrichment_refresh():
+            enrich.configure(enrich.settings, refresh=True)
+            return state.snapshot()
+
+        @app.post('/api/enrichment/test')
+        async def enrichment_test(request: Request):
+            try:
+                body = await request.json()
+                call = normalize_call(body.get('call', ''))
+                if not call:
+                    raise ValueError('Enter a valid test callsign')
+                return await enrich.test(call)
+            except (ValueError, TypeError, AttributeError):
+                raise HTTPException(422, 'Enter a valid test callsign, and wait for any running provider lookup.')
+
+    if runtime:
         @app.get('/api/diagnostics')
         async def diagnostics():
             return state.diagnostic_rows()

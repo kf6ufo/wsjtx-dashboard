@@ -1,6 +1,6 @@
-# Native Ubuntu installation — Step 1
+# Native Ubuntu installation — Steps 0–2
 
-**Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this Step 1 installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
+**Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
 Target Ubuntu 24.04+ with Python 3.12–3.14, Git, Node 24 LTS (24.15+) and npm. Install prerequisites as needed:
 
@@ -32,3 +32,7 @@ Open **http://127.0.0.1:8788/** on the Mac. Replace host/user with authorized SS
 [Configuration, operations, updates, backup, migration, rollback and troubleshooting](install-macos.md#configuration-and-saved-settings) apply identically. For an occupied port use `ss -ltnp '( sport = :8787 )'` to identify it and select another port. Leave the old dashboard/WaveLogGate service untouched. A future optional systemd service needs its own validation, especially write access for persistent data; service management is outside this validated release.
 
 Pending actual Ubuntu validation: prerequisites, dependency installation, production build, foreground start/stop/restart, saved settings/history, update preservation, LAN/tunnel access, and two-browser SSE/reconnection. UDP/multicast must be validated on each actual OS/interface. Mac results do not establish Ubuntu reception or socket sharing.
+
+## Step 2 configuration
+
+Step 2 is included on `main`; use the standard clone/update commands above. Existing Step 0/1 TOML and workspace data remain compatible; enrichment defaults disabled until configured. Follow the [Step 2 guide](step-2.md) for providers, QRZ XML credentials, cache policy and operator review. Back up config/data before upgrading; restoring a Step 1 revision also requires its pre-upgrade configuration backup because Step 1 does not accept the new enrichment section. QRZ and Club Log credentials in config/backups need the same care as other account passwords.

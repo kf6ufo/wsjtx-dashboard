@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test('running station receiver reports actual traffic in both browser windows', async ({ browser, request, baseURL }) => {
  const response = await request.get('/api/snapshot')
  const snapshot = await response.json()
- expect(snapshot.step).toBe(1)
+ expect(snapshot.step).toBeGreaterThanOrEqual(1)
  expect(snapshot.sample).toBe(false)
  expect(snapshot.receiver.status).toBe('listening')
  expect(snapshot.counters.packets).toBeGreaterThan(0)
@@ -25,7 +25,14 @@ test('running station receiver reports actual traffic in both browser windows', 
  }
  await first.screenshot({ path: 'test-results/step1-actual-station.png', fullPage: true })
  await first.getByRole('button', { name: 'Station', exact: true }).click()
+  await expect(first.getByRole('button', { name: 'Station', exact: true })).toHaveAttribute('aria-current', 'page')
+  if (snapshot.call) await expect(first.getByRole('region', { name: 'Focused station', exact: true })).toBeVisible()
  if (!snapshot.call) await expect(first.getByRole('heading', { name: 'Waiting for a WSJT-X selection' })).toBeVisible()
+  if (snapshot.call) await first.getByTestId(`history-${snapshot.call}`).scrollIntoViewIfNeeded()
+  if (snapshot.photoUrls?.[snapshot.call]) {
+    const photos = first.getByRole('img', { name: `QRZ profile for ${snapshot.call}`, exact: true })
+    await expect.poll(() => photos.evaluateAll(images => images.length >= 2 && images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 15000 }).toBe(true)
+  }
  if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
  // Read-only check: no settings, focus or radio commands are sent.
  await a.close(); await b.close()

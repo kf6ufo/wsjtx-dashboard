@@ -22,7 +22,7 @@ def main():
     from .app import create_app
     from .workspace import WorkspaceState
     state = WorkspaceState(args.config.resolve().parent / 'data' / 'workspace.sqlite3')
-    uvicorn.run(create_app(config.receiver, state, config_path=args.config.resolve()), host=config.host, port=config.port, workers=1, timeout_graceful_shutdown=5)
+    uvicorn.run(create_app(config.receiver, state, config_path=args.config.resolve(), enrichment_settings=config.enrichment), host=config.host, port=config.port, workers=1, timeout_graceful_shutdown=5)
     return 0
 
 
