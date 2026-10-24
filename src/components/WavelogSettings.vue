@@ -17,8 +17,10 @@ async function action(path: string, method: string, payload?: unknown) {
   const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, ...(payload === undefined ? {} : { body: JSON.stringify(payload) }) })
   const body = await response.json()
   if (!response.ok) throw new Error(typeof body.detail === 'string' ? body.detail : 'Wavelog operation failed')
-  if (path.endsWith('/test')) message.value = body.message || 'Connection test finished.'
-  else { props.dashboard.applySnapshot(body as Snapshot, false); message.value = 'Wavelog settings saved. Radio reception and selection history are unchanged.' }
+  if (path.endsWith('/test')) message.value = body.status === 'ready' && !configuration.value.enabled
+   ? 'Connection test passed. History is still disabled; turn on Enable Wavelog history and save to load contacts.'
+   : body.message || 'Connection test finished.'
+  else { props.dashboard.applySnapshot(body as Snapshot, false); message.value = `Wavelog settings saved. History lookups are ${configuration.value.enabled ? 'enabled' : 'disabled'}. Radio reception and selection history are unchanged.` }
   return true
  } catch (error) { message.value = error instanceof Error ? error.message : 'Dashboard connection failed'; return false }
  finally { busy.value = false }
@@ -40,6 +42,7 @@ async function save() {
  <section class="receiver-settings" aria-labelledby="wavelog-settings-title">
   <span class="section-eyebrow">YOUR SOURCE OF RECORD</span><h3 id="wavelog-settings-title">Wavelog QSO history</h3>
   <p>Read previous contacts for the focused station. Wavelog owns the logbook; this dashboard does not submit, change or delete contacts.</p>
+  <p role="status" data-testid="wavelog-history-enablement"><strong>History lookups are {{ configuration.enabled ? 'enabled' : 'disabled' }}.</strong><template v-if="!configuration.enabled"> A connection test only verifies access. Turn on Enable Wavelog history and save to load contacts.</template></p>
   <form class="settings-form receiver-form" aria-label="Wavelog settings" @submit.prevent="save" @input="dirty = true" @change="dirty = true">
    <label class="check-setting"><input type="checkbox" v-model="draft.enabled"> Enable Wavelog history</label>
    <label>Wavelog application URL<input class="form-control" type="url" v-model.trim="draft.url" placeholder="https://log.example.com/index.php"><small>The application address; an ending /api or /api/v2 is removed automatically. Keep /index.php if your installation needs it.</small></label>

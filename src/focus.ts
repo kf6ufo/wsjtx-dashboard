@@ -59,7 +59,10 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   historyKey = key
   const request = ++historyRequest, call = state.call
   historyAbort?.abort()
-  if (!result || result.status === 'disabled' || result.status === 'idle') {
+  if (snapshot.wavelog?.config.enabled === false || result?.status === 'disabled') {
+   state.qsos = { status: 'error', message: 'Wavelog history is disabled. Turn on Enable Wavelog history in Settings and save. A successful connection test does not enable history.' }; return
+  }
+  if (!result || result.status === 'idle') {
    state.qsos = { status: 'error', message: 'Wavelog is not connected. Configure read-only history in Settings.' }; return
   }
   if (result.call !== call || result.status === 'pending') { state.qsos = { status: 'pending' }; return }

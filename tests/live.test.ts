@@ -65,6 +65,12 @@ describe('centrally owned live snapshots', () => {
    pending[1]!(new Response('error', { status: 500 }))
    await new Promise(resolve => setTimeout(resolve, 0))
    expect(d.state.qsos).toMatchObject({ status: 'loaded', data: [{ id: 'new' }] })
+   const disabled = real(5, 'K1ABC', 'disabled')
+   disabled.wavelog!.config.enabled = false
+   disabled.wavelog!.result = { status: 'disabled', call: '', complete: false }
+   d.applySnapshot(disabled)
+   expect(d.state.qsos).toMatchObject({ status: 'error', message: expect.stringContaining('history is disabled') })
+   expect(fetcher).toHaveBeenCalledTimes(3)
   } finally { vi.unstubAllGlobals() }
  })
 })
