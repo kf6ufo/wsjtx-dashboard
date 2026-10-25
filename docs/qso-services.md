@@ -1,10 +1,10 @@
 # Optional QSO history, enrichment and delivery preview
 
-This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`feature/qso-history-and-delivery`**, based on the preserved Step 4 branch. Main and the operating preview on port 8787 remain unchanged. Use an isolated checkout/configuration for review; production WaveLogGate is still the uploader.
+This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`feature/qso-history-and-delivery`**, based on the preserved Step 4 branch. Main remains unchanged. At the operator’s request, the extension now runs as the single dashboard on port 8787, preserving the existing station configuration/history with Dashboard submissions disabled. Production WaveLogGate is still the uploader.
 
 ## Install and review
 
-The separate local review is **http://127.0.0.1:8798/**, with synthetic history, loopback UDP 18242 and logging off. It can be stopped/restarted independently of the operating 8787 preview. Its source checkout is `/private/tmp/wsjtx-qso-review`; start with `.venv/bin/python -m backend.server` from that directory.
+The single local dashboard is **http://127.0.0.1:8787/**. Its serving checkout is `/private/tmp/wsjtx-step3-native` on `feature/qso-history-and-delivery`. Stop only this dashboard’s foreground process with Ctrl+C (or SIGTERM when detached); restart with `.venv/bin/python -m backend.server` from that directory. The former 8798 synthetic preview is stopped/retired; its files are retained for reference and must not be started as a second instance. The active instance uses the original station settings/history, no synthetic ADIF path, and logging off.
 
 Use the normal [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) prerequisites, then:
 
