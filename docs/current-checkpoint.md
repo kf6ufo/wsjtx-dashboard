@@ -1,6 +1,14 @@
-# Current checkpoint — reviewed main baseline
+# Current checkpoint — confirmation-method display preview
 
-**October 25, 2026.** The operator approved [merging the reviewed features](main-baseline-merge-request.md) while preserving the single operating Dashboard and keeping all Dashboard submissions disabled. Both PRs are merged; the installed Dashboard is on `main`. The receiving-interface mismatch discovered after restart was resolved with the operator's approval; actual packets from both rigs now arrive.
+**October 25, 2026.** The operator approved [merging the reviewed features](main-baseline-merge-request.md) while preserving the single operating Dashboard and keeping all Dashboard submissions disabled. Both PRs are merged; the stable main baseline is `a25c484`. The current display refinement runs on `feature/station-confirmation-methods` for review. The receiving-interface mismatch discovered after restart was resolved with the operator's approval; actual packets from both rigs now arrive.
+
+## Current display refinement
+
+The operator requested confirmation methods rather than a QRZ profile link beside the LoTW indicator. Implementation **`dac9665`** replaces those two Key information entries with one compact **Confirm via** value, listing LoTW/QRZ first and eQSL/paper when supported. A QRZ profile/account alone never establishes QRZ confirmation capability. QRZ XML provides LoTW, eQSL and paper preferences; matching historical contact confirmations provide positive additional evidence, including QRZ. Explicit current No preferences override older evidence. Hover text distinguishes advertised preferences from historically observed methods, without claiming the current QSO is confirmed. Missing, pending, failed or unsupported evidence displays Unknown. The profile link remains with station basics. [Behavior and source limitations](step-4.md).
+
+**30 frontend tests, TypeScript checking/production build and five affected browser workflows passed** (three enrichment/photo/map workflows, Wavelog, ADIF). Coverage includes QRZ history evidence shared between browsers, no QRZ inference from profiles, stale/different calls, incomplete positive history, current negatives, unknown/error states, field ordering and compact/mobile geometry. An initial root-checkout Vitest invocation could not start its workers; the established isolated checkout completed all 30 tests. A browser assertion was corrected to read the value rather than the decorative hidden icon. Backend application code is unchanged; the earlier 93-test baseline remains historical evidence, not a newly rerun backend suite.
+
+The tested frontend is installed at **http://127.0.0.1:8787/** from this feature branch, without restarting backend PID 40123. Configuration bytes, epoch, focus/history, preferences and photo URLs matched before/after the asset update; all **115 history entries** were retained. Full configuration/data/build backups, consistent SQLite copies and private live verification screenshots are at `/private/tmp/wsjtx-before-confirm-methods-3r3jpn3w`. Read-only Chrome checks confirmed the current value **LoTW, Paper QSL**, the identity profile link, equal column heights, mobile width and no page errors; screenshots were inspected. Reception remained listening on 10.176.1.91 and both Dashboard logging flags stayed false. Production Wavelog, WaveLogGate and radios are unchanged. This is a review preview; main has not been merged with this refinement.
 
 ## Published history
 
@@ -9,7 +17,7 @@
 
 Both drafts were marked ready and merged with merge commits, preserving published ancestry and feature branches. The retargeted PR #4 diff was byte-for-byte identical to its reviewed stacked diff (38 files); its conflict-free proposed merge tree and final main tree both matched tested head `7189020`. No force pushes or feature changes were needed. Subsequent baseline documentation commits update these notes without changing the tested application tree.
 
-## Validation
+## Baseline validation
 
 Actual platform: **macOS 26.6.1 arm64, Python 3.13.1, Node 24.21.0**, Chrome. At PR #4 head `7189020`:
 
@@ -23,7 +31,7 @@ Historical evidence is retained in [Step 4 checkpoint](step-4-checkpoint.md), [Q
 
 ## Single operating installation and preservation
 
-The sole installed Dashboard is **http://127.0.0.1:8787/**, serving checkout `/private/tmp/wsjtx-step3-native`, branch `main`, process **40123** at verification. Application source/build is merge `e9fa332`; later documentation-only updates need no backend restart. The former 8798 fixture preview remains stopped. Fixture validation servers were temporary and stopped after their workflows.
+The sole installed Dashboard is **http://127.0.0.1:8787/**, serving checkout `/private/tmp/wsjtx-step3-native`, branch `feature/station-confirmation-methods`, process **40123** at verification. The current frontend uses `dac9665`; backend application files remain identical to main. The original baseline application source/build was merge `e9fa332`; subsequent documentation updates did not require a backend restart. The former 8798 fixture preview remains stopped. Fixture validation servers were temporary and stopped after their workflows.
 
 Before branch changes, configuration, complete data, built assets and consistent online SQLite copies were backed up privately at `/private/tmp/wsjtx-before-main-baseline-7jk_yv5q`. After gracefully stopping only Dashboard PID 34517, a complete cold backup was added in its `stopped/` subdirectory. The prior source revision is `f266d54`. No ADIF file is configured in this installation; no synthetic file/path was migrated.
 
