@@ -104,8 +104,11 @@ def parse_packet(data: bytes) -> Packet:
         fields['mode'], fields['message'] = r.text(64), r.text()
         if milliseconds >= 86400000 or not math.isfinite(dt):
             raise PacketError("invalid decode fields")
+    if kind == 12:
+        fields['adif'] = r.text(65000)
+        if r.pos != len(data): raise PacketError('Unexpected Logged ADIF payload tail')
     # Other message payloads remain uninterpreted, bounded diagnostic bytes only.
-    # In particular, types 5/12 never store or submit a permanent QSO.
+    # Type 5 remains diagnostic-only; type 12 is handled by the opt-in QSO outbox.
     return Packet(kind, rig_id, schema=schema, fields=fields)
 
 

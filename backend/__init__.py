@@ -1,1 +1,1 @@
-"""Receive-only WSJT-X focus service. No enrichment or logging integrations."""
+"""WSJT-X dashboard: receive, focus, optional history/enrichment and opt-in delivery."""

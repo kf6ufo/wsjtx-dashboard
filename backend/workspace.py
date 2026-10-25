@@ -89,7 +89,15 @@ class WorkspaceState(FoundationState):
             snapshot['enrichment'] = self.enrichment_service.snapshot()
         if getattr(self, 'wavelog_service', None):
             snapshot['wavelog'] = self.wavelog_service.snapshot()
+        if getattr(self, 'qso_service', None):
+            snapshot['qso'] = self.qso_service.snapshot()
+        if getattr(self, 'qso_history', None) and self.qso_history.active:
+            snapshot['qsoHistory'] = self.qso_history.snapshot()
         return snapshot
+
+    def accept(self, packet, **kwargs):
+        if getattr(self, 'qso_service', None): self.qso_service.capture(packet)
+        super().accept(packet, **kwargs)
 
     def publish(self):
         if not self.ready:
@@ -117,6 +125,7 @@ class WorkspaceState(FoundationState):
             self.enrichment_service.observe()
         if getattr(self, 'wavelog_service', None):
             self.wavelog_service.observe()
+        if getattr(self, 'qso_history', None): self.qso_history.observe()
         # Selections/preferences/browsing push immediately. Telemetry is coalesced
         # at 5 Hz; no database commits are made for ordinary packet traffic.
         if changed or time.monotonic() - self.last_broadcast >= .2:

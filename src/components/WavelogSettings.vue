@@ -41,7 +41,7 @@ async function save() {
 <template>
  <section class="receiver-settings" aria-labelledby="wavelog-settings-title">
   <span class="section-eyebrow">YOUR SOURCE OF RECORD</span><h3 id="wavelog-settings-title">Wavelog QSO history</h3>
-  <p>Read previous contacts for the focused station. Wavelog owns the logbook; this dashboard does not submit, change or delete contacts.</p>
+  <p>Read previous contacts for the focused station. These controls only read contacts. Optional completed-QSO delivery is configured separately below.</p>
   <p role="status" data-testid="wavelog-history-enablement"><strong>History lookups are {{ configuration.enabled ? 'enabled' : 'disabled' }}.</strong><template v-if="!configuration.enabled"> A connection test only verifies access. Turn on Enable Wavelog history and save to load contacts.</template></p>
   <form class="settings-form receiver-form" aria-label="Wavelog settings" @submit.prevent="save" @input="dirty = true" @change="dirty = true">
    <label class="check-setting"><input type="checkbox" v-model="draft.enabled"> Enable Wavelog history</label>
