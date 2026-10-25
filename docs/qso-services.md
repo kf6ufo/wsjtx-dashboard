@@ -4,6 +4,8 @@ This extension implements the [operator’s architecture request](qso-architectu
 
 ## Install and review
 
+The separate local review is **http://127.0.0.1:8798/**, with synthetic history, loopback UDP 18242 and logging off. It can be stopped/restarted independently of the operating 8787 preview. Its source checkout is `/private/tmp/wsjtx-qso-review`; start with `.venv/bin/python -m backend.server` from that directory.
+
 Use the normal [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) prerequisites, then:
 
 ```sh
