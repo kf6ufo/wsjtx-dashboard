@@ -1,0 +1,59 @@
+# Current checkpoint — Step 3
+
+**October 23, 2026.** The operator approved publication of Step 3 and requested the worked-before-first layout. `main` includes configurable enrichment, QRZ photos and read-only Wavelog history. No QSO submissions or forwarding are enabled. [Prior Step 2 evidence and publication review](step-2-checkpoint.md).
+
+Prior Work Session live evidence is retained below and is distinct from publication checks. Temporary review-server paths and running-process observations are historical; this publication does not restart production station services.
+
+## Publication checks
+
+The operator approved Step 3 and the worked-before-first layout for `main`. The publication branch combines Step 3 `ae7c619`, layout commit `4e33010`, and the existing Step 2 main publication. Documentation now uses the standard `main` installation path and retains prior Step 2 publication evidence separately.
+
+Current macOS checks: **77 backend tests**, **17 frontend tests**, production build and **all eight offline browser workflows** passed. The Station screenshot was visually inspected with worked-before and current-band status above enrichment. The receiver browser assertion was updated to expect the explicit disabled-history state introduced by Step 3; its previous unavailable-state assertion was obsolete. One existing Starlette/httpx test-adapter warning remains. No new live provider, production radio or Ubuntu tests were performed for publication, and existing station services were not restarted.
+
+A fresh native install at `c3e85e5b9d662ccb2b82517742461d429f51dc10` in `/private/tmp/wsjtx-step3-publication-check` passed the documented installer and production build. On an isolated loopback port, Step 3 API defaults, disabled receiver/Wavelog, HTML, JS/CSS assets and completed application shutdown were verified. The temporary smoke harness initially required exit code zero; Uvicorn can preserve SIGTERM after completing shutdown, as the existing installed-server regression already permits. The shutdown log confirmed completion.
+
+## Implementation
+
+Settings adds the Wavelog application URL, write-only API v2 token, station/logbook scope, connection testing and bounded cache/pagination controls. Old Step 0–2 configs load without migration; Wavelog defaults disabled. Saves preserve receiver and QRZ settings atomically. Server-side credentials never return in snapshots or contact results. [Setup and operator review](step-3.md).
+
+The default scope reads exact-callsign contacts across all locations authorized by the token, including previous KF0TKE and current KF6UFO. Optional logbook selection resolves its station IDs. Hidden locations can be resolved individually. All matching pages load before a complete result is declared. Failed/partial/pending/complete-empty/complete-loaded remain separate; worked-before and band status require a complete result within the selected scope. Optional confirmation failure leaves QSL unavailable independently of contact completeness.
+
+Contacts load separately from enrichment and UDP processing. Small result metadata travels through SSE; each browser fetches the matching versioned contact result once, rather than resending contacts on Decode traffic. Server generation guards and browser request guards reject delayed results for older callsigns. Contacts are memory-only, with bounded caches, request/page/record/response-size/time limits. The table initially renders 100 contacts, with more available on request; sorting and read-only details use actual returned records. Production Wavelog/WaveLogGate and radio settings remain unchanged. No QSO writes, ADIF sync or forwarding exist.
+
+## Verification
+
+Host remains macOS 26.6.1 arm64, Python 3.13.1, Node 24.21.0 and installed Chrome. **77 backend tests**, **17 frontend tests** and the production build pass. One existing Starlette/httpx adapter deprecation warning remains.
+
+Backend fixtures exercise exact callsign/full pagination, both station callsigns, optional confirmations, selected and hidden locations/logbooks, late focus changes, cache expiry/bounds, first/later-page failures, inconsistent totals/duplicates/empty pages, authentication/access/rate-limit failures, safety limits, safe errors and preservation of QRZ/receiver configuration. A two-browser workflow covers the real installed entry point with an offline Wavelog gateway and actual loopback UDP: 213 contacts, all pages, progressive rendering, details, incomplete history, genuine empty results, delayed focus, browsing provenance, connection settings, restricted scope, mobile width and continued UDP reception after disabling Wavelog. All eight offline browser workflows passed, including the existing enrichment/photo, receiver, foundation and fixture regressions. Browser-fetch coverage additionally verifies that a late HTTP result cannot replace a newer result even after returning to the same callsign.
+
+**Live capability evidence:** the operator supplied the installation URL privately; its actual public `/api/v2/status` returned HTTP 200 with Wavelog API status `ok`. That initial check verified reachability only. The operator subsequently saved a token locally. Authenticated live contact and confirmation reads now succeed, with the saved selected-location scope and with all authorized locations. A missing-history report was traced to history remaining disabled after successful connection tests; the interface now states enablement separately, explains that testing does not enable history, and directs disabled station views to Settings instead of ineffective retries. History was enabled without changing the saved token or selected locations. One reported count discrepancy also appeared in direct API reads across all and individually selected locations; no contact was dropped by dashboard filtering. No production contact data is used in automated fixtures.
+
+The exact implementation commit **`a6d8574007007f550d3bf143d86260282378069e`** was installed with `./install.sh` from a separate clean checkout in a temporary native review checkout. Disabled defaults, production assets, workspace creation, startup and graceful application shutdown passed on an isolated HTTP port. The published branch was independently cloned directly from GitHub into an independent temporary validation checkout at that same commit; the documented installer, production assets, API defaults and startup/shutdown passed there too. Later changes record this evidence and add a read-only settings screenshot assertion; application code is unchanged.
+
+The prior Step 2 review dashboard was stopped and its configuration and entire data directory cold-backed up to the source checkout’s ignored **`backups/before-step3-20261023/`**, with a private `upgrade-record.json`. Those files were copied to the clean Step 3 installation. Repeating the documented installer preserved the configuration and **every data file byte-for-byte**; SQLite integrity passed. Only then was the supplied Wavelog URL added, leaving history disabled and its token blank. QRZ and receiver settings were explicitly compared and unchanged.
+
+Step 3 startup preserved focused **WA8ICK**, all **seven history entries**, selection/browsing time/rig/band provenance, photo URLs and shared preferences. The actual QRZ record/photo loaded; multicast reception resumed on **239.255.0.73:2238**, using the preserved receiving interface. Both **WSJT-X - IC7300** and **WSJT-X - IC9100** appeared again. The two-window read-only actual-station workflow passed, including a screenshot of the real Wavelog settings form. No synthetic packets were sent to production multicast. This is reception/read-only UI evidence, not a new operator-confirmed physical-click test. A later observation measured **36 additional actual Decodes** while focus and the entire history remained unchanged; malformed-packet and receiver-error counts remained zero.
+
+Ubuntu execution remains untested, including dependencies/build, upgrades, multicast and browser/tunnel access. API v2 is required (Wavelog 3.1.0+); legacy API fallback is not implemented. Numeric version is not inferred from public status: supported endpoints/scopes are tested directly.
+
+## Review installation
+
+The earlier **Step 3 review server** was running at **http://127.0.0.1:8787/** in a temporary native checkout, with preserved QRZ and receiver settings. At that time Step 2 was stopped, with its original files and cold backup retained. Temporary review copies are not durable service directories.
+
+The installation branch is `main`. For a clean checkout, follow the native installer. Stop the existing dashboard before starting another on port 8787; cold-copy config/data as documented when moving the workspace. Exact local paths and upgrade fingerprints are retained only in the ignored backup’s private upgrade record.
+
+Do not send tokens in chat. Use **Settings → Wavelog QSO history**, retain **All authorized station locations**, save the API v2 token with `qso:read` and `station:read` (optional `confirmation:read`/`logbook:read`), and test. Then enable history and select/browse a station. Review complete history against Wavelog before treating the integration as live-verified.
+
+## History enablement follow-up
+
+The operator reported successful configuration tests but unavailable contact history. Saved configuration had `enabled = false`; enabling read-only history immediately produced a complete contact result. No API or parser fix was required. This follow-up distinguishes disabled history from connection failure in the station view, banner, Focus History and Settings. Successful tests explicitly warn when history remains disabled; the station view links to Settings and hides ineffective refresh/retry actions.
+
+Validation: 17 frontend tests, production build, and the Wavelog browser workflow, extended to test a successful connection while disabled followed by enabling history and loading contacts. Existing backend behavior is unchanged; the previously recorded backend checks apply. Live authenticated reads and browser rendering were verified without changing or submitting Wavelog contacts. Exact operator contact details and credentials remain outside Git.
+
+The enablement follow-up is installed at **`fa88a918723bce6e132c7033a81c3a43141a4e46`** through the documented native installer. Enabled Wavelog configuration, credentials and every saved data file were verified byte-for-byte unchanged through installation; the dashboard was then restarted. The two-window read-only actual-station browser check passed again with authenticated contact history visible. QRZ enrichment and UDP reception continue.
+
+## Worked-before layout follow-up
+
+At the operator’s request, the worked-before summary and current-band status now appear directly after the station identity/radio details, above Station enrichment. The same pending, empty, disabled, incomplete and loaded states remain in place. A small gap separates the band status from enrichment.
+
+Validation: all 17 frontend tests, the production build and the existing offline Wavelog browser workflow passed. Its desktop screenshot was visually inspected; worked-before and current-band status precede enrichment. The workflow also checks mobile width, two-browser history and partial/empty/disabled results. This layout follow-up changes no provider, receiver or persistence behavior.

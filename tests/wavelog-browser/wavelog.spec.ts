@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockMapTiles } from '../mapTiles'
 import { execFileSync } from 'node:child_process'
 function packet(call: string) {
  execFileSync('.venv/bin/python', ['-c', `import socket\nfrom backend.tests.fixtures import status\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\ns.sendto(status(call='${call}',rig='Wavelog fixture'),('127.0.0.1',18240))\ns.close()`])
@@ -6,6 +7,7 @@ function packet(call: string) {
 test('complete and partial QSO history, scope settings and two-browser navigation', async ({ browser, request, baseURL }) => {
  const a = await browser.newContext(), b = await browser.newContext()
  const first = await a.newPage(), second = await b.newPage()
+ await mockMapTiles(first); await mockMapTiles(second)
  const errors: string[] = [];first.on('pageerror', error => errors.push(error.message));second.on('pageerror', error => errors.push(error.message))
  let historyRequests = 0
  first.on('request', req => { if (req.url().includes('/api/wavelog/history/')) historyRequests++ })
@@ -28,16 +30,34 @@ test('complete and partial QSO history, scope settings and two-browser navigatio
  await expect(first.locator('.qso-table tbody tr')).toHaveCount(200)
  await first.getByRole('button', { name: 'Show next 100 contacts' }).click()
  await expect(first.locator('.qso-table tbody tr')).toHaveCount(213)
+ const stationBox = await first.locator('.station-panel').boundingBox(), historyBox = await first.locator('.history-panel').boundingBox()
+ expect(Math.abs(stationBox!.y + stationBox!.height - historyBox!.y - historyBox!.height)).toBeLessThan(3)
  await first.locator('.qso-link').first().click()
  await expect(first.getByRole('dialog')).toContainText('WAVELOG CONTACT DETAILS')
  await expect(first.getByRole('dialog')).toContainText('Offline fixture K1MNY')
+
+ const beforeDialogDecodes = (await (await request.get('/api/snapshot')).json()).counters.decodes
+ execFileSync('.venv/bin/python', ['-c', "import socket\nfrom backend.tests.fixtures import decode\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\nfor _ in range(12): s.sendto(decode(),('127.0.0.1',18240))\ns.close()"])
+ await expect.poll(async () => (await (await request.get('/api/snapshot')).json()).counters.decodes).toBeGreaterThan(beforeDialogDecodes)
+ await expect(first.getByRole('dialog')).toContainText('Offline fixture K1MNY')
+ await expect(first.locator('.qso-table tbody tr')).toHaveCount(213)
+
+
+ await first.getByRole('button', { name: 'Close', exact: true }).focus()
+ await first.keyboard.press('Tab')
+ await expect(first.getByRole('region', { name: 'Scrollable contact details', exact: true })).toBeFocused()
+ await first.keyboard.press('Tab')
+ await expect(first.getByRole('button', { name: 'Close', exact: true })).toBeFocused()
+
  await first.getByRole('button', { name: 'Close', exact: true }).click()
  packet('K3ERR')
  await expect(first.locator('.qso-load-more')).toContainText('Incomplete history')
  await expect(first.getByTestId('band-status')).toContainText('Status unavailable')
+ await expect(first.locator('.call-status-label')).toContainText('Worked status unknown')
  expect((await (await request.get('/api/snapshot')).json()).wavelog.result.complete).toBe(false)
  packet('K2NEW')
  await expect(first.locator('.worked-summary')).toContainText('Not worked in this Wavelog scope')
+ await expect(first.locator('.call-status-label')).toContainText('New callsign')
  await expect(first.getByTestId('band-status')).toContainText('New on')
  packet('K4SLO');await expect(first.getByTestId('focused-call')).toHaveText('K4SLO')
  packet('K5NOW');await expect(first.getByTestId('focused-call')).toHaveText('K5NOW')

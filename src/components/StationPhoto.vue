@@ -9,7 +9,7 @@ watch(() => [props.call, image.value], () => { failed.value = false })
 <template>
  <div class="station-photo" :class="{ 'station-photo-compact': compact }">
   <img v-if="image && !failed" :src="image" :alt="`QRZ profile for ${call}`" referrerpolicy="no-referrer" :loading="compact ? 'lazy' : 'eager'" decoding="async" @error="failed = true">
-  <div v-else class="station-photo-placeholder" role="img" :aria-label="`No profile photo available for ${call}`"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="28" r="14"/><path d="M12 76v-6a28 28 0 0 1 56 0v6Z"/></svg><span v-if="!compact">No profile photo</span></div>
+  <div v-else class="station-photo-placeholder" role="img" :aria-label="`No profile photo available for ${call}`"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="28" r="14"/><path d="M12 76v-6a28 28 0 0 1 56 0v6Z"/></svg><span v-if="!compact">No profile pic</span></div>
  </div>
 </template>
 <style scoped>

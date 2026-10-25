@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockMapTiles } from '../mapTiles'
 import { execFileSync } from 'node:child_process'
 
 // Sends only to the dedicated loopback test socket, never station multicast.
@@ -9,6 +10,7 @@ function packet(expression: string, count = 1) {
 test('actual local UDP drives two browsers and bounded interactive diagnostics', async ({ browser, request, baseURL }) => {
  const a = await browser.newContext(), b = await browser.newContext()
  const first = await a.newPage(), second = await b.newPage()
+ await mockMapTiles(first); await mockMapTiles(second)
  const errors: string[] = []
  first.on('pageerror', e => errors.push(e.message)); second.on('pageerror', e => errors.push(e.message))
  await first.goto(baseURL!); await second.goto(baseURL!)
@@ -33,7 +35,7 @@ test('actual local UDP drives two browsers and bounded interactive diagnostics',
  await expect(first.getByTestId('focused-call')).toHaveText('K3ACT')
  await b.setOffline(false); await second.evaluate(() => window.dispatchEvent(new Event('online')))
  await expect(second.getByTestId('focused-call')).toHaveText('K3ACT')
- await expect(second.getByText('Available operator and license details appear in Station enrichment below.', { exact: false })).toBeVisible()
+ await expect(second.getByText('Available operator and license information appears in Details.', { exact: false })).toBeVisible()
  await expect(second.getByText('Wavelog history is disabled · worked-before status unknown')).toBeVisible()
  await first.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await expect(first.locator('.instance-table tbody tr')).toHaveCount(2)

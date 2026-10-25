@@ -1,27 +1,37 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import StationDetailsScroll from './StationDetailsScroll.vue'
 import type { EnrichmentState } from '../types'
-const props = defineProps<{ enrichment?: EnrichmentState; call: string }>()
-const result = computed(() => props.enrichment?.result)
-const fields = computed(() => result.value?.call === props.call ? result.value.fields ?? {} : {})
-const data = computed(() => result.value?.call === props.call ? result.value : undefined)
-function value(raw: unknown) { return typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : String(raw ?? '—') }
+import { fieldText, hasValue, stationTableRows } from '../stationDetails'
+const props = defineProps<{ enrichment?: EnrichmentState; call: string; connected?: boolean }>()
+const emit = defineEmits<{ refresh: [] }>()
+const data = computed(() => props.enrichment?.result.call === props.call ? props.enrichment.result : undefined)
+const fields = computed(() => data.value?.fields ?? {})
+const rows = computed(() => data.value ? stationTableRows(data.value) : [])
+const returned = computed(() => Object.entries(fields.value).filter(([, value]) => hasValue(value)))
+const qrz = computed(() => data.value?.providers?.qrz?.status === 'loaded')
+const biography = computed(() => qrz.value && Number(fields.value.bio) > 0)
 function utc(raw?: number) { return raw ? new Date(raw).toISOString().replace('T', ' ').slice(0,19) + ' UTC' : '' }
 </script>
 <template>
- <section class="enrichment-card" aria-labelledby="radio-enrichment-title" aria-live="polite">
-  <div class="enrichment-heading"><div><span class="section-eyebrow">PYHAMTOOLS &amp; CALLBOOK</span><h3 id="radio-enrichment-title">Station enrichment</h3></div><span class="enrichment-state">{{ data?.status ?? (enrichment?.config.enabled ? 'Waiting for selection' : 'Disabled') }}</span></div>
+ <section class="enrichment-card station-details" aria-labelledby="radio-enrichment-title">
+  <div class="enrichment-heading"><h3 id="radio-enrichment-title">Details</h3><a v-if="qrz" class="details-source-link" :href="`https://www.qrz.com/db/${encodeURIComponent(call)}`" target="_blank" rel="noopener noreferrer">Data from QRZ.com ↗</a><span v-else class="enrichment-state" role="status">{{ data?.status ?? (enrichment?.config.enabled ? 'Waiting for selection' : 'Disabled') }}</span></div>
   <p v-if="!enrichment?.config.enabled" class="muted-state">Enable enrichment and configure providers in Settings.</p>
   <p v-else-if="data?.status === 'pending'" role="status">Looking up {{ call }}… Radio reception continues.</p>
   <template v-else-if="data && data.status !== 'disabled' && data.status !== 'idle'">
    <p v-if="data.message" class="error-text">{{ data.message }}</p>
-   <dl class="enrichment-summary"><div v-if="fields.country"><dt>Country / entity</dt><dd>{{ fields.country }}</dd></div><div v-if="fields.adif"><dt>DXCC</dt><dd>{{ fields.adif }}</dd></div><div v-if="fields.continent"><dt>Continent</dt><dd>{{ fields.continent }}</dd></div><div v-if="fields.cqz || fields.ituz"><dt>CQ / ITU zone</dt><dd>{{ fields.cqz ?? '—' }} / {{ fields.ituz ?? '—' }}</dd></div><div v-if="data.locationGrid"><dt>Location grid</dt><dd>{{ data.locationGrid }}</dd></div><div v-if="data.computed?.distanceKm !== undefined"><dt>Short path</dt><dd>{{ data.computed.distanceKm.toLocaleString() }} km · {{ data.computed.heading }}°</dd></div></dl>
-   <p v-if="data.locationSource" class="enrichment-note">{{ data.locationSource }}<span v-if="data.stationGrid"> · From {{ data.stationGrid }} ({{ data.stationGridSource }})</span></p>
-   <p v-else class="enrichment-note">No station grid available. Country coordinates are not treated as a reported operating location.</p>
+   <p v-if="data.status === 'empty'" class="muted-state">No matching station details were returned by the configured providers.</p>
+   <StationDetailsScroll v-if="rows.length || returned.length" :label="`Scrollable station details for ${call}`" :key="call">
+    <table class="station-details-table"><thead><tr><th scope="col">Field</th><th scope="col">Value</th></tr></thead><tbody>
+     <tr v-if="biography"><th scope="row">Biography</th><td><a :href="`https://www.qrz.com/db/${encodeURIComponent(call)}`" target="_blank" rel="noopener noreferrer">Biography on QRZ ↗</a></td></tr>
+     <tr v-for="field in rows" :key="field.key" :data-field="field.key"><th scope="row">{{ field.label }}</th><td :title="field.source ? `Source: ${field.source}` : undefined" :class="{ 'detail-emphasis': ['reportedGrid','distance','heading'].includes(field.key) }"><a v-if="field.href" :href="field.href" :target="field.key === 'url' ? '_blank' : undefined" rel="noopener noreferrer">{{ field.value }} ↗</a><span v-else>{{ field.value }}</span><small v-if="field.source" class="visually-hidden">Source: {{ field.source }}</small></td></tr>
+     <tr v-if="qrz"><th scope="row">QRZ page</th><td><a :href="`https://www.qrz.com/db/${encodeURIComponent(call)}`" target="_blank" rel="noopener noreferrer">{{ call }} on QRZ ↗</a></td></tr>
+    </tbody></table>
+    <details class="enrichment-details" v-if="returned.length" :key="`raw-${call}`"><summary>All returned fields · {{ returned.length }}</summary><div class="enrichment-table"><table class="table"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody><tr v-for="[name, field] in returned" :key="name"><td>{{ name }}</td><td>{{ fieldText(field) }}</td><td>{{ data.fieldSources?.[name] }}</td></tr></tbody></table></div></details>
+   </StationDetailsScroll>
    <p v-if="data.reportedGrid && data.callbookGrid && data.reportedGrid !== data.callbookGrid" class="enrichment-note">Reported grid {{ data.reportedGrid }} is used for this contact; callbook grid {{ data.callbookGrid }} is retained separately.</p>
-   <div class="enrichment-providers"><p v-for="(provider, name) in data.providers" :key="name"><strong>{{ name }}</strong> · {{ provider.status }}<span v-if="provider.cached"> · cached</span><span v-if="provider.dataStatus === 'stale'"> · stale data</span><span v-if="provider.message"> · {{ provider.message }}</span><span v-if="provider.subscription"> · XML subscription: {{ provider.subscription }}</span><small v-if="provider.updatedAt">{{ utc(provider.updatedAt) }}</small></p></div>
-   <details class="enrichment-details" v-if="Object.keys(fields).length"><summary>All returned fields · {{ Object.keys(fields).length }}</summary><div class="enrichment-table"><table class="table"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody><tr v-for="(field, name) in fields" :key="name"><td>{{ name }}</td><td>{{ value(field) }}</td><td>{{ data.fieldSources?.[name] }}</td></tr></tbody></table></div></details>
-   <details class="enrichment-details" v-if="data.computed && Object.keys(data.computed).length"><summary>Radio calculations</summary><dl><template v-for="(field, name) in data.computed" :key="name"><dt>{{ name }}</dt><dd>{{ value(field) }}</dd></template></dl></details>
+   <div class="enrichment-providers station-provider-status"><p v-for="(provider, name) in data.providers" :key="name"><strong>{{ name }}</strong> · {{ provider.status }}<span v-if="provider.cached"> · cached</span><span v-if="provider.dataStatus === 'stale'"> · stale data</span><span v-if="provider.message"> · {{ provider.message }}</span><small v-if="provider.updatedAt">Retrieved {{ utc(provider.updatedAt) }}</small></p></div>
   </template>
+  <button v-if="enrichment?.config.enabled" class="text-button details-refresh" :disabled="connected === false || data?.status === 'pending'" @click="emit('refresh')">Refresh details</button>
  </section>
 </template>

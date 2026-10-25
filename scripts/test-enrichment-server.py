@@ -31,7 +31,7 @@ def fixture_post(self, values):
     ET.SubElement(session, 'Key').text = 'fixture-session'
     if 'callsign' in values:
         call = values['callsign']
-        fields = dict(call=call, fname='Fixture', name='Operator', country='United States', dxcc='291', grid='FN31', **{'class': 'E'})
+        fields = dict(call=call, fname='Fixture', name='Operator', country='United States', dxcc='291', grid='FN31', bio='1200', email='fixture@example.invalid', url='https://example.invalid/operator', lotw='1', eqsl='0', addr1='123 Fixture Lane', addr2='Fixture City', state='', county='Fixture County', zip='00000', aliases='K0OLD', efdate='2020-01-01', expdate='2030-01-01', **{'class': 'E'})
         if call != 'K2NPH': fields['image'] = f'https://photos.example.invalid/{call}.svg'
         record = ET.SubElement(root, 'Callsign')
         for key, value in fields.items(): ET.SubElement(record, key).text = value

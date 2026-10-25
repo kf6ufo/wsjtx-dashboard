@@ -42,3 +42,7 @@ Open **Settings → Wavelog QSO history**. Save the application URL and a dedica
 Radio selections and Focus History browsing load complete paginated contacts independently from QRZ. Failed or partial history never claims a new callsign/band. Contacts are cached only in memory. This release does not submit QSOs or replace WaveLogGate. See the checkpoint for verified and still untested behavior.
 
 The worked-before summary and current-band status appear directly beneath the focused station details, ahead of Station enrichment.
+
+## Step 4 preview
+
+The initial station-details preview is on **`feature/step-4-station-details`**. It uses a compact top navigation bar and a centered photo-first station tile, prioritizes populated fields in a scrollable panel, and keeps worked-before/current-band status immediately below identity. Key information highlights LoTW and a QRZ profile link, with scrollable QSO details below. A zoomable Leaflet/OpenStreetMap station map sits beneath the profile/details columns, ahead of contacts. [Preview installation and operator review](docs/step-4.md). `main` remains the reviewed Step 3 release.
