@@ -7,13 +7,13 @@ import 'leaflet/dist/leaflet.css'
 
 const props = defineProps<{ call: string; entry?: Entry; enrichment?: EnrichmentState }>()
 const location = computed(() => stationMapLocation(props.call, props.entry, props.enrichment))
-const host = ref<HTMLDivElement>(), tilesFailed = ref(false), mapFailed = ref(false), zoom = ref(6), ready = ref(false)
+const host = ref<HTMLDivElement>(), tilesFailed = ref(false), mapFailed = ref(false), zoom = ref(4), ready = ref(false)
 let map: LeafletMap | undefined, markers: LayerGroup | undefined, observer: ResizeObserver | undefined
 let mounted = false, generation = 0
 function destroy() { ready.value = false; observer?.disconnect(); observer = undefined; map?.remove(); map = undefined; markers = undefined }
 function center() {
  const point = location.value
- if (point) map?.setView([point.lat, point.lng], point.zoom, { animate: false })
+ if (point && map) map.setView([point.lat, point.lng], Math.max(map.getMinZoom(), point.zoom - 2), { animate: false })
 }
 function modifierZoom(event: WheelEvent) {
  // Capture runs before Leaflet's wheel listener, retaining its trackpad debounce.

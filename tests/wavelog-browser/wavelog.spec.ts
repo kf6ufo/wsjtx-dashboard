@@ -30,6 +30,8 @@ test('complete and partial QSO history, scope settings and two-browser navigatio
  await expect(first.locator('.qso-table tbody tr')).toHaveCount(200)
  await first.getByRole('button', { name: 'Show next 100 contacts' }).click()
  await expect(first.locator('.qso-table tbody tr')).toHaveCount(213)
+ const stationBox = await first.locator('.station-panel').boundingBox(), historyBox = await first.locator('.history-panel').boundingBox()
+ expect(Math.abs(stationBox!.y + stationBox!.height - historyBox!.y - historyBox!.height)).toBeLessThan(3)
  await first.locator('.qso-link').first().click()
  await expect(first.getByRole('dialog')).toContainText('WAVELOG CONTACT DETAILS')
  await expect(first.getByRole('dialog')).toContainText('Offline fixture K1MNY')
