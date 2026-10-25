@@ -1,12 +1,12 @@
 # WSJT-X Dashboard
 
-A self-hosted companion for the operating desk. **Current implementation — Step 3:** a responsive Station / Diagnostics / Settings dashboard, clearly labeled fictional profiles and contacts, shared server selections, live browser updates, saved workspace preferences/history, and configurable receive-only WSJT-X UDP with packet diagnostics, configurable pyhamtools enrichment, optional QRZ XML callbook details, and read-only Wavelog QSO history.
+A self-hosted companion for the operating desk. **Reviewed baseline — Steps 0–4:** compact Station / Diagnostics / Settings navigation, photo-first station identity, populated scrollable details, worked-before/current-band indicators, a zoomable station map and complete contact history. Shared Focus History, live browser updates, saved preferences, multiple WSJT-X receiver identities, pyhamtools and QRZ enrichment are included. Fictional sample data is labeled and kept separate from actual radio selections.
 
-**UDP reception, enrichment and Wavelog history are opt-in. Configure credentials locally in Settings.** Production radios, WaveLogGate and station services remain unchanged. There are no QSO submissions, radio commands or forwarding. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) replace the old milestone and Ubuntu-only assumptions; [Steps 4–7 remain the roadmap](docs/roadmap.md).
+**UDP reception, enrichment and Wavelog history are opt-in. Configure credentials locally in Settings.** Optional independent ADIF history, Wavelog fallback and durable enriched-QSO delivery infrastructure are also included. **Dashboard logging and Wavelog delivery default off and remain off in the operating installation.** Production WaveLogGate still submits QSOs. Real Wavelog write validation and production cutover are pending; no radio commands or UDP forwarding are implemented. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) · [Remaining work and acceptance boundaries](docs/roadmap.md).
 
 ## Install and run
 
-The reviewed Step 3 implementation is installed from **`main`**. Previous attempts remain available in Git history; obsolete documentation and the superseded test server are removed from the current tree.
+Install the reviewed baseline from **`main`**. PR #3 (Step 4) and PR #4 (optional QSO architecture) were merged in dependency order on October 25, 2026. Feature branches and earlier evidence remain in Git history. [Merge and runtime verification](docs/current-checkpoint.md).
 
 Use a **separate checkout**, preserving any existing installation. Requires Git, Python **3.12–3.14**, and Node **24 LTS, 24.15+** with npm. Dependencies build on the target host. No editor, Codex, Docker, release asset or privileged installer is required.
 
@@ -27,7 +27,7 @@ Open **Settings → WSJT-X receiver**. Set the receiving computer's IPv4 interfa
 
 **Diagnostics** shows sources, network IDs, last seen, packet/error counts and bounded packet details. Pause/clear affects the diagnostic display only. A changed valid DX Call after the first Status updates two browsers without refresh; ordinary decodes never steal focus. History browsing preserves order/time/rig. Once activated, the radio workspace/history remains visible even if reception is disabled. The original sample workspace is retained separately; an isolated frontend fixture demo is at `/?mode=demo`.
 
-Before first enabling reception, sample profiles/contacts load independently from offline fixtures; empty and failed sample histories remain distinct. VK3DEMO has no contacts, PY2DEMO simulates a failed lookup, and ZS6DEMO has no profile. These are illustrative callsigns with fictional identity/contact details. Actual radio selections use configured enrichment providers, never fixture profiles or contacts. QSO history remains explicitly unavailable until Wavelog is connected.
+Before first enabling reception, sample profiles/contacts load independently from offline fixtures; empty and failed sample histories remain distinct. VK3DEMO has no contacts, PY2DEMO simulates a failed lookup, and ZS6DEMO has no profile. These are illustrative callsigns with fictional identity/contact details. Actual radio selections use configured enrichment providers, never fixture profiles or contacts. Actual QSO history requires an enabled Wavelog connection or configured ADIF source; unavailable/incomplete history never establishes a new callsign.
 
 [Operation, updates, backups, migration, rollback and troubleshooting](docs/install-macos.md#operation-and-updates) · [Development/checks](docs/development.md) · [Current tested/untested checkpoint](docs/current-checkpoint.md)
 
@@ -39,14 +39,14 @@ Open **Settings → pyhamtools enrichment**. Enable Country-files.com for accoun
 
 Open **Settings → Wavelog QSO history**. Save the application URL and a dedicated Wavelog **API v2 token** with `qso:read` and `station:read`, then test the saved connection. An ending `/api` is accepted and removed automatically. Leave scope at **All authorized station locations** to include former and current station callsigns. Optional `confirmation:read` supplies QSL details; `logbook:read` enables logbook selection where supported. [Step 3 setup and review guide](docs/step-3.md).
 
-Radio selections and Focus History browsing load complete paginated contacts independently from QRZ. Failed or partial history never claims a new callsign/band. Contacts are cached only in memory. This release does not submit QSOs or replace WaveLogGate. See the checkpoint for verified and still untested behavior.
+Radio selections and Focus History browsing load complete paginated contacts independently from QRZ. Failed or partial history never claims a new callsign/band. Read results are cached only in memory. Dashboard submissions remain disabled; WaveLogGate is unchanged. See the checkpoint for verified and still untested behavior.
 
-The worked-before summary and current-band status appear directly beneath the focused station details, ahead of Station enrichment.
+The worked-before summary and current-band status appear directly below identity in the compact left tile, beside the scrollable Details column. Station wording is independent of the selected history provider; its actual source and scope remain visible.
 
-## Optional history and logging preview
+## Optional history and logging infrastructure
 
-The operator-requested architecture extension is on **`feature/qso-history-and-delivery`**, based on the preserved Step 4 preview. It adds independent ADIF history/logging, automatic Wavelog preference/fallback, strict incomplete-history states, per-rig identities, enrichment and a persistent per-destination outbox. Logging defaults to **off**. This branch is for isolated review, not a production uploader cutover. [Configuration, reliability and validation](docs/qso-services.md) · [Full requested scope](docs/qso-architecture-request.md).
+Included on **`main`**: independent ADIF history/logging, automatic Wavelog preference/fallback, strict incomplete-history states, per-rig identities, missing-only enrichment and a persistent per-destination outbox. Existing installations retain their configuration. Keep `logging_enabled = false` and `log_to_wavelog = false` until isolated write acceptance and an explicitly approved sole-uploader cutover. No isolated Wavelog test instance is currently available; production is not a write-test target. [Configuration, reliability, backups and validation](docs/qso-services.md) · [Full requested scope](docs/qso-architecture-request.md).
 
-## Step 4 preview
+## Station display
 
-The initial station-details preview is on **`feature/step-4-station-details`**. It uses a compact top navigation bar and a centered photo-first station tile, prioritizes populated fields in a scrollable panel, and keeps worked-before/current-band status immediately below identity. Key information highlights LoTW and a QRZ profile link, with scrollable QSO details below. A zoomable Leaflet/OpenStreetMap station map sits beneath the profile/details columns, ahead of contacts. [Preview installation and operator review](docs/step-4.md). `main` remains the reviewed Step 3 release.
+The reviewed Step 4 layout is on **`main`**. It uses a compact top navigation bar and a centered photo-first station tile, prioritizes populated fields in a scrollable panel, and keeps worked-before/current-band status immediately below identity. Key information highlights LoTW and a QRZ profile link, with scrollable QSO details below. A Leaflet/OpenStreetMap station map sits beneath the profile/details columns, ahead of contacts, with buttons, drag/pinch, keyboard and Command/Ctrl-scroll zoom. [Display behavior and acceptance caveats](docs/step-4.md). Inline biography retrieval remains deferred; Ubuntu execution remains untested.

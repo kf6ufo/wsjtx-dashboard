@@ -1,21 +1,21 @@
-# Optional QSO history, enrichment and delivery preview
+# Optional QSO history, enrichment and delivery infrastructure
 
-This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`feature/qso-history-and-delivery`**, based on the preserved Step 4 branch. Main remains unchanged. At the operator’s request, the extension now runs as the single dashboard on port 8787, preserving the existing station configuration/history with Dashboard submissions disabled. Production WaveLogGate is still the uploader.
+This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`main`**, merged through PR #4 at `e9fa332` after Step 4 PR #3 at `42220f0` on October 25, 2026. At the operator’s request, the extension now runs as the single dashboard on port 8787, preserving the existing station configuration/history with Dashboard submissions disabled. Production WaveLogGate is still the uploader.
 
 ## Install and review
 
-The single local dashboard is **http://127.0.0.1:8787/**. Its serving checkout is `/private/tmp/wsjtx-step3-native` on `feature/qso-history-and-delivery`. Stop only this dashboard’s foreground process with Ctrl+C (or SIGTERM when detached); restart with `.venv/bin/python -m backend.server` from that directory. The former 8798 synthetic preview is stopped/retired; its files are retained for reference and must not be started as a second instance. The active instance uses the original station settings/history, no synthetic ADIF path, and logging off.
+The single local dashboard is **http://127.0.0.1:8787/**. Its serving checkout is `/private/tmp/wsjtx-step3-native` on `main`. Stop only this dashboard’s foreground process with Ctrl+C (or SIGTERM when detached); restart with `.venv/bin/python -m backend.server` from that directory. The former 8798 synthetic preview is stopped/retired; its files are retained for reference and must not be started as a second instance. The active instance uses the original station settings/history, no synthetic ADIF path, and logging off.
 
 Use the normal [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) prerequisites, then:
 
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard-qso
 cd ~/wsjtx-dashboard-qso
-git switch feature/qso-history-and-delivery
+git switch main
 ./install.sh
 ```
 
-Choose an unused HTTP port in `config.toml` before starting `.venv/bin/python -m backend.server`. Configure **Settings → QSO history & logging**. The receiver remains opt-in; use a dedicated loopback test UDP port during review. Do not turn this into a second production uploader while WaveLogGate submits the same contacts.
+For a separate isolated validation checkout, choose an unused HTTP port in `config.toml` before starting `.venv/bin/python -m backend.server`, and stop it after validation. Normal operation uses the existing single dashboard on 8787. Configure **Settings → QSO history & logging**. The receiver remains opt-in; use a dedicated loopback test UDP port during review. Do not turn this into a second production uploader while WaveLogGate submits the same contacts.
 
 `adif-io==0.6.1` is the new pinned runtime dependency. Old TOML files remain valid. The optional `[qso]` section defaults to automatic history, no ADIF file and **logging off**. Saving one section preserves the other sections and secrets.
 

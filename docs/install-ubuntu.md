@@ -1,4 +1,4 @@
-# Native Ubuntu installation — Steps 0–3
+# Native Ubuntu installation — reviewed Steps 0–4
 
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
@@ -41,6 +41,12 @@ Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2
 
 Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
 
-Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
+Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. History read results use memory caches; preserve the entire `data/` directory, including the durable delivery outbox, and any independently located ADIF file. See [optional QSO services](qso-services.md).
 
 The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
+
+## Current baseline and optional delivery
+
+`main` includes reviewed Step 4 and the optional ADIF/history/durable delivery infrastructure. Both `logging_enabled` and `log_to_wavelog` default to false and remain false in the active installation. Keep them disabled while production WaveLogGate uploads contacts. Isolated real Wavelog write validation and explicit cutover approval are pending. See the [current checkpoint](current-checkpoint.md).
+
+Back up any configured ADIF file in addition to `config.toml` and the entire `data/` directory, with this Dashboard stopped. Protect these backups as they contain credentials and operating data. Upgrades preserve the outbox and existing log files; never replace configuration with example defaults or delete pending work. For rollback, preserve current files first, restore the matching prior configuration/data/ADIF backup and run that revision’s installer.

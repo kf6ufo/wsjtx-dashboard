@@ -1,4 +1,4 @@
-# Native macOS installation — Steps 0–3
+# Native macOS installation — reviewed Steps 0–4
 
 This installs a built frontend served by the Python server, independent of VS Code/Codex. Keep any existing station installation running and use a separate directory and unused HTTP port. The default is loopback port 8787. No radio/network/service settings are changed by the installer.
 
@@ -57,7 +57,7 @@ Edit the ignored `config.toml`, then restart the server to change the HTTP addre
 
 The `[wsjtx]` section is the actual receiver configuration. Step 0 files remain valid; new `listen` and `retention` keys default to `"0.0.0.0"` and `200`. Settings saves these fields into this same TOML and applies changes immediately. Choose the receiving host interface before enabling multicast. See the [Step 1 guide](step-1.md) for restart/baseline, coexistence, retention and troubleshooting behavior. Installed operation reads TOML, not old receiver environment variables.
 
-Settings saves default appearance and compact strip visibility to `data/workspace.sqlite3` alongside the config. Shared sample history is retained separately from the new persistent radio history. Preferences and both histories survive restart; packet logs, telemetry and receiver baselines are memory-only. Installation configuration and browser preferences are separate scopes in one documented configuration system. Optional callbook credentials are configured in Settings and saved only on the server; see [Step 2](step-2.md). Sample contacts are fixtures, not a second logbook. Each history is deduplicated and bounded (200 entries; six sample calls available). After the first receiver activation, the radio workspace remains active on disable/restart; it never seeds sample selections. Seed data is created only for a new workspace. Theme in the header and Station Desk in Settings preview locally; Save in Settings establishes shared defaults. The Step 4 preview hides the legacy station-title setting while preserving its stored value.
+Settings saves default appearance and compact strip visibility to `data/workspace.sqlite3` alongside the config. Shared sample history is retained separately from the new persistent radio history. Preferences and both histories survive restart; packet logs, telemetry and receiver baselines are memory-only. Installation configuration and browser preferences are separate scopes in one documented configuration system. Optional callbook credentials are configured in Settings and saved only on the server; see [Step 2](step-2.md). Sample contacts are fixtures, not a second logbook. Each history is deduplicated and bounded (200 entries; six sample calls available). After the first receiver activation, the radio workspace remains active on disable/restart; it never seeds sample selections. Seed data is created only for a new workspace. Theme in the header and Station Desk in Settings preview locally; Save in Settings establishes shared defaults. Step 4 hides the legacy station-title setting while preserving its stored value.
 
 ## Operation and updates
 
@@ -98,7 +98,7 @@ If Git reports local changes or divergence, stop and inspect; do not reset or fo
 
 ## Moving to Ubuntu
 
-With the server stopped, copy only `config.toml` and `data/` to a clean checkout of the same revision on Ubuntu. Adjust HTTP binding for that host; keep reception disabled. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. No pending-QSO queue exists in Step 3; Step 6 must document queue migration before enabling it. The application never imports production QSO logs.
+With the Dashboard stopped and logging disabled, copy `config.toml`, the complete `data/` directory (workspace, outbox and any WAL/SHM files), and any configured ADIF file to a clean checkout at the same revision on Ubuntu. Retain a private backup on the source host. Preserve the ADIF absolute path where practical: pending delivery targets are frozen and a changed path holds work rather than rerouting it. If paths must change, retain the original file and resolve held deliveries before cutover; never hand-edit queue rows. Adjust HTTP binding and the Dashboard receiving interface for that host; keep reception and logging disabled until separately validated. Build dependencies there with `./install.sh`. Do not copy `.venv`, `node_modules`, `.tools` or `dist` across platforms. This migration procedure is documented but has not been executed on Ubuntu. [Queue and ADIF recovery details](qso-services.md#backups-upgrades-and-limitations).
 
 ## Troubleshooting and validation
 
@@ -120,6 +120,12 @@ Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2
 
 Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
 
-Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. Contacts are held only in bounded memory caches, so there is no QSO database to migrate.
+Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. History read results use memory caches; preserve the entire `data/` directory, including the durable delivery outbox, and any independently located ADIF file. See [optional QSO services](qso-services.md).
 
 The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
+
+## Current baseline and optional delivery
+
+`main` includes reviewed Step 4 and the optional ADIF/history/durable delivery infrastructure. Both `logging_enabled` and `log_to_wavelog` default to false and remain false in the active installation. Keep them disabled while production WaveLogGate uploads contacts. Isolated real Wavelog write validation and explicit cutover approval are pending. See the [current checkpoint](current-checkpoint.md).
+
+Back up any configured ADIF file in addition to `config.toml` and the entire `data/` directory, with this Dashboard stopped. Protect these backups as they contain credentials and operating data. Upgrades preserve the outbox and existing log files; never replace configuration with example defaults or delete pending work. For rollback, preserve current files first, restore the matching prior configuration/data/ADIF backup and run that revision’s installer.

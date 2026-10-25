@@ -1,6 +1,6 @@
-# Step 4 preview — station details
+# Step 4 — reviewed station details and map
 
-The initial Step 4 preview is on **`feature/step-4-station-details`**. Reviewed `main` remains Step 3 until operator review. This pass follows the GridTracker2 reference: show the fields actually available, put operating information first, and let the secondary details scroll independently. The operator has now requested the station map beneath the profile/details columns, using the same Leaflet/OpenStreetMap approach as pskreporter-local.
+The reviewed Step 4 layout is on **`main`**, merged through PR #3 at `42220f0` on October 25, 2026. The feature branch and [preview evidence](step-4-checkpoint.md) remain available. Inline biography retrieval and actual Ubuntu acceptance remain pending. This pass follows the GridTracker2 reference: show the fields actually available, put operating information first, and let the secondary details scroll independently. The operator has now requested the station map beneath the profile/details columns, using the same Leaflet/OpenStreetMap approach as pskreporter-local.
 
 ## Station display
 
@@ -35,14 +35,14 @@ For a separate clean installation:
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git ~/wsjtx-dashboard-step4
 cd ~/wsjtx-dashboard-step4
-git switch feature/step-4-station-details
+git switch main
 ./install.sh
 .venv/bin/python -m backend.server
 ```
 
 The default address is **http://127.0.0.1:8787/**. Use a free HTTP port in this checkout's `config.toml` if another dashboard is already listening. Follow the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) guide for prerequisites, private GitHub access and operation. This frontend pass adds the locked Leaflet library and TypeScript definitions, with no configuration keys or database migration. The existing receiver, QRZ and Wavelog backend is unchanged. For an existing installation, preserve config/data and follow the documented backup/update procedure; do not recopy example defaults.
 
-For a frontend-only refresh of an existing server using the same backend, check out this feature branch and run `npm ci` followed by `npm run build` in the serving checkout, then reload the browser. A Git checkout alone does not update its built assets. No backend restart is required for this pass.
+For an existing installation, follow the [supported update procedure](install-macos.md#operation-and-updates): stop only the Dashboard, back up configuration, complete data and any ADIF file, fast-forward `main`, run `./install.sh`, and restart. A Git checkout alone does not update built assets. The current baseline includes backend additions as well as presentation changes.
 
 ## Review checklist
 
