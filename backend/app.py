@@ -16,6 +16,11 @@ from .wavelog import WavelogService, WavelogError
 from .wavelog_config import update_wavelog_settings
 from .enrichment import EnrichmentService, EnrichmentSettings, update_settings
 from .state import normalize_call
+from .qso_config import update_qso_settings
+from .qso_history import QsoHistoryService
+from .qso_delivery import QsoDeliveryService
+from .qso_model import QsoError
+from .config import save_qso_config
 from dataclasses import asdict
 
 
@@ -29,6 +34,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
     runtime = ReceiverRuntime(state) if isinstance(state, WorkspaceState) else None
     enrich = None
     wavelog = None
+    qso_history = delivery = None
     config_lock = asyncio.Lock()
     if runtime and config_path:
         enrichment_settings = enrichment_settings or load_config(config_path).enrichment
@@ -36,6 +42,12 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         state.enrichment_service = enrich
         wavelog = WavelogService(state, load_config(config_path).wavelog)
         state.wavelog_service = wavelog
+        qso_settings = load_config(config_path).qso
+        if qso_settings.adif_path or qso_settings.logging_enabled: state.enter_radio_workspace()
+        qso_history = QsoHistoryService(state, qso_settings, wavelog)
+        state.qso_history = qso_history
+        delivery = QsoDeliveryService(state, qso_settings, wavelog, enrich, config_path.parent / 'data' / 'delivery.sqlite3', qso_history)
+        state.qso_service = delivery
 
     @asynccontextmanager
     async def lifespan(_app):
@@ -47,6 +59,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 await enrich.start()
             if wavelog:
                 await wavelog.start()
+            if qso_history: await qso_history.start()
+            if delivery: await delivery.start()
         elif settings.enabled:
             try:
                 sock = create_socket(settings)
@@ -58,6 +72,9 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         try:
             yield
         finally:
+            if runtime: await runtime.stop()
+            if delivery: await delivery.stop()
+            if qso_history: await qso_history.stop()
             if wavelog:
                 await wavelog.stop()
             if enrich:
@@ -147,6 +164,41 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 return wavelog.history(lookup_id)
             except WavelogError as error:
                 raise HTTPException(409, str(error))
+
+    if delivery:
+        @app.put('/api/qso/settings')
+        async def qso_settings(request: Request):
+            try:
+                payload = await request.json()
+                async with config_lock:
+                    new = update_qso_settings(delivery.settings, payload)
+                    if new.logging_enabled and new.log_to_wavelog and not (wavelog.settings.url and wavelog.settings.token):
+                        raise ValueError('Configure Wavelog before enabling delivery')
+                    save_qso_config(config_path, new)
+                    delivery.settings = new
+                    if new.adif_path or new.logging_enabled: state.enter_radio_workspace()
+                    qso_history.configure(new)
+                    delivery.retry()
+                    state.flush()
+            except (ValueError, TypeError, OSError):
+                raise HTTPException(422, 'QSO settings could not be saved. Check the absolute ADIF path, coverage and rig mappings.')
+            return state.snapshot()
+
+        @app.get('/api/qso/history/{lookup_id}')
+        async def qso_history_records(lookup_id: str, band: str | None = None, mode: str | None = None):
+            from .qso_history import filter_history
+            try: return filter_history(qso_history.history(lookup_id), band, mode)
+            except QsoError: raise HTTPException(409, 'History changed; refresh the current station')
+
+        @app.post('/api/qso/history/refresh')
+        async def qso_history_refresh():
+            qso_history.refresh()
+            return state.snapshot()
+
+        @app.post('/api/qso/retry')
+        async def qso_retry():
+            delivery.retry(); state.flush()
+            return state.snapshot()
 
     if runtime:
         class ReceiverRequest(BaseModel):

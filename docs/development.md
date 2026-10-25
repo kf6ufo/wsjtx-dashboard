@@ -40,3 +40,8 @@ This check reads actual station diagnostics in two browser windows without chang
 The enrichment browser suite uses HTTP 8793, isolated loopback UDP 18239 and a temporary country-file fixture. It checks shared enrichment, settings, missing QRZ credentials, history provenance and layout. Provider unit tests use the actual pyhamtools parser with offline country/Club Log XML data and mocked QRZ/Club Log HTTP responses; they require no account and do not establish live subscription access. See [Step 2](step-2.md).
 
 The Wavelog browser workflow uses HTTP 8794 and loopback UDP 18240 with a temporary config/database. All Wavelog responses are offline fixtures; it exercises pagination, two station callsigns, incomplete/empty/loaded results, read-only details, delayed focus changes, two browsers, settings, scope selection and mobile width. Unit tests cover API error handling, pagination inconsistencies, safety limits, credentials and independent worker behavior. These tests do not use production tokens or establish live authenticated Wavelog access.
+
+
+## Optional history/delivery extension
+
+Run `npm run test:e2e:qso` for the isolated ADIF-only browser workflow (HTTP 8797 / loopback UDP 18241). It creates a temporary synthetic file, never uses station multicast or an operator log, and checks incomplete coverage, opt-in writes, duplicate suppression and cross-browser updates. `backend/tests/test_qso_architecture.py` covers provider and delivery contracts, 10,000 indexed contacts, append interruption, destination independence, persistent uncertain outcomes and automatic history recovery. The Python ADIF dependency is pinned in `requirements.lock`. See [the extension guide](qso-services.md) for acceptance limits and the required isolated real-Wavelog test.

@@ -3,7 +3,7 @@ import { rigs } from './fixtures'
 import { mockProviders } from './providers'
 import type { Entry, Lookup, Profile, Providers, Qso, LiveRig, Snapshot, Preferences } from './types'
 export function createDashboard(providers: Providers = mockProviders, live = false) {
- const state = reactive({ wavelog: undefined as import('./types').WavelogState | undefined, photoUrls: {} as Record<string, string>, enrichment: undefined as import('./types').EnrichmentState | undefined, radioWorkspace: false, storageError: '' as string | null, counters: { packets: 0, malformed: 0, decodes: 0 } as Snapshot['counters'], sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
+ const state = reactive({ qso: undefined as import('./types').QsoServiceState | undefined, qsoHistory: undefined as import('./types').HistorySelectionState | undefined, wavelog: undefined as import('./types').WavelogState | undefined, photoUrls: {} as Record<string, string>, enrichment: undefined as import('./types').EnrichmentState | undefined, radioWorkspace: false, storageError: '' as string | null, counters: { packets: 0, malformed: 0, decodes: 0 } as Snapshot['counters'], sample: false, preferences: { title: 'My station', appearance: 'dark', radioStrip: false } as Preferences, call: '', history: [] as Entry[], rigSelections: {} as Record<string, string>, profile: { status: 'pending' } as Lookup<Profile>, qsos: { status: 'pending' } as Lookup<Qso[]>, source: 'radio' as 'radio' | 'browse', decodes: 0, live, liveRigs: [] as LiveRig[], connection: 'connecting' as 'connecting' | 'connected' | 'disconnected', receiver: { status: 'disabled', error: null } as Snapshot['receiver'], navigationError: '' })
  let generation = 0, sequence = 0
  function load(call: string, profileDelay?: number, qsoDelay?: number) {
   const token = ++generation
@@ -44,22 +44,23 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
  async function retry() {
   if (!state.radioWorkspace) { load(state.call); return }
   try {
-   const response = await fetch('/api/wavelog/refresh', { method: 'POST' })
+   const response = await fetch(state.qsoHistory ? '/api/qso/history/refresh' : '/api/wavelog/refresh', { method: 'POST' })
    if (!response.ok) throw new Error('Refresh failed')
    applySnapshot(await response.json(), false)
-  } catch { state.navigationError = 'Wavelog refresh failed. Check the dashboard connection.' }
+  } catch { state.navigationError = 'History refresh failed. Check the dashboard connection.' }
  }
  let historyKey = '', historyRequest = 0
  let historyAbort: AbortController | undefined
  function applyWavelog(snapshot: Snapshot) {
   if (!state.radioWorkspace) return
-  const result = snapshot.wavelog?.result
-  const key = `${snapshot.epoch}:${state.call}:${result?.lookupId ?? result?.status ?? 'disabled'}`
+  const result = snapshot.qsoHistory?.result ?? snapshot.wavelog?.result
+  const endpoint = snapshot.qsoHistory ? '/api/qso/history/' : '/api/wavelog/history/'
+  const key = `${snapshot.epoch}:${endpoint}:${state.call}:${result?.lookupId ?? result?.status ?? 'disabled'}`
   if (historyKey === key) return
   historyKey = key
   const request = ++historyRequest, call = state.call
   historyAbort?.abort()
-  if (snapshot.wavelog?.config.enabled === false || result?.status === 'disabled') {
+  if (!snapshot.qsoHistory && (snapshot.wavelog?.config.enabled === false || result?.status === 'disabled')) {
    state.qsos = { status: 'error', message: 'Wavelog history is disabled. Turn on Enable Wavelog history in Settings and save. A successful connection test does not enable history.' }; return
   }
   if (!result || result.status === 'idle') {
@@ -72,7 +73,7 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   }
   state.qsos = { status: 'pending' }
   historyAbort = new AbortController()
-  void fetch(`/api/wavelog/history/${encodeURIComponent(result.lookupId)}`, { signal: historyAbort.signal })
+  void fetch(`${endpoint}${encodeURIComponent(result.lookupId)}`, { signal: historyAbort.signal })
    .then(async response => {
     if (!response.ok) throw new Error('History response changed or failed')
     const body = await response.json()
@@ -80,7 +81,7 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
     if (body.call !== call || body.lookupId !== result.lookupId || !Array.isArray(body.records)) throw new Error('Unexpected history')
     state.qsos = { status: 'loaded', data: body.records, complete: body.complete === true, message: body.message }
    }).catch(() => {
-    if (request === historyRequest && call === state.call) state.qsos = { status: 'error', message: 'Wavelog history could not be loaded. Retry to refresh; worked status is unknown.' }
+    if (request === historyRequest && call === state.call) state.qsos = { status: 'error', message: 'QSO history could not be loaded. Retry to refresh; worked status is unknown.' }
    })
  }
 
@@ -104,6 +105,8 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   state.counters = snapshot.counters
   state.storageError = snapshot.storageError ?? null
   state.wavelog = snapshot.wavelog
+  state.qsoHistory = snapshot.qsoHistory
+  state.qso = snapshot.qso
   state.enrichment = snapshot.enrichment
   state.photoUrls = snapshot.photoUrls ?? {}
   if (snapshot.call && (changedEpoch || wasRadio !== state.radioWorkspace || state.call !== snapshot.call)) load(snapshot.call)

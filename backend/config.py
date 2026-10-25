@@ -6,6 +6,7 @@ import tomllib
 from .receiver import Settings
 from .enrichment_config import EnrichmentSettings
 from .wavelog_config import WavelogSettings
+from .qso_config import QsoSettings
 
 
 @dataclass(frozen=True)
@@ -15,13 +16,14 @@ class ServerConfig:
     receiver: Settings
     enrichment: EnrichmentSettings = field(default_factory=EnrichmentSettings)
     wavelog: WavelogSettings = field(default_factory=WavelogSettings)
+    qso: QsoSettings = field(default_factory=QsoSettings)
 
 
 def load_config(path: Path) -> ServerConfig:
     try:
         with path.open('rb') as source:
             data = tomllib.load(source)
-        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment', 'wavelog'}:
+        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment', 'wavelog', 'qso'}:
             raise ValueError('Expected [http], [wsjtx], optional [enrichment] and [wavelog] sections')
         http, radio = data['http'], data['wsjtx']
         if set(http) != {'host', 'port'} or not {'enabled', 'group', 'port', 'interface'} <= set(radio) or set(radio) - {'enabled', 'group', 'port', 'interface', 'listen', 'retention'}:
@@ -40,7 +42,7 @@ def load_config(path: Path) -> ServerConfig:
         if not any(address in ipaddress.IPv4Network(network) for network in private_networks):
             raise ValueError('http.host must be a specific private LAN or loopback IPv4 address')
         receiver = Settings(**radio)
-        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})), WavelogSettings(**data.get('wavelog', {})))
+        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})), WavelogSettings(**data.get('wavelog', {})), QsoSettings(**data.get('qso', {})))
     except (OSError, ValueError, TypeError, KeyError) as exc:
         raise ValueError(f'Configuration error in {path}: {exc}') from exc
 
@@ -61,6 +63,11 @@ def save_enrichment_config(path: Path, settings: EnrichmentSettings):
 def save_wavelog_config(path: Path, settings: WavelogSettings):
     from dataclasses import asdict
     _save_section(path, 'wavelog', asdict(settings))
+
+
+def save_qso_config(path: Path, settings: QsoSettings):
+    from dataclasses import asdict
+    _save_section(path, 'qso', asdict(settings))
 
 
 def _save_section(path: Path, section_name: str, values: dict):
@@ -89,10 +96,15 @@ def _save_section(path: Path, section_name: str, values: dict):
                 return '  ' + line[index:].rstrip()
         return ''
 
+    def toml(value):
+        if isinstance(value, dict): return '{' + ', '.join(json.dumps(k) + ' = ' + toml(v) for k,v in value.items()) + '}'
+        if isinstance(value, list): return '[' + ', '.join(map(toml, value)) + ']'
+        return json.dumps(value)
+
     def missing():
         for key, value in values.items():
             if key not in seen:
-                lines.append(f'{key} = {json.dumps(value)}\n')
+                lines.append(f'{key} = {toml(value)}\n')
                 seen.add(key)
 
     for line in original.splitlines(keepends=True):
@@ -106,7 +118,7 @@ def _save_section(path: Path, section_name: str, values: dict):
         if match and match[1] in values:
             key = match[1]
             comment = comment_in(line)
-            lines.append(f'{key} = {json.dumps(values[key])}{comment}\n')
+            lines.append(f'{key} = {toml(values[key])}{comment}\n')
             seen.add(key)
         else:
             lines.append(line if line.endswith('\n') else line + '\n')

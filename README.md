@@ -43,6 +43,10 @@ Radio selections and Focus History browsing load complete paginated contacts ind
 
 The worked-before summary and current-band status appear directly beneath the focused station details, ahead of Station enrichment.
 
+## Optional history and logging preview
+
+The operator-requested architecture extension is on **`feature/qso-history-and-delivery`**, based on the preserved Step 4 preview. It adds independent ADIF history/logging, automatic Wavelog preference/fallback, strict incomplete-history states, per-rig identities, enrichment and a persistent per-destination outbox. Logging defaults to **off**. This branch is for isolated review, not a production uploader cutover. [Configuration, reliability and validation](docs/qso-services.md) · [Full requested scope](docs/qso-architecture-request.md).
+
 ## Step 4 preview
 
 The initial station-details preview is on **`feature/step-4-station-details`**. It uses a compact top navigation bar and a centered photo-first station tile, prioritizes populated fields in a scrollable panel, and keeps worked-before/current-band status immediately below identity. Key information highlights LoTW and a QRZ profile link, with scrollable QSO details below. A zoomable Leaflet/OpenStreetMap station map sits beneath the profile/details columns, ahead of contacts. [Preview installation and operator review](docs/step-4.md). `main` remains the reviewed Step 3 release.

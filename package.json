@@ -13,7 +13,8 @@
     "test:e2e:receiver": "playwright test --config playwright.receiver.config.ts",
     "test:e2e:station": "playwright test --config playwright.station.config.ts",
     "test:e2e:enrichment": "playwright test --config playwright.enrichment.config.ts",
-    "test:e2e:wavelog": "playwright test --config playwright.wavelog.config.ts"
+    "test:e2e:wavelog": "playwright test --config playwright.wavelog.config.ts",
+    "test:e2e:qso": "playwright test --config playwright.qso.config.ts"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",

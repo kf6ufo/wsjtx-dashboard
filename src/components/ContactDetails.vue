@@ -15,6 +15,6 @@ const utcDate = (date: string) => new Date(date).toISOString().replace('T', ' ')
   <dt>Station callsign</dt><dd>{{ qso.station }}</dd>
   <template v-if="qso.grid"><dt>Reported contact grid</dt><dd>{{ qso.grid }}</dd></template>
   <dt>{{ radio ? 'Confirmation' : 'Sample confirmation' }}</dt><dd>{{ qso.confirmed === null ? 'Unavailable' : qso.confirmed ? 'Confirmed' : radio ? 'Unconfirmed' : 'Pending' }}</dd>
-  <template v-if="radio"><dt>Wavelog QSO ID</dt><dd>{{ qso.id }}</dd><template v-if="qso.stationName"><dt>Station location</dt><dd>{{ qso.stationName }}</dd></template><template v-for="confirmation in qso.confirmations" :key="confirmation.type"><dt>{{ confirmation.type }}</dt><dd>{{ confirmation.date || 'Received' }}</dd></template><template v-for="[key, value] in extras" :key="key"><dt>{{ labels[key] || key.replaceAll('_', ' ') }}</dt><dd>{{ value }}</dd></template></template>
+  <template v-if="radio"><dt>QSO ID</dt><dd>{{ qso.id }}</dd><template v-if="qso.stationName"><dt>Station location</dt><dd>{{ qso.stationName }}</dd></template><template v-for="confirmation in qso.confirmations" :key="confirmation.type"><dt>{{ confirmation.type }}</dt><dd>{{ confirmation.date || 'Received' }}</dd></template><template v-for="[key, value] in extras" :key="key"><dt>{{ labels[key] || key.replaceAll('_', ' ') }}</dt><dd>{{ value }}</dd></template></template>
  </dl></div>
 </template>

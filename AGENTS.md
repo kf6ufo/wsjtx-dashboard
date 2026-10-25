@@ -6,7 +6,7 @@ Build a polished, self-hosted, real-time, browser-based companion to WSJT-X, int
 ## Current authority and development order
 Read `WSJTX-REBUILD-HANDOFF.md`, `README.md` and `docs/current-checkpoint.md` before substantial work. The October 23 rebuild handoff replaces the old milestone/deployment plan. Preserve existing history and work. `main` holds the reviewed implementation; use feature branches for future steps.
 
-Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Steps 2 and 3, including QRZ photos and read-only Wavelog history, are approved for publication on `main`. The Step 4 reference arrangement puts worked-before/current-band status below identity in the left column, with scrollable Details alongside on wide screens and below on narrower screens. The operator requested Step 4 station/profile/contact presentation on `feature/step-4-station-details`, with populated fields prioritized in a scrollable area. On October 24 the operator approved adding a zoomable station map below the profile/details columns, using the Leaflet/OpenStreetMap approach from pskreporter-local. Keep main at the reviewed Step 3 scope until review; do not begin Step 5, QSO submissions or forwarding without a request.
+Steps 0 and 1 have been reviewed with the operator, including actual selections from IC9100 and IC7300. Steps 2 and 3, including QRZ photos and read-only Wavelog history, are approved for publication on `main`. The Step 4 reference arrangement puts worked-before/current-band status below identity in the left column, with scrollable Details alongside on wide screens and below on narrower screens. The operator requested Step 4 station/profile/contact presentation on `feature/step-4-station-details`, with populated fields prioritized in a scrollable area. On October 24 the operator approved adding a zoomable station map below the profile/details columns, using the Leaflet/OpenStreetMap approach from pskreporter-local. The operator subsequently requested optional-Wavelog history and enriched logging in `docs/qso-architecture-request.md`; implement that extension on `feature/qso-history-and-delivery`, preserving the Step 4 review branch. Main remains reviewed Step 3. Production logging cutover still requires isolated Wavelog validation and explicit approval; actual UDP forwarding remains out of scope.
 
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
@@ -35,11 +35,11 @@ Support the same source/server/build/config/persistence on macOS and Ubuntu. Nat
 - Step 0 uses SSE or an equivalent server push mechanism with a snapshot endpoint for reconnects.
 
 ## Data ownership and logging safety
-- Wavelog is the authoritative QSO logbook; never create a second independent permanent QSO log or write to Wavelog's database directly.
+- Wavelog is the preferred online history provider; the explicitly requested local ADIF file is an independent optional log/history source, not a synchronized mirror. Never write directly to Wavelog’s database. SQLite holds delivery work and minimal dedupe receipts; purge delivered QSO payloads after all destinations succeed.
 - Production WaveLogGate is working. **Do not disable, replace, modify, or compete with its live QSO submissions.**
 - No live QSO writes, legacy API submissions, credential handling, or changes to production radio configuration in Step 0.
 - Future logging requires verified Logged ADIF parsing, durable queue, careful retries/idempotency, station-location mapping, exhaustive tests, an isolated test Wavelog instance, and explicit approval before cutover.
-- Do not introduce automatic ADIF synchronization or a local ADIF destination in the initial release unless requested.
+- The local ADIF destination is now explicitly requested. Do not implement bidirectional Wavelog/ADIF synchronization or actual UDP forwarding. Preserve configuration, existing logs and pending delivery work on upgrades.
 
 ## Technology and maintainability
 - Current preferences: Vue 3 + TypeScript + Bootstrap 5 for the dashboard; Python + FastAPI for future server work; pyhamtools selectively for radio enrichment; native macOS and Ubuntu installations, with Docker optional. These are recommendations, not permission to build all layers in Step 0.

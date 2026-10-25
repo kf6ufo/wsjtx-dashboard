@@ -136,3 +136,7 @@
 
 /* Let the station/contact column set the row height; history fills it independently. */
 @media(min-width:701px){.radio-desk .history-panel{align-self:stretch;position:relative;top:auto;min-height:0}.radio-desk .history-scroll{flex:1 1 0;min-height:0;height:0;max-height:none}}
+
+.qso-rig-mapping{border:1px solid var(--line);padding:12px;display:grid;gap:10px;border-radius:6px}.qso-rig-mapping legend{font-size:14px}.qso-delivery-job{border-top:1px solid var(--line);padding:10px 0;font-size:12px}.qso-service-notice{margin:0 14px 12px;padding:10px;border:1px solid var(--line);border-radius:6px;font-size:12px;color:var(--muted)}
+
+.qso-settings-form>h4,.qso-settings-form>.qso-rig-mapping{grid-column:1/-1}.qso-rig-mapping{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:700px){.qso-rig-mapping{grid-template-columns:1fr}}

@@ -39,3 +39,7 @@ backups/
 *.swp
 *.swo
 tempCodeRunnerFile.py
+
+# Operator logbooks are runtime data, never source artifacts.
+*.adi
+*.adif

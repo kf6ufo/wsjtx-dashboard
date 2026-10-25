@@ -8,9 +8,9 @@ The complete requirements and acceptance criteria are in [WSJTX-REBUILD-HANDOFF.
 | 1 | Configurable primary WSJT-X UDP reception; per-network-ID baselines, selection changes, bounded packet diagnostics | Reviewed; actual selections from both rigs, ordering and Decode stability verified on Mac |
 | 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Implemented; QRZ tested by operator; photo follow-up added |
 | 3 | Wavelog authoritative complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Approved for main with worked-before-first layout; authenticated reads verified |
-| 4 | Complete real profile/photo/license, QSO details/sorting, worked indicators based on complete history | Initial station-details preview on feature branch; map deferred, awaiting review |
+| 4 | Complete real profile/photo/license, QSO details/sorting, worked indicators based on complete history | Photo/details/map preview preserved on feature branch |
 | 5 | Complete shared bounded lookup history, thumbnails, retention/clear, preserved selection provenance while browsing | Roadmap |
-| 6 | Optional enriched QSO submissions; type 5/12 deduplication, durable queue, mapping, isolated tests and controlled sole-uploader cutover | Roadmap |
+| 6 | Optional enriched type-12 QSO delivery, independent ADIF history/logging, durable per-destination queue and mappings | Explicitly requested; isolated implementation branch, production cutover unapproved |
 | 7 | Optional one-way UDP forwarding; multiple independent destinations, loop prevention, supported enriched formats, actual destination tests | Roadmap |
 
 Step 0 reuses the predecessor's tested Vue components and snapshot transport, with a new persistent sample workspace and native installation path. Step 1 activates the receiver only when explicitly enabled in the saved TOML/Settings. It adds bounded in-memory diagnostics, per-instance health and separate persistent radio history. Step 2 adds opt-in external providers and server-side credentials; Step 3 adds opt-in read-only API v2 history across all authorized locations, with complete pagination and safe partial/error states. QSO submissions and forwarding remain inactive.

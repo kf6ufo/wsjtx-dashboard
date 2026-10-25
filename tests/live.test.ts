@@ -73,4 +73,23 @@ describe('centrally owned live snapshots', () => {
    expect(fetcher).toHaveBeenCalledTimes(3)
   } finally { vi.unstubAllGlobals() }
  })
+ it('uses the generic ADIF result while Wavelog is disabled and rejects a stale provider response', async () => {
+  const pending: ((response: Response) => void)[] = []
+  const fetcher = vi.fn(() => new Promise<Response>(resolve => pending.push(resolve)))
+  vi.stubGlobal('fetch', fetcher)
+  try {
+   const d = createDashboard(undefined, true)
+   const local = (revision: number, call: string, id: string): Snapshot => ({ ...snapshot(revision, call), step: 3, sample: false,
+    qsoHistory: { provider: 'adif', label: 'Local ADIF', notice: 'Local History Only', result: { call, lookupId: id, status: 'loaded', recordCount: 1, complete: false } } })
+   d.applySnapshot(local(1,'K1ABC','old-local'))
+   expect(fetcher.mock.calls[0]![0]).toBe('/api/qso/history/old-local')
+   d.applySnapshot(local(2,'K2XYZ','new-local'))
+   pending[0]!(new Response(JSON.stringify({ call:'K1ABC',lookupId:'old-local',complete:true,records:sampleQsos('JA2HDE') })))
+   await new Promise(resolve => setTimeout(resolve,0))
+   expect(d.state.call).toBe('K2XYZ'); expect(d.state.qsos.status).toBe('pending')
+   pending[1]!(new Response(JSON.stringify({ call:'K2XYZ',lookupId:'new-local',complete:false,records:[{...sampleQsos('JA2HDE')[0],id:'local-current'}] })))
+   await vi.waitFor(() => expect(d.state.qsos).toMatchObject({status:'loaded',complete:false,data:[{id:'local-current'}]}))
+  } finally {vi.unstubAllGlobals()}
+ })
+
 })

@@ -12,7 +12,7 @@ export interface ReceiverState extends Partial<ReceiverConfig> { status: 'disabl
 export interface DiagnosticRow { id: number; at: number; source: string; instance: string | null; kind: number | null; name: string; schema: number | null; size: number; error: string | null }
 export interface DiagnosticDetail extends DiagnosticRow { fields: Record<string, unknown>; rawBase64: string }
 export interface DiagnosticPage { generation: number; latest: number; limit: number; rows: DiagnosticRow[] }
-export interface Snapshot { wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
+export interface Snapshot { qso?: QsoServiceState; qsoHistory?: HistorySelectionState; wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
 
 export interface EnrichmentConfig {
  enabled: boolean; source: 'countryfile' | 'clublogxml' | 'clublogapi' | 'qrz'; filename: string;
@@ -30,3 +30,7 @@ export interface WavelogLogbook { id: number; name: string; stationIds: number[]
 export interface WavelogConnection { status: string; message?: string; api?: string; owner?: string; expiresAt?: string; scopes: string[]; stations: WavelogStation[]; logbooks: WavelogLogbook[]; notices?: string[]; checkedAt?: number }
 export interface WavelogResult { status: string; call: string; complete: boolean; lookupId?: string; recordCount?: number; total?: number | null; scope?: string; cached?: boolean; updatedAt?: number; message?: string; confirmationStatus?: string }
 export interface WavelogState { config: WavelogConfig; connection: WavelogConnection; result: WavelogResult }
+
+export interface QsoConfig { history_source: 'auto' | 'wavelog' | 'adif'; adif_path: string; adif_complete: boolean; logging_enabled: boolean; log_to_wavelog: boolean; recovery_seconds: number; rigs: { id: string; station_callsign: string; operator: string; wavelog_station_id: number; tx_power: string }[] }
+export interface HistorySelectionState { provider: string; label: string; notice?: string; result: WavelogResult }
+export interface QsoServiceState { config: QsoConfig; enabled: boolean; warning: string; error: string; queue: { jobs: Record<string, number>; destinations: { destination: string; status: string; count: number }[]; recent: { id: string; rig: string; status: string; message: string; created: number; deliveries: { destination: string; status: string; attempts: number; message: string; remoteId?: string }[] }[] } }

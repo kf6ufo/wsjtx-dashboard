@@ -46,3 +46,16 @@ page_size = 100
 max_pages = 100
 max_records = 10000
 timeout_seconds = 8
+
+# Optional history and delivery extension. Old files need no migration.
+[qso]
+history_source = "auto"
+adif_path = ""
+# Explicit historical coverage assertion, never inferred from an empty file.
+adif_complete = false
+# Separate from read-only Wavelog settings above. Leave off until isolated review.
+logging_enabled = false
+log_to_wavelog = false
+recovery_seconds = 30
+# Settings writes inline mappings keyed by exact WSJT-X network ID.
+rigs = []
