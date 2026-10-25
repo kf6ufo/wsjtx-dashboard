@@ -24,6 +24,8 @@ export function currentBandStatus(history: Lookup<Qso[]>, band: string | null | 
  if (!band?.trim()) return { kind: 'unknown', title: 'Current band unknown', detail: 'Latest selection has no known band.' }
  const label = bandLabel(band), description = source ? `${source} history` : 'history'
  if (history.status === 'pending') return { kind: 'checking', title: `Checking ${label}…`, detail: `Waiting for complete ${description}.` }
+ const observed = history.status === 'loaded' ? history.data.filter(q => q.observed && normalizeBand(q.band) === normalizeBand(band)) : []
+ if (observed.length) return { kind: 'worked', title: `Worked on ${label}`, detail: `${observed.length} observed locally · ${[...new Set(observed.map(q => q.mode))].join(', ')} · awaiting history reconciliation` }
  if (history.status === 'error' || (history.status === 'loaded' && history.complete !== true)) return { kind: 'unavailable', title: `Status unavailable on ${label}`, detail: 'History failed or is incomplete · worked status unknown.' }
  const records = history.status === 'loaded' ? history.data : []
  const count = records.filter(q => normalizeBand(q.band) === normalizeBand(band)).length

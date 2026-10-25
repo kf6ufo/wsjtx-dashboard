@@ -142,3 +142,7 @@
 .qso-settings-form>h4,.qso-settings-form>.qso-rig-mapping{grid-column:1/-1}.qso-rig-mapping{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:700px){.qso-rig-mapping{grid-template-columns:1fr}}
 
 .station-key-facts>[data-field="confirmVia"]{grid-column:span 2}
+
+.forwarding-form>h3,.forwarding-form>p,.forwarding-destination{grid-column:1/-1}.forwarding-destination{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.forwarding-destination legend{font-size:15px}.forwarding-destination>p,.packet-selection{grid-column:1/-1}.packet-selection{display:flex;flex-wrap:wrap;gap:8px;border:0}.packet-selection legend{font-size:12px}.forwarding-status,.observed-qso{font-size:11px;color:var(--station-amber)}.observed-qso{display:block}.history-clear-dialog{max-width:480px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:24px}.history-clear-dialog::backdrop{background:#0008}.dialog-actions{display:flex;justify-content:flex-end;gap:10px}@media(max-width:700px){.forwarding-destination{grid-template-columns:minmax(0,1fr)}}
+.history-clear-dialog{background:#1e2b36;color:#dce3e9;max-height:90dvh;overflow:auto}.theme-light .history-clear-dialog{background:#fff;color:#20323d}
+.focus-history-form>h3,.focus-history-form>p{grid-column:1/-1}.history-clear-dialog{width:min(480px,calc(100vw - 32px));box-sizing:border-box}

@@ -328,6 +328,7 @@ class WavelogService:
             if token == self.generation:
                 self.result = result | {'lookupId': uuid4().hex}
                 self.connection = deepcopy(client.connection)
+                if getattr(self.state, 'observations', None): self.state.observations.remember(self.result, 'wavelog')
                 self.state.flush()
 
     def configure(self, settings):

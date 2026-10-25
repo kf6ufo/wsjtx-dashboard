@@ -59,3 +59,13 @@ log_to_wavelog = false
 recovery_seconds = 30
 # Settings writes inline mappings keyed by exact WSJT-X network ID.
 rigs = []
+
+# Step 5: radio-selection history only, independent of QSO logs and the outbox.
+[history]
+limit = 200
+# 0 = retain until manually cleared; other choices are 7 or 30 days.
+retention_days = 0
+
+# Step 7: opt-in one-way UDP distribution. Each destination defaults disabled.
+[forwarding]
+destinations = []

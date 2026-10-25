@@ -9,9 +9,9 @@ The complete requirements and acceptance criteria are in [WSJTX-REBUILD-HANDOFF.
 | 2 | Configurable pyhamtools/callbook enrichment; background lookups, source/freshness, bounded caches | Implemented; QRZ tested by operator; photo follow-up added |
 | 3 | Wavelog complete QSO history, pagination, authorized station locations including KF0TKE/KF6UFO | Implemented and reviewed on main; authenticated read-only access verified |
 | 4 | Real profile/photo/license, QSO details/sorting, worked indicators, scrollable details and map | Implemented and reviewed on main through PR #3; inline biography deferred, Ubuntu acceptance untested |
-| 5 | Complete shared bounded lookup history, thumbnails, retention/clear, preserved selection provenance while browsing | Partly implemented; final acceptance and retention/clear enhancements remain unfinished |
+| 5 | Complete shared bounded lookup history, thumbnails, retention/clear, preserved selection provenance while browsing | Implemented on `feature/steps-5-and-7`: independent observed contacts/read reconciliation, size/retention/clear controls; milestone acceptance pending |
 | 6 | Optional enriched type-12 QSO delivery, independent ADIF history/logging, durable per-destination queue and mappings | Infrastructure on main through PR #4; offline validation passed, logging disabled; isolated real write validation and production cutover pending |
-| 7 | Optional one-way UDP forwarding; multiple independent destinations, loop prevention, supported enriched formats, actual destination tests | Not implemented |
+| 7 | Optional one-way UDP forwarding; multiple independent destinations, loop prevention, supported enriched formats, actual destination tests | Implemented on `feature/steps-5-and-7`: opt-in raw/enriched one-way distribution; actual receiver evidence and milestone acceptance tracked in the checkpoint |
 
 The operator approved the October 25 stable baseline in [the merge request](main-baseline-merge-request.md). PR #3 merged at `42220f0`; PR #4 was retargeted from Step 4 to main and merged at `e9fa332`. [Current verification and runtime state](current-checkpoint.md). Steps 0–4 are reviewed implementation, not a claim that every platform or biography capability is accepted. Future work stays on feature branches.
 

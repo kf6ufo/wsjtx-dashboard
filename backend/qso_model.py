@@ -5,6 +5,8 @@ import hashlib
 import io
 import json
 import re
+from functools import lru_cache
+from copy import deepcopy
 import adif_io
 from .state import normalize_call
 from .protocol import band_from_hz
@@ -71,6 +73,28 @@ def parse_completed(raw):
     return normalize_qso(rows[0])
 
 
+@lru_cache(maxsize=128)
+def _completed_fields(raw):
+    return parse_completed(raw)
+
+
+def completed_fields(packet):
+    """One bounded normalization cache shared by observation, delivery and routing."""
+    return deepcopy(_completed_fields(packet.fields['adif']))
+
+
+async def enriched_completed(original, profile, enrichment):
+    """Use the same provider lock and missing-only rules for every QSO output."""
+    import asyncio
+    result = {}
+    if enrichment.settings.enabled:
+        try:
+            async with enrichment.lock:
+                result = await asyncio.to_thread(enrichment.providers.enrich, {'call': original['CALL'], 'dxGrid': original.get('GRIDSQUARE', ''), 'deGrid': original.get('MY_GRIDSQUARE', '')})
+        except Exception: pass
+    return enrich_qso(original, profile, result)
+
+
 def normalize_qso(fields):
     values = {str(k).upper(): str(v).strip() for k, v in fields.items() if str(v).strip()}
     call = normalize_call(values.get('CALL', ''))
@@ -104,6 +128,12 @@ def identity(fields):
     except InvalidOperation: pass
     values = [fields.get('CALL',''), fields.get('QSO_DATE',''), fields.get('TIME_ON','').ljust(6,'0'), fields.get('BAND',''), fields.get('SUBMODE') or fields.get('MODE',''), frequency, fields.get('STATION_CALLSIGN','')]
     return hashlib.sha256(json.dumps([v.upper() for v in values], separators=(',', ':')).encode()).hexdigest()
+
+
+def observed_identity(fields, rig):
+    """Deduplicate an explicit contact across rigs; keep unknown stations separate."""
+    key = identity(fields)
+    return key if fields.get('STATION_CALLSIGN') else hashlib.sha256((rig + ':' + key).encode()).hexdigest()
 
 
 def adif_text(fields):

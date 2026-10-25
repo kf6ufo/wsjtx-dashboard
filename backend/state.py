@@ -84,6 +84,7 @@ class FocusState:
             self.rigs[packet.rig_id] = dict(self.rigs.get(packet.rig_id, {}), id=packet.rig_id, name=packet.rig_id.removeprefix('WSJT-X - '),
                                           band=band, mode=packet.mode, frequency=packet.frequency,
                                           call=call or '', dxGrid=packet.fields.get('dxGrid', ''),
+                                          stationCall=packet.fields.get('deCall', ''),
                                           deGrid=packet.fields.get('deGrid', ''), lastSeen=now, online=True, color='#70c9bd')
             if not baseline and call and call != previous:
                 self.selection_sequence += 1

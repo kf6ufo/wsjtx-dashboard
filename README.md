@@ -2,7 +2,7 @@
 
 A self-hosted companion for the operating desk. **Reviewed baseline — Steps 0–4:** compact Station / Diagnostics / Settings navigation, photo-first station identity, populated scrollable details, worked-before/current-band indicators, a zoomable station map and complete contact history. Shared Focus History, live browser updates, saved preferences, multiple WSJT-X receiver identities, pyhamtools and QRZ enrichment are included. Fictional sample data is labeled and kept separate from actual radio selections.
 
-**UDP reception, enrichment and Wavelog history are opt-in. Configure credentials locally in Settings.** Optional independent ADIF history, Wavelog fallback and durable enriched-QSO delivery infrastructure are also included. **Dashboard logging and Wavelog delivery default off and remain off in the operating installation.** Production WaveLogGate still submits QSOs. Real Wavelog write validation and production cutover are pending; no radio commands or UDP forwarding are implemented. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) · [Remaining work and acceptance boundaries](docs/roadmap.md).
+**UDP reception, enrichment and Wavelog history are opt-in. Configure credentials locally in Settings.** Optional independent ADIF history, Wavelog fallback and durable enriched-QSO delivery infrastructure are also included. **Dashboard logging and Wavelog delivery default off and remain off in the operating installation.** Production WaveLogGate still submits QSOs. Real Wavelog write validation and production cutover are pending; radio commands remain excluded. The Steps 5/7 review branch adds opt-in one-way UDP distribution. [Approved requirements](WSJTX-REBUILD-HANDOFF.md) · [Remaining work and acceptance boundaries](docs/roadmap.md).
 
 ## Install and run
 
@@ -50,3 +50,7 @@ Included on **`main`**: independent ADIF history/logging, automatic Wavelog pref
 ## Station display
 
 The reviewed Step 4 layout is on **`main`**. It uses a compact top navigation bar and a centered photo-first station tile, prioritizes populated fields in a scrollable panel, and keeps worked-before/current-band status immediately below identity. The confirmation-method refinement on `feature/station-confirmation-methods` combines the former LoTW/QRZ entries into **Confirm via**; the QRZ profile link remains with station basics. Scrollable QSO details remain below. A Leaflet/OpenStreetMap station map sits beneath the profile/details columns, ahead of contacts, with buttons, drag/pinch, keyboard and Command/Ctrl-scroll zoom. [Display behavior and acceptance caveats](docs/step-4.md). Inline biography retrieval remains deferred; Ubuntu execution remains untested.
+
+## Steps 5 and 7 review
+
+`feature/steps-5-and-7` adds independent completed-contact observation/read reconciliation, configurable Focus History retention/clearing and optional one-way UDP destinations. Logging remains off; WaveLogGate stays unchanged. The combined milestone retains the confirmation-method display preview and awaits operator review before merging. [Behavior and GridTracker2 setup](docs/steps-5-and-7.md) · [Actual validation and remaining acceptance](docs/current-checkpoint.md).

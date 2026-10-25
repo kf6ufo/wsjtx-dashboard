@@ -108,7 +108,8 @@ def parse_packet(data: bytes) -> Packet:
         fields['adif'] = r.text(65000)
         if r.pos != len(data): raise PacketError('Unexpected Logged ADIF payload tail')
     # Other message payloads remain uninterpreted, bounded diagnostic bytes only.
-    # Type 5 remains diagnostic-only; type 12 is handled by the opt-in QSO outbox.
+    # Type 5 is not an observation/submission; type 12 feeds shared observation
+    # and independently opted-in delivery/forwarding services.
     return Packet(kind, rig_id, schema=schema, fields=fields)
 
 

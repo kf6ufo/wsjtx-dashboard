@@ -22,6 +22,11 @@ from .qso_delivery import QsoDeliveryService
 from .qso_model import QsoError
 from .config import save_qso_config
 from dataclasses import asdict
+from .history_config import HistorySettings
+from .forwarding_config import ForwardingSettings
+from .forwarding import ForwardingService
+from .observations import ObservationService
+from .config import save_history_config, save_forwarding_config
 
 
 class BrowseRequest(BaseModel):
@@ -35,6 +40,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
     enrich = None
     wavelog = None
     qso_history = delivery = None
+    observations = forwarding = None
     config_lock = asyncio.Lock()
     if runtime and config_path:
         enrichment_settings = enrichment_settings or load_config(config_path).enrichment
@@ -48,10 +54,24 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         state.qso_history = qso_history
         delivery = QsoDeliveryService(state, qso_settings, wavelog, enrich, config_path.parent / 'data' / 'delivery.sqlite3', qso_history)
         state.qso_service = delivery
+        state.configure_history(load_config(config_path).history)
+        observations = ObservationService(state, config_path.parent / 'data' / 'observations.sqlite3', qso_history, wavelog)
+        state.observations = observations
+        forwarding = ForwardingService(state, load_config(config_path).forwarding, enrich, lambda: delivery.settings, config_path.parent / 'data' / 'forwarding.sqlite3')
+        state.forwarding = forwarding
+
+    async def maintenance():
+        ticks = 0
+        while True:
+            await asyncio.sleep(1)
+            ticks += 1
+            if ticks % 60 == 0 and state.prune_history(): state.publish()
+            if forwarding and forwarding.dirty:
+                forwarding.dirty = False; state.flush()
 
     @asynccontextmanager
     async def lifespan(_app):
-        task, sock = None, None
+        task, sock, maintenance_task = None, None, None
         state.receiver.update(group=settings.group, port=settings.port, interface=settings.interface)
         if runtime:
             await runtime.apply(settings)
@@ -61,6 +81,9 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 await wavelog.start()
             if qso_history: await qso_history.start()
             if delivery: await delivery.start()
+            if observations: await observations.start()
+            if forwarding: await forwarding.start()
+            maintenance_task = asyncio.create_task(maintenance())
         elif settings.enabled:
             try:
                 sock = create_socket(settings)
@@ -72,7 +95,12 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         try:
             yield
         finally:
+            if maintenance_task:
+                maintenance_task.cancel()
+                with suppress(asyncio.CancelledError): await maintenance_task
             if runtime: await runtime.stop()
+            if forwarding: await forwarding.stop()
+            if observations: await observations.stop()
             if delivery: await delivery.stop()
             if qso_history: await qso_history.stop()
             if wavelog:
@@ -142,6 +170,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                     new = update_wavelog_settings(wavelog.settings, payload)
                     save_wavelog_config(config_path, new)
                     wavelog.configure(new)
+                    if observations:
+                        observations.sync_context(); state.flush()
             except (ValueError, TypeError, OSError):
                 raise HTTPException(422, 'Wavelog settings could not be saved. Check the URL, API v2 token, scope, limits and file permissions.')
             return state.snapshot()
@@ -178,6 +208,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                     delivery.settings = new
                     if new.adif_path or new.logging_enabled: state.enter_radio_workspace()
                     qso_history.configure(new)
+                    if observations: observations.sync_context()
                     delivery.retry()
                     state.flush()
             except (ValueError, TypeError, OSError):
@@ -201,6 +232,50 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
             return state.snapshot()
 
     if runtime:
+        @app.put('/api/history/settings')
+        async def history_settings(request: Request):
+            if config_path is None: raise HTTPException(503, 'Installed configuration is required')
+            try:
+                body = await request.json()
+                if not isinstance(body, dict): raise ValueError()
+                new = HistorySettings(**body)
+                async with config_lock:
+                    save_history_config(config_path, new)
+                    state.configure_history(new); state.publish()
+            except (ValueError, TypeError, OSError): raise HTTPException(422, 'Choose a valid history size and retention period')
+            return state.snapshot()
+
+        @app.delete('/api/history')
+        async def clear_history():
+            state.clear_history()
+            if state.storage_error: raise HTTPException(503, state.storage_error)
+            return state.snapshot()
+
+    if observations:
+        @app.get('/api/observations/history/{lookup_id}')
+        async def observed_history(lookup_id: str):
+            try: return observations.records(lookup_id)
+            except QsoError: raise HTTPException(409, 'Observed history changed; use the latest snapshot')
+
+    if forwarding:
+        @app.put('/api/forwarding')
+        async def forwarding_settings(request: Request):
+            try:
+                body = await request.json()
+                if not isinstance(body, dict): raise ValueError()
+                new = ForwardingSettings(**body)
+                async with config_lock:
+                    await forwarding.validate(new, load_config(config_path).receiver)
+                    save_forwarding_config(config_path, new)
+                    await forwarding.configure(new)
+                    state.flush()
+            except (ValueError, TypeError, OSError): raise HTTPException(422, 'Forwarding settings are invalid or would feed the Dashboard receiving socket')
+            return state.snapshot()
+
+        @app.get('/api/forwarding')
+        async def forwarding_status(): return forwarding.snapshot()
+
+    if runtime:
         class ReceiverRequest(BaseModel):
             model_config = {'extra': 'forbid'}
             enabled: bool = Field(strict=True)
@@ -216,6 +291,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 raise HTTPException(503, 'Receiver settings require the installed config.toml entry point')
             try:
                 new = Settings(**body.model_dump())
+                if forwarding: await forwarding.validate(forwarding.settings, new)
             except ValueError as exc:
                 raise HTTPException(422, str(exc))
             async with config_lock, runtime.lock:

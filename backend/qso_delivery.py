@@ -15,7 +15,7 @@ import sqlite3
 import stat
 import threading
 import time
-from .qso_model import parse_completed, enrich_qso, identity, adif_text, adif_records, QsoError
+from .qso_model import completed_fields, enriched_completed, identity, adif_text, adif_records, QsoError
 from .wavelog import WavelogClient, WavelogError
 import requests
 
@@ -216,7 +216,7 @@ class QsoDeliveryService:
         if not self.accepting or not self.settings.logging_enabled or packet.kind != 12: return
         if not self.settings.adif_path and not self.settings.log_to_wavelog: return
         try:
-            original = parse_completed(packet.fields['adif'])
+            original = completed_fields(packet)
             profile = next((deepcopy(r) for r in self.settings.rigs if r['id']==packet.rig_id), {})
             targets = {}
             if self.settings.adif_path: targets['adif'] = {'path': self.settings.adif_path}
@@ -246,13 +246,7 @@ class QsoDeliveryService:
             key, rig, raw, mapping = rows[0]; original, profile = json.loads(raw), json.loads(mapping)
             profile = profile or next((deepcopy(r) for r in self.settings.rigs if r['id']==rig), {})
             try:
-                result = {}
-                if self.enrichment.settings.enabled:
-                    try:
-                        async with self.enrichment.lock:
-                            result = await asyncio.to_thread(self.enrichment.providers.enrich, {'call':original['CALL'], 'dxGrid':original.get('GRIDSQUARE',''), 'deGrid':original.get('MY_GRIDSQUARE','')})
-                    except Exception: result = {}
-                fields, sources = enrich_qso(original, profile, result)
+                fields, sources = await enriched_completed(original, profile, self.enrichment)
                 fields.setdefault('APP_WSJT_DASHBOARD_RIG', rig)
                 sources.setdefault('APP_WSJT_DASHBOARD_RIG', 'WSJT-X network ID')
                 if not fields.get('STATION_CALLSIGN'): raise QsoError('Set a station identity for this WSJT-X network ID, then retry')

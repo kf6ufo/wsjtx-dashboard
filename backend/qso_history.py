@@ -136,6 +136,7 @@ class QsoHistoryService:
             self.event.clear()
             if not self.active or self.state.sample or not self.state.call: continue
             call, token = self.state.call, self.generation
+            observation_revision = getattr(getattr(self.state, 'observations', None), 'revision', 0)
             wr = self.wavelog.result
             enabled = self.wavelog.settings.enabled
             source = self.settings.history_source
@@ -156,8 +157,11 @@ class QsoHistoryService:
                 result = deepcopy(wr) | {'source': 'wavelog'} if source != 'adif' and wr.get('call') == call else dict(call=call, status='error', complete=False, records=[], source='none', message='No history source is configured; worked status is unknown.')
                 key = (result.get('source'), call, result.get('lookupId'), result.get('status'))
             if call != self.state.call or token != self.generation: continue
+            if observation_revision != getattr(getattr(self.state, 'observations', None), 'revision', 0): continue
             if key != self.key:
-                self.key = key; self.result = result | {'lookupId': uuid4().hex}; self.state.flush()
+                self.key = key; self.result = result | {'lookupId': uuid4().hex}
+                if getattr(self.state, 'observations', None): self.state.observations.remember(self.result, self.result.get('source', 'none'))
+                self.state.flush()
             if source != 'adif' and enabled and self.wavelog.connection.get('status') == 'error' and time.monotonic() >= self.next_probe and not self.wavelog.lock.locked():
                 self.next_probe = time.monotonic() + self.settings.recovery_seconds
                 for item in self.wavelog.client.cache.values(): item['updatedAt'] = 0
