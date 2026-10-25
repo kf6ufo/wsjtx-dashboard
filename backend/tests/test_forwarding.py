@@ -159,3 +159,24 @@ def test_loop_rejection_at_save_and_at_dispatch_and_settings_validation(tmp_path
         assert load_config(config).forwarding.destinations==[row]
         assert api.get('/api/snapshot').json()['qso']['config']['logging_enabled'] is False
         assert api.put('/api/forwarding',json={'destinations':[]},headers={'Origin':'https://other.invalid'}).status_code==403
+
+
+def test_reflected_packets_from_a_different_port_cannot_steal_focus_or_loop(tmp_path):
+    async def scenario():
+        sink=collector();state,fwd=service(tmp_path,[destination('safe',sink.getsockname()[1])])
+        await fwd.start();await ready(fwd)
+        original_source=('127.0.0.1',23000)
+        for call in ['K0BASE','K1OLD','K2CURRENT']:
+            raw=status(call=call)
+            ingest(raw,state,original_source);assert await receive(sink)==raw
+        previous=deepcopy(state.history)
+        # An indirect relay can return from a different source port than its listener.
+        ingest(status(call='K1OLD'),state,('127.0.0.2',62000))
+        assert state.history==previous and state.call=='K2CURRENT'
+        assert fwd.snapshot()['loopDrops']==1
+        with pytest.raises(asyncio.TimeoutError):await receive(sink,.05)
+        # Repeated original traffic from the real sender is still byte-preserved.
+        raw=status(call='K2CURRENT');ingest(raw,state,original_source)
+        assert await receive(sink)==raw
+        await fwd.stop();state.close();sink.close()
+    asyncio.run(scenario())

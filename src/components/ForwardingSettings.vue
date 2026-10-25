@@ -38,5 +38,6 @@ const status = (id: string) => props.dashboard.state.forwarding?.destinations.fi
   <button type="button" class="btn console-button" @click="add" :disabled="rows.length>=16">Add UDP destination</button>
   <button class="btn btn-success" :disabled="busy || dashboard.state.connection !== 'connected'">{{ busy ? 'Saving…' : 'Save UDP forwarding settings' }}</button><p role="status">{{ message }}</p>
   <p v-if="dashboard.state.forwarding?.error" role="alert" class="error-text">{{ dashboard.state.forwarding.error }}</p>
+  <p v-if="dashboard.state.forwarding?.loopDrops">Reflected packets blocked: {{ dashboard.state.forwarding.loopDrops }}</p>
  </form>
 </template>

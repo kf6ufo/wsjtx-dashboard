@@ -65,13 +65,15 @@ class ForwardingService:
         self.outputs, self.tasks = {}, []
         self.completed = asyncio.Queue(maxsize=64)
         self.recent = OrderedDict()
+        self.origins = OrderedDict()
+        self.loop_drops = 0
         self.error = ''
         self.dirty = False
 
     def snapshot(self):
         if any(task.done() and not task.cancelled() and task.exception() for task in self.tasks):
             self.error = 'A UDP destination worker stopped. Other outputs remain independent; check network resources and save the destination settings again.'
-        return dict(config=self.settings.public(), error=self.error, destinations=[dict(id=key, enabled=item['config']['enabled'], dispatched=item['dispatched'], filtered=item['filtered'], dropped=item['dropped'], lastSentAt=item['lastSentAt'], lastError=item['lastError'], status=item['status'], queued=item['queue'].qsize()) for key,item in self.outputs.items()], completedQueued=self.completed.qsize())
+        return dict(config=self.settings.public(), error=self.error, loopDrops=self.loop_drops, destinations=[dict(id=key, enabled=item['config']['enabled'], dispatched=item['dispatched'], filtered=item['filtered'], dropped=item['dropped'], lastSentAt=item['lastSentAt'], lastError=item['lastError'], status=item['status'], queued=item['queue'].qsize()) for key,item in self.outputs.items()], completedQueued=self.completed.qsize())
 
     async def configure(self, settings):
         # Cancel old queues before saving routes; disabled destinations cannot drain later.
@@ -100,18 +102,25 @@ class ForwardingService:
                 # An unavailable host is independently diagnosed, not a global outage.
                 continue
 
+    def is_reflection(self, raw, source):
+        if not self.recent: return False
+        previous = self.recent.get(hashlib.sha256(raw).digest())
+        if previous and time.monotonic()-previous[1] <= 3 and source != previous[0]:
+            self.loop_drops += 1; self.dirty = True
+            return True
+        return False
+
     def route(self, raw, source, packet=None):
+        if self.is_reflection(raw, source): return
         try: _reader, schema, kind, rig = read_header(raw)
         except PacketError: return
         if kind not in PACKET_TYPES: return
         if self.outputs: self.dirty = True
         if packet is None and schema in (2, 3): return  # Known-schema malformed payload.
         digest = hashlib.sha256(raw).digest()
-        now = time.monotonic()
-        for key in list(self.recent):
-            if now-self.recent[key] > 3: self.recent.pop(key)
-            else: break
-        if (source, digest) in self.recent: return
+        self.origins[digest] = source
+        self.origins.move_to_end(digest)
+        while len(self.origins)>2048: self.origins.popitem(last=False)
         enriched = []
         for key, item in self.outputs.items():
             row = item['config']
@@ -178,7 +187,9 @@ class ForwardingService:
                     sent = sock.sendto(data, address)
                     if sent != len(data): raise OSError()
                     item['dispatched'] += 1; item['lastSentAt'] = int(time.time()*1000); item['lastError'] = ''
-                    self.recent[(address,hashlib.sha256(data).digest())] = time.monotonic()
+                    digest = hashlib.sha256(data).digest()
+                    self.recent[digest] = (self.origins.get(digest), time.monotonic())
+                    self.recent.move_to_end(digest)
                     while len(self.recent)>2048: self.recent.popitem(last=False)
                 except (OSError, ValueError):
                     item['dropped'] += 1; item['lastError'] = 'UDP dispatch failed or was blocked to prevent a loop; no automatic retry.'

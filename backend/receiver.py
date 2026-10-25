@@ -58,6 +58,14 @@ def create_socket(settings: Settings):
 
 
 def ingest(data: bytes, state: FocusState, source=('127.0.0.1', 0)):
+    forwarding = getattr(state, 'forwarding', None)
+    if forwarding and forwarding.is_reflection(data, source):
+        if hasattr(state, 'record_datagram'):
+            state.record_datagram(data, source, error='Reflected forwarding packet suppressed')
+        state.counters['packets'] += 1
+        state.counters['ignored'] += 1
+        state.publish()
+        return
     try:
         packet = parse_packet(data)
     except PacketError as exc:

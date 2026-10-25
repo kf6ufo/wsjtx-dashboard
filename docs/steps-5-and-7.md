@@ -36,7 +36,7 @@ Supported receive-side types are Heartbeat 0, Status 1, Decode 2, Clear 3, QSO L
 
 Each destination has a bounded telemetry queue, its own nonblocking UDP socket and independent DNS/error state. Ordinary traffic never waits for provider lookups or Wavelog. Unavailable destinations drop telemetry without retries and cannot block healthy outputs. Status shows enablement, resolution/error state, queued/dispatched/filtered/dropped counts, last dispatch UTC and last error. Counters are since startup/configuration; dispatch means a UDP send, not acknowledgement, parsing success or a saved QSO.
 
-Only IPv4 unicast is supported. Multicast, unspecified/broadcast addresses and same-host destinations feeding Dashboard's receiver port are rejected. Hostname results are checked at resolution and receiver settings are rechecked at dispatch; short-lived echo fingerprints also suppress reflected packets. Remote applications must not construct an indirect forwarding loop. DNS refresh is bounded; DNS failures do not disable other destinations.
+Only IPv4 unicast is supported. Multicast, unspecified/broadcast addresses and same-host destinations feeding Dashboard's receiver port are rejected. Hostname results are checked at resolution and receiver settings are rechecked at dispatch; short-lived bounded echo fingerprints also suppress reflected packets from a different source, even when a relay uses another source port. Reflections are rejected before focus/observation processing and counted separately, so an old reflected Status cannot steal focus. Remote applications must not construct an indirect forwarding loop. DNS refresh is bounded; DNS failures do not disable other destinations.
 
 ## Enriched Logged ADIF format
 
