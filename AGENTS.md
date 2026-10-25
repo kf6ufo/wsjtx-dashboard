@@ -29,8 +29,8 @@ Support the same source/server/build/config/persistence on macOS and Ubuntu. Nat
 - Display separate pending, empty, unavailable/error, and loaded states. API failures must never be interpreted as zero QSOs.
 
 ## Known radio behavior
-- Verified Step 1 multicast group `239.255.0.73:2238`; Mac receiving interface `10.176.1.200`; Ubuntu interface `10.176.1.6` is historical and must be verified.
-- October 25 baseline restart: the Mac currently has `10.176.1.91`; a temporary receive-only probe there saw both rigs. The preserved saved interface `10.176.1.200` is no longer assigned and Dashboard reception is blocked pending the operator's configuration choice. See the current checkpoint; do not claim the old listening state proves current reception.
+- Verified multicast group `239.255.0.73:2238`; current Mac receiving interface `10.176.1.91`. Previous Mac interface `10.176.1.200` and Ubuntu interface `10.176.1.6` are historical and must be verified before reuse.
+- October 25 baseline follow-up: the operator approved updating only Dashboard's receiving interface from `10.176.1.200` to `10.176.1.91`. The receiver applied it without restarting the backend; actual packets from both IC7300 and IC9100 were verified. Configuration apart from that interface, history/preferences/photos and disabled logging were preserved. WSJT-X, Wavelog and WaveLogGate were unchanged.
 - Step 1 observed `WSJT-X - IC9100` and `WSJT-X - IC7300`, both from `10.176.1.5`. QRPLabsQDX at `10.176.1.7` is historical context. Additional rigs are expected. Identify instances by WSJT-X network ID rather than sender IP alone.
 - WSJT-X Status `dx_call` changes were experimentally seen after clicks on both systems. A change is a practical selection signal, **not proof of a physical mouse click**. Treat initial Status as baseline; validate callsigns and handle cleared/unchanged values carefully.
 - Step 0 uses SSE or an equivalent server push mechanism with a snapshot endpoint for reconnects.

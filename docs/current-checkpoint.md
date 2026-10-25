@@ -1,6 +1,6 @@
 # Current checkpoint — reviewed main baseline
 
-**October 25, 2026.** The operator approved [merging the reviewed features](main-baseline-merge-request.md) while preserving the single operating Dashboard and keeping all Dashboard submissions disabled. Both PRs are merged; the installed Dashboard is on `main`. UDP reception has a host-interface blocker described below.
+**October 25, 2026.** The operator approved [merging the reviewed features](main-baseline-merge-request.md) while preserving the single operating Dashboard and keeping all Dashboard submissions disabled. Both PRs are merged; the installed Dashboard is on `main`. The receiving-interface mismatch discovered after restart was resolved with the operator's approval; actual packets from both rigs now arrive.
 
 ## Published history
 
@@ -31,13 +31,15 @@ The supported installer ran in the serving checkout. Its old `origin` referenced
 
 Read-only live API/Chrome checks confirmed actual authenticated Wavelog history (complete, one matching contact), QRZ data/profile photo and calculated radio enrichment, populated two-column details, worked-before display, contact dialog, map, history/contact panel alignment, Settings/Diagnostics navigation, narrow-screen width and no page errors. No provider write/retry/outage experiment was performed.
 
-## UDP interface blocker
+## UDP interface recovery
 
 The preserved Dashboard configuration enables multicast `239.255.0.73:2238` on receiving interface **10.176.1.200**. After restart, macOS reports **10.176.1.91** as its current LAN address; 10.176.1.200 is not assigned. Receiver startup therefore reports `Can't assign requested address`. The old process had retained its previously opened socket; its earlier listening status does not prove fresh reception on the changed host address.
 
 A temporary receive-only socket on 10.176.1.91 received 21 real packets from both `WSJT-X - IC7300` and `WSJT-X - IC9100`, then closed. This verifies a working receiving interface without modifying Dashboard configuration or launching another Dashboard.
 
-Configuration was deliberately preserved, rather than silently changing the saved interface. The operator has been asked whether to update only Dashboard's receiving interface to 10.176.1.91. Until that choice is resolved, **live UDP reception and post-restart multiple-rig telemetry are blocked**, although the Dashboard and provider reads work. No WSJT-X, Wavelog or WaveLogGate settings/services were changed. Historical actual IC9100/IC7300 selection evidence and current isolated multiple-rig test passes remain separate from this live restart limitation.
+The operator then explicitly approved changing only Dashboard's receiving interface to **10.176.1.91**. The existing `/api/receiver` settings operation saved and applied this change, restarting only the receiving socket. The backend process/epoch stayed unchanged. Parsed configuration before/after differed only in `wsjtx.interface`; history, preferences and photo references matched immediately after the apply, with all 88 entries retained. Original configuration and the before-change snapshot remain in the private baseline backup, along with `interface-change-verification.json`.
+
+The Dashboard now reports **listening** on the new interface. Live diagnostics verified newly received packets from both **`WSJT-X - IC7300`** and **`WSJT-X - IC9100`**, with packet counters advancing. A read-only Chrome check confirmed both rigs in Diagnostics, the focused callsign, disabled logging and no page errors. This is actual multicast receipt, separate from fixture tests and earlier physical selection acceptance. No new physical-click acceptance claim is made. Both logging flags remain false. No WSJT-X, Wavelog or WaveLogGate settings/services were changed; the sole Dashboard remains on port 8787. No application code changed, so the previously recorded automated test results apply; the interface follow-up used these live checks.
 
 ## Logging safety and rollback
 
@@ -47,7 +49,7 @@ To roll back, stop only this Dashboard, preserve current files, use source `f266
 
 ## Remaining work
 
-- **Steps 0–4:** implemented and reviewed baseline. Inline biography retrieval remains deferred; actual Ubuntu install/upgrade/network acceptance remains untested. Resolve the current receiving-interface mismatch before claiming the live receiver healthy.
+- **Steps 0–4:** implemented and reviewed baseline. Live receiver recovery on the current Mac interface is verified. Inline biography retrieval remains deferred; actual Ubuntu install/upgrade/network acceptance remains untested.
 - **Step 5:** shared persistent, bounded, deduplicated Focus History already works, with thumbnails and preserved radio provenance while browsing. Retention/clear enhancements and final Step 5 acceptance remain unfinished.
 - **Step 6:** independent ADIF history and durable enriched delivery infrastructure is implemented and tested offline. No isolated Wavelog instance currently exists. Real field acceptance/normalization and outage/reconciliation validation require an isolated instance, followed by explicit sole-uploader production cutover approval. This is not operational completion; keep Dashboard logging disabled and WaveLogGate unchanged.
 - **Step 7:** UDP forwarding is not implemented.
