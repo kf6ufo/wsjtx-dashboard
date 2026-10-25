@@ -52,7 +52,7 @@ Output is a correctly encoded WSJT-X schema 2/3 type-12 message, with its origin
 
 ## GridTracker2 operator review
 
-The operator identified the receiving iMac as **10.176.1.7**, listening on **UDP 2239**. Keep GridTracker multicast and its UDP forwarding off for this test, so it receives only the Dashboard's unicast feed. Its installed version should be recorded during review; do not infer it from a successful send.
+The live destination is enabled for iMac **10.176.1.7:2239**, original types 0/1/2/3 only. The operator confirmed **GridTracker2 2.261019.5 (2.261019.5.991) receives both IC7300 and IC9100**. Keep GridTracker multicast and its UDP forwarding off for this arrangement, so it receives only the Dashboard's unicast feed. The receiving-side confirmation is separate from Dashboard dispatch counters. The following procedure also covers independent setup/retesting.
 
 1. In Dashboard Settings add a named destination for `10.176.1.7:2239`, Original WSJT-X format, all rigs, and types 0/1/2/3 only. Enable/save it. This phase sends no logged-contact packets.
 2. Confirm GridTracker actually displays live Status/Decode traffic from IC7300 and IC9100 as distinct network IDs. Verify ordinary traffic does not reorder Dashboard Focus History.
