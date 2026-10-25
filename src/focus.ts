@@ -51,7 +51,7 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
  }
  let historyKey = '', historyRequest = 0
  let historyAbort: AbortController | undefined
- function applyWavelog(snapshot: Snapshot) {
+ function applyHistoryResult(snapshot: Snapshot) {
   if (!state.radioWorkspace) return
   const result = snapshot.qsoHistory?.result ?? snapshot.wavelog?.result
   const endpoint = snapshot.qsoHistory ? '/api/qso/history/' : '/api/wavelog/history/'
@@ -61,15 +61,15 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   const request = ++historyRequest, call = state.call
   historyAbort?.abort()
   if (!snapshot.qsoHistory && (snapshot.wavelog?.config.enabled === false || result?.status === 'disabled')) {
-   state.qsos = { status: 'error', message: 'Wavelog history is disabled. Turn on Enable Wavelog history in Settings and save. A successful connection test does not enable history.' }; return
+   state.qsos = { status: 'error', message: 'History is disabled. Configure a history source in Settings and save. Connection tests do not enable history.' }; return
   }
   if (!result || result.status === 'idle') {
-   state.qsos = { status: 'error', message: 'Wavelog is not connected. Configure read-only history in Settings.' }; return
+   state.qsos = { status: 'error', message: 'History is not connected. Configure a history source in Settings.' }; return
   }
   if (result.call !== call || result.status === 'pending') { state.qsos = { status: 'pending' }; return }
   if (result.status === 'empty' && result.complete) { state.qsos = { status: 'empty' }; return }
   if (!result.lookupId || !result.recordCount) {
-   state.qsos = { status: 'error', message: result.message || 'Wavelog history is unavailable; worked status is unknown.' }; return
+   state.qsos = { status: 'error', message: result.message || 'History is unavailable; worked status is unknown.' }; return
   }
   state.qsos = { status: 'pending' }
   historyAbort = new AbortController()
@@ -113,7 +113,7 @@ export function createDashboard(providers: Providers = mockProviders, live = fal
   else if (!snapshot.call && (state.call || changedEpoch)) {
    ++generation; state.call = ''; state.profile = { status: 'pending' }; state.qsos = { status: 'pending' }
   }
-  applyWavelog(snapshot)
+  applyHistoryResult(snapshot)
   // Same-call radio selections update provenance through history, without
   // restarting independent lookups for every telemetry/Decode snapshot.
  }

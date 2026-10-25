@@ -33,6 +33,10 @@ The ADIF path must be absolute and end in `.adi` or `.adif`. Regular UTF-8 ADI f
 
 External file changes and successful local appends invalidate the in-memory index via file identity/size/mtime. A file changing during a read is incomplete until a stable reload. An in-process lock serializes index loads. The offline suite exercises 10,000 synthetic contacts; there is no claim of unlimited memory or benchmark on every target OS.
 
+## Station wording
+
+Station actions and status use source-neutral wording: **Not worked in this scope**, **Refresh history**, **Lookup complete · 0 contacts**, generic loading/disabled/unknown states and **Contact details**. Focus History hints and band summaries do not assume Wavelog. The source footer, scope/freshness information and actionable provider errors retain actual provenance. Settings still names each integration explicitly. Contact-row expansion/dialog reset follows the active history result, including ADIF.
+
 ## Logging destinations and station identity
 
 History selection and logging enablement are independent. With **Enable completed-QSO logging** on:

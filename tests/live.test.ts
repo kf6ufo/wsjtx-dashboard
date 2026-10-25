@@ -69,7 +69,7 @@ describe('centrally owned live snapshots', () => {
    disabled.wavelog!.config.enabled = false
    disabled.wavelog!.result = { status: 'disabled', call: '', complete: false }
    d.applySnapshot(disabled)
-   expect(d.state.qsos).toMatchObject({ status: 'error', message: expect.stringContaining('history is disabled') })
+   expect(d.state.qsos).toMatchObject({ status: 'error', message: expect.stringContaining('History is disabled') })
    expect(fetcher).toHaveBeenCalledTimes(3)
   } finally { vi.unstubAllGlobals() }
  })
