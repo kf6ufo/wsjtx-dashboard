@@ -1,4 +1,4 @@
-import type { EnrichmentResult } from './types'
+import type { EnrichmentResult, Lookup, Qso } from './types'
 
 export interface StationField { key: string; label: string; value: string; source?: string; href?: string }
 export interface StationGroup { title: string; fields: StationField[] }
@@ -37,6 +37,34 @@ const definitions: [string, [string, string][]][] = [
  ['Location', [['addr1', 'Address'], ['addr2', 'City / locality'], ['state', 'State / province'], ['zipcode', 'Postal code'], ['country', 'Country / entity'], ['county', 'County'], ['ccode', 'Country code'], ['fips', 'FIPS code'], ['timezone', 'Time zone'], ['gmtoffset', 'UTC offset'], ['latitude', 'Provider latitude'], ['longitude', 'Provider longitude'], ['geoloc', 'Coordinate source'], ['iota', 'IOTA']]],
 ]
 const yesNo = new Set(['lotw', 'eqsl', 'mqsl', 'lotw_user', 'eqsl_user'])
+function qslPreference(value: unknown): boolean | undefined {
+ const text = fieldText(value).toLowerCase()
+ if (['1', 'true', 'yes', 'y'].includes(text)) return true
+ if (['0', 'false', 'no', 'n'].includes(text)) return false
+}
+
+export function stationConfirmationFact(data: EnrichmentResult | undefined, call: string, history?: Lookup<Qso[]>): StationField {
+ const current = data?.call === call ? data : undefined
+ const fields = current?.fields ?? {}, observed = new Set<string>()
+ const aliases: Record<string, string> = { lotw: 'LoTW', qrz: 'QRZ', qrzcom: 'QRZ', eqsl: 'eQSL', eqslcc: 'eQSL', qsl: 'Paper QSL', paper: 'Paper QSL', direct: 'Paper QSL', bureau: 'Paper QSL' }
+ if (history?.status === 'loaded') for (const qso of history.data) {
+  if (qso.call?.toUpperCase() !== call.toUpperCase()) continue
+  for (const confirmation of qso.confirmations ?? []) {
+   const method = aliases[confirmation.type.toLowerCase().replace(/[^a-z0-9]/g, '')]
+   if (method) observed.add(method)
+  }
+ }
+ const methods: string[] = [], sources: string[] = []
+ for (const [method, key] of [['LoTW', 'lotw'], ['QRZ', ''], ['eQSL', 'eqsl'], ['Paper QSL', 'mqsl']] as const) {
+  const preference = key ? qslPreference(fields[key]) : undefined
+  if (preference === true) {
+   methods.push(method); sources.push(`${method}: ${current?.fieldSources?.[key] || 'Callbook'} preference`)
+  } else if (preference === undefined && observed.has(method)) {
+   methods.push(method); sources.push(`${method}: previously confirmed in contact history`)
+  }
+ }
+ return { key: 'confirmVia', label: 'Confirm via', value: methods.join(', ') || 'Unknown', source: methods.length ? sources.join('\n') + '\nThese are confirmation methods, not confirmation of the current QSO.' : 'Confirmation methods are unknown. A QRZ profile alone does not establish a confirmation method.' }
+}
 
 export function stationGroups(data: EnrichmentResult): StationGroup[] {
  const values = data.fields ?? {}, sources = data.fieldSources ?? {}
@@ -59,8 +87,8 @@ export function stationGroups(data: EnrichmentResult): StationGroup[] {
    if (!hasValue(raw)) continue
    let value = fieldText(raw)
    if (yesNo.has(key)) {
-    if (['0', 'false', 'no'].includes(value.toLowerCase())) value = 'No'
-    else if (['1', 'true', 'yes'].includes(value.toLowerCase())) value = 'Yes'
+    const preference = qslPreference(raw)
+    if (preference !== undefined) value = preference ? 'Yes' : 'No'
    }
    const href = key === 'url' ? webLink(raw) : key === 'email' ? emailLink(raw) : undefined
    fields.push({ key, label, value, source: sources[key], href })
@@ -75,15 +103,11 @@ export function stationGroups(data: EnrichmentResult): StationGroup[] {
 }
 
 export function stationKeyFacts(data: EnrichmentResult): StationField[] {
- const fields = data.fields ?? {}, computed = data.computed ?? {}
+ const computed = data.computed ?? {}
  const facts: StationField[] = []
  if (computed.distanceKm !== undefined) facts.push({ key: 'distance', label: 'Distance', value: `${computed.distanceKm.toLocaleString()} km` })
  if (computed.heading !== undefined) facts.push({ key: 'heading', label: 'Azimuth', value: `${computed.heading}°` })
  if (data.locationGrid) facts.push({ key: 'grid', label: data.reportedGrid ? 'Operating grid' : data.callbookGrid ? 'Home grid' : 'Estimated grid', value: data.locationGrid, source: data.locationSource })
- const qsl = stationGroups(data).flatMap(group => group.fields)
- const lotw = qsl.find(field => field.key === 'lotw')
- if (lotw) facts.push(lotw)
- if (data.call) facts.push({ key: 'qrz', label: 'QRZ', value: data.providers?.qrz?.status === 'loaded' ? 'Profile ↗' : 'Lookup ↗', href: `https://www.qrz.com/db/${encodeURIComponent(data.call)}`, source: 'Opens the QRZ callsign page; not a confirmation status' })
  return facts
 }
 

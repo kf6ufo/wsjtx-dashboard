@@ -33,7 +33,7 @@ def get_json(self, resource, params=None, **kwargs):
     if call == 'K3ERR' and resource == 'qso' and page == 2: raise WavelogError('Fixture later-page failure. History is incomplete.')
     count = 0 if call == 'K2NEW' else 213
     if resource == 'confirmation':
-        rows = [] if not count else [dict(qso_id=1, callsign=call, type='LoTW', confirmation_date='2026-10-01')]
+        rows = [] if not count else [dict(qso_id=1, callsign=call, type=kind, confirmation_date='2026-10-01') for kind in ('LoTW', 'QRZ')]
         if params.get('station_id') == '2': rows=[]
     else:
         rows=[dict(id=i, call=call, station_id=1 if i%2 else 2, band='20m' if i%2 else '40m', mode='MFSK', submode='FT8', qso_date=(datetime(2024,1,1)+timedelta(days=i)).isoformat(' '), rst_sent='-07', rst_rcvd='-10', gridsquare='FN31', freq=14074000, comment='Offline fixture '+call) for i in range(1,count+1)]

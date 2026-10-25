@@ -172,7 +172,7 @@ function interleave() { dashboard.select('DL1DEMO', rigs[0]!.id); dashboard.sele
     </div>
     <div v-if="state.radioWorkspace && state.qsos.status === 'loaded' && state.qsos.complete" class="contact-overview" aria-label="Complete contact history overview"><div><span class="section-eyebrow">WORKED BANDS</span><div class="contact-tags"><span v-for="band in bands" :key="band">{{ bandLabel(band) }}</span></div></div><div><span class="section-eyebrow">MODES</span><div class="contact-tags"><span v-for="mode in modes" :key="mode">{{ mode }}</span></div></div><div class="confirmation-overview"><span class="section-eyebrow">QSL STATUS</span><strong v-if="confirmations.unknown !== qsos.length">{{ confirmations.confirmed }} confirmed</strong><strong v-else>Confirmation unavailable</strong><small v-if="confirmations.unknown">{{ confirmations.unknown }} unavailable</small></div></div>
     </section>
-    <StationKeyInformation v-if="state.radioWorkspace" :enrichment="state.enrichment" :call="state.call"/>
+    <StationKeyInformation v-if="state.radioWorkspace" :enrichment="state.enrichment" :call="state.call" :history="state.qsos"/>
     </div><div class="station-details-column">
     <p v-if="detailsError" class="station-refresh-error" role="alert">{{ detailsError }}</p>
     <EnrichmentCard v-if="state.radioWorkspace" :enrichment="state.enrichment" :call="state.call" :connected="state.connection === 'connected' && !detailsBusy" @refresh="refreshDetails"/>

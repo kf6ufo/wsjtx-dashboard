@@ -139,7 +139,9 @@ test('QRZ photos appear beside the callsign and as shared history thumbnails', a
  await vertical.focus(); await first.keyboard.press('Home')
 
  await expect(first.locator('.station-key-facts [data-field="eqsl"]')).toHaveCount(0)
- await expect(first.locator('.station-key-facts [data-field="qrz"] a')).toHaveAttribute('href', 'https://www.qrz.com/db/K1ACT')
+ await expect(first.locator('.station-key-facts [data-field="confirmVia"] dd')).toHaveText('LoTW')
+ await expect(first.locator('.station-key-facts a')).toHaveCount(0)
+ await expect(first.locator('.identity-links').getByRole('link', { name: 'QRZ profile ↗', exact: true })).toHaveAttribute('href', 'https://www.qrz.com/db/K1ACT')
  const mapBox = await first.locator('.station-map').boundingBox(), contactsBox = await first.locator('.qso-heading').boundingBox()
  expect(mapBox!.y).toBeGreaterThanOrEqual(primaryBox!.y + primaryBox!.height)
  expect(mapBox!.width).toBeGreaterThan(primaryBox!.width + detailBox!.width)
