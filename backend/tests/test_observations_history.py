@@ -124,12 +124,12 @@ def test_adif_reconciliation_does_not_append_and_partial_history_stays_explicit(
         partial=history.adif.lookup('K1OBS');history.result=partial|{'lookupId':'partial'}
         combined=obs.merged(state.call)
         assert len(combined['records'])==1 and combined['pendingObserved']==1 and not combined['complete']
-        history.adif.coverage=True;history.adif.stamp=None
         for item in obs.pending.values():item['due']=0
         await obs.start()
         deadline=time.monotonic()+2
         while obs.pending and time.monotonic()<deadline:await asyncio.sleep(.02)
-        assert not obs.pending and history.result['complete']
+        assert not obs.pending and not history.result['complete']
+        assert history.result['records'][0]['verifiedHistory']
         assert path.read_text()==adif_text(fields())
         await obs.stop();state.close()
     asyncio.run(scenario())

@@ -36,5 +36,6 @@ describe('QSO sorting and band assessment', () => {
   expect(currentBandStatus(incomplete, '17m')).toMatchObject({ kind: 'worked', title: 'Worked on 17 m', detail: expect.stringContaining('observed locally · FT8') })
   expect(currentBandStatus(incomplete, '20m').kind).toBe('unavailable')
   expect(currentBandStatus({ ...incomplete, data: [{ ...observed, observed: false }] }, '17m').kind).toBe('unavailable')
+  expect(currentBandStatus({ ...incomplete, data: [{ ...observed, observed: false, verifiedHistory: true }] }, '17m')).toMatchObject({ kind: 'worked', detail: expect.stringContaining('historical coverage incomplete') })
  })
 })

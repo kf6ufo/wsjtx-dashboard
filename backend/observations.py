@@ -239,7 +239,8 @@ class ObservationService:
                 with self.lock, self.db:
                     for key, item in group:
                         matches = [r for r in (result or {}).get('records', []) if matches_contact(item['fields'], r)]
-                        if result and result.get('complete') and len(matches) == 1:
+                        verified = result and (result.get('complete') or (source == 'adif' and result.get('recordsVerified')))
+                        if verified and len(matches) == 1:
                             self.db.execute('DELETE FROM observations WHERE id=?', (key,))
                             self.db.execute('INSERT OR REPLACE INTO observation_receipts VALUES(?,?)', (key, now))
                             retired.append(key)

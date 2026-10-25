@@ -1,6 +1,6 @@
 export interface Rig { id: string; name: string; band: string; mode: string; color: string }
 export interface Profile { name: string; location: string; country: string; grid: string; initials: string; color: string; bio: string }
-export interface Qso { observed?: boolean; observationStatus?: string; observedRig?: string; call?: string; stationId?: number; stationName?: string; confirmations?: { type: string; date: string }[]; details?: Record<string, string>; id: string; date: string; band: string; mode: string; sent: string; received: string; station: string; grid: string; confirmed: boolean | null }
+export interface Qso { verifiedHistory?: boolean; observed?: boolean; observationStatus?: string; observedRig?: string; call?: string; stationId?: number; stationName?: string; confirmations?: { type: string; date: string }[]; details?: Record<string, string>; id: string; date: string; band: string; mode: string; sent: string; received: string; station: string; grid: string; confirmed: boolean | null }
 export interface Entry { call: string; rigId: string; selectedAt: number; band: string | null; mode?: string; frequency?: number; dxGrid?: string; deGrid?: string; browsedAt?: number; recency: number }
 export type Lookup<T> = { status: 'pending' } | { status: 'loaded'; data: T; complete?: boolean; message?: string } | { status: 'empty' } | { status: 'error'; message: string }
 export interface QsoHistory { records: Qso[]; complete: boolean }
