@@ -1,6 +1,6 @@
 # Steps 5 and 7 — live contacts, Focus History and UDP distribution
 
-This review milestone implements the [operator request](steps-5-and-7-request.md) on `feature/steps-5-and-7`, retaining the preceding confirmation-display preview. Main remains the reviewed baseline until operator acceptance. It does not activate Step 6 production logging or replace WaveLogGate.
+The operator accepted this milestone and its display refinements for publication on **main** through [PR #6](https://github.com/kf6ufo/wsjtx-dashboard/pull/6) on **October 26, 2026**. It implements the [operator request](steps-5-and-7-request.md), retaining the confirmation-method display. Feature-branch history and [review evidence](steps-5-and-7-review-checkpoint.md) are preserved. It does not activate Step 6 production logging or replace WaveLogGate.
 
 ## Observing completed contacts
 
@@ -50,7 +50,7 @@ Output is a correctly encoded WSJT-X schema 2/3 type-12 message, with its origin
 
 [WSJT-X wire protocol](https://github.com/WSJTX/wsjtx/blob/master/Network/NetworkMessage.hpp) · [GridTracker2 receiver source](https://gitlab.com/gridtracker.org/gridtracker2) · [GridTracker settings guide](https://docs.gridtracker.org/latest/GridTracker-Overview/Settings-Sub-Menus.html)
 
-## GridTracker2 operator review
+## GridTracker2 setup and verification
 
 The live destination is enabled for iMac **10.176.1.7:2239**, original types 0/1/2/3 only. The operator confirmed **GridTracker2 2.261019.5 (2.261019.5.991) receives both IC7300 and IC9100**. Keep GridTracker multicast and its UDP forwarding off for this arrangement, so it receives only the Dashboard's unicast feed. The receiving-side confirmation is separate from Dashboard dispatch counters. The following procedure also covers independent setup/retesting.
 
@@ -64,11 +64,11 @@ Actual receiver/version evidence and field-preservation limits are recorded sepa
 
 ## Installation, backup and rollback
 
-Use the standard native installer at the identified feature commit. Before upgrading/restarting, stop only Dashboard and back up `config.toml`, the complete `data/` directory and any configured ADIF file. This now includes workspace, delivery, observations and forwarding SQLite databases and any WAL/SHM files. Preserve all pending observations/delivery work, thumbnails and preferences. Never copy virtual environments or node_modules between platforms.
+Use the standard native installer on main; the accepted application source is `2890e02`. Before upgrading/restarting, stop only Dashboard and back up `config.toml`, the complete `data/` directory and any configured ADIF file. This now includes workspace, delivery, observations and forwarding SQLite databases and any WAL/SHM files. Preserve all pending observations/delivery work, thumbnails and preferences. Never copy virtual environments or node_modules between platforms.
 
 Old TOML files load with manual/200-entry history and no destinations. The installer does not rewrite them. Saving the new Settings sections adds `[history]` or `[forwarding]`. Older baseline code rejects these sections, so rollback requires its matching backed-up configuration as well as preserving current data first. Keep new observation/receipt databases for a later resumed upgrade; do not delete pending work or hand-edit receipts. No production radio, Wavelog or WaveLogGate service is changed by installation.
 
-Ubuntu execution, remote receiver versions and any unsupported third-party format need their own acceptance evidence. No production Step 6 cutover is included. Do not merge this milestone before operator review.
+Ubuntu execution, other receiver versions and unsupported third-party formats need their own acceptance evidence. The recorded iMac version and isolated local receiver evidence support this accepted milestone; they do not establish blanket compatibility. No production Step 6 cutover is included.
 
 ## Verified GridTracker2 format behavior
 
