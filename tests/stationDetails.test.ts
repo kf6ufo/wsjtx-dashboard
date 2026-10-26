@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { stationGroups, webLink, operatorName, stationKeyFacts, stationTableRows } from '../src/stationDetails'
+import { stationGroups, webLink, operatorName, stationKeyFacts, stationTableRows, stationConfirmationFact } from '../src/stationDetails'
+import StationKeyInformation from '../src/components/StationKeyInformation.vue'
 import EnrichmentCard from '../src/components/EnrichmentCard.vue'
 import ContactDetails from '../src/components/ContactDetails.vue'
-import type { EnrichmentState } from '../src/types'
+import type { EnrichmentState, Lookup, Qso } from '../src/types'
 const enrichment: EnrichmentState = {
  config: { enabled: true } as EnrichmentState['config'], health: {},
  result: { status: 'loaded', call: 'K1ABC', reportedGrid: 'JO62', callbookGrid: 'FN31', stationGrid: 'CN87',
@@ -18,7 +19,7 @@ describe('station presentation', () => {
   expect(fields.find(f => f.key === 'gmtoffset')?.value).toBe('0')
   expect(fields.find(f => f.key === 'lotw')?.value).toBe('Yes')
   expect(fields.find(f => f.key === 'eqsl')?.value).toBe('No')
-  expect(stationKeyFacts(enrichment.result).find(f => f.key === 'qrz')).toMatchObject({ label: 'QRZ', value: 'Profile ↗', href: 'https://www.qrz.com/db/K1ABC' })
+  expect(stationKeyFacts(enrichment.result).some(f => f.key === 'qrz')).toBe(false)
   expect(stationKeyFacts(enrichment.result).some(f => f.key === 'eqsl')).toBe(false)
   expect(stationTableRows(enrichment.result).some(f => f.key === 'eqsl')).toBe(false)
   expect(fields.find(f => f.key === 'mqsl')?.value).toBe('No')
@@ -26,6 +27,31 @@ describe('station presentation', () => {
   expect(groups[0]?.title).toBe('Contact & QSL')
   expect(groups.find(group => group.title === 'Operating location')?.fields.map(f => f.value)).toEqual(['JO62', 'FN31', 'CN87'])
   expect(fields.find(f => f.key === 'longitude')?.source).toBe('QRZ XML')
+ })
+ it('lists advertised confirmation methods without inferring QRZ from a profile or account', () => {
+  const data = { ...enrichment.result, fields: { lotw: 'Y', eqsl: 'N', mqsl: true, user: 'profile-owner', lotw_user: '1' } }
+  expect(stationConfirmationFact(data, 'K1ABC')).toMatchObject({ label: 'Confirm via', value: 'LoTW, Paper QSL' })
+  expect(stationGroups(data).flatMap(g => g.fields).find(f => f.key === 'eqsl')?.value).toBe('No')
+  expect(stationConfirmationFact({ ...data, fields: { lotw: '0', eqsl: '', mqsl: false } }, 'K1ABC').value).toBe('Unknown')
+ })
+ it('uses positive contact evidence for QRZ, deduplicates methods, and respects current advertised negatives', () => {
+  const qso: Qso = { id: '1', call: 'K1ABC', date: '2026-10-24T14:25:27Z', band: '17m', mode: 'FT8', sent: '-10', received: '-07', station: 'KF6UFO', grid: 'JO62', confirmed: true, confirmations: [{ type: 'QRZ.com', date: '' }, { type: 'LoTW', date: '' }, { type: 'eQSL', date: '' }, { type: 'unknown service', date: '' }] }
+  const history: Lookup<Qso[]> = { status: 'loaded', complete: false, data: [qso, qso] }
+  const fact = stationConfirmationFact(enrichment.result, 'K1ABC', history)
+  expect(fact.value).toBe('LoTW, QRZ')
+  expect(fact.source).toContain('QRZ: previously confirmed in contact history')
+  expect(stationConfirmationFact(undefined, 'K1ABC', { ...history, data: [qso, { ...qso, call: 'K2OTHER' }] }).value).toBe('LoTW, QRZ, eQSL')
+  expect(stationConfirmationFact(enrichment.result, 'K2NEW', history).value).toBe('Unknown')
+  expect(stationConfirmationFact(undefined, 'K1ABC', { ...history, data: [{ ...qso, call: undefined }] }).value).toBe('Unknown')
+  for (const unavailable of [{ status: 'pending' }, { status: 'empty' }, { status: 'error', message: 'Unavailable' }] as Lookup<Qso[]>[]) expect(stationConfirmationFact(undefined, 'K1ABC', unavailable).value).toBe('Unknown')
+ })
+ it('renders one compact confirmation indicator, with unknown state after a different callsign', async () => {
+  const w = mount(StationKeyInformation, { props: { enrichment, call: 'K1ABC' } })
+  expect(w.get('[data-field="confirmVia"] dd').text()).toBe('LoTW')
+  expect(w.find('a').exists()).toBe(false)
+  await w.setProps({ call: 'K2NEW' })
+  expect(w.get('[data-field="confirmVia"] dd').text()).toBe('Unknown')
+  expect(w.text()).not.toContain('LoTW')
  })
  it('keeps unsafe links as text, and formats the provider display name without HTML rendering', () => {
   for (const value of ['javascript:alert(1)', 'data:text/html,x', 'https://user:pass@example.com', '//example.com']) expect(webLink(value)).toBeUndefined()

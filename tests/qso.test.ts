@@ -30,4 +30,12 @@ describe('QSO sorting and band assessment', () => {
   for (const data of [records, []]) expect(currentBandStatus({ status: 'loaded', data, complete: false }, '20m').kind).toBe('unavailable')
   expect(currentBandStatus(complete, null).kind).toBe('unknown')
  })
+ it('shows positive observed band and mode immediately while keeping other incomplete bands unknown', () => {
+  const observed = { ...records[0]!, band: '17m', mode: 'FT8', observed: true }
+  const incomplete = { status: 'loaded' as const, data: [observed], complete: false }
+  expect(currentBandStatus(incomplete, '17m')).toMatchObject({ kind: 'worked', title: 'Worked on 17 m', detail: expect.stringContaining('observed locally · FT8') })
+  expect(currentBandStatus(incomplete, '20m').kind).toBe('unavailable')
+  expect(currentBandStatus({ ...incomplete, data: [{ ...observed, observed: false }] }, '17m').kind).toBe('unavailable')
+  expect(currentBandStatus({ ...incomplete, data: [{ ...observed, observed: false, verifiedHistory: true }] }, '17m')).toMatchObject({ kind: 'worked', detail: expect.stringContaining('historical coverage incomplete') })
+ })
 })

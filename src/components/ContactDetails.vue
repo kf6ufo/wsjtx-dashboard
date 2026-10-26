@@ -11,6 +11,7 @@ const utcDate = (date: string) => new Date(date).toISOString().replace('T', ' ')
  <div class="contact-detail-scroll" role="region" tabindex="0" aria-label="Scrollable contact details"><dl class="contact-details-grid">
   <dt>Date / time</dt><dd>{{ utcDate(qso.date) }}</dd>
   <dt>Band / mode</dt><dd>{{ qso.band }} / {{ qso.mode }}</dd>
+  <template v-if="qso.observed"><dt>Record source</dt><dd>Observed locally in WSJT-X · {{ qso.observationStatus }}</dd><dt>Originating rig</dt><dd>{{ qso.observedRig }}</dd></template>
   <template v-if="qso.sent || qso.received"><dt>Sent / received</dt><dd>{{ qso.sent || 'Not recorded' }} / {{ qso.received || 'Not recorded' }}</dd></template>
   <dt>Station callsign</dt><dd>{{ qso.station }}</dd>
   <template v-if="qso.grid"><dt>Reported contact grid</dt><dd>{{ qso.grid }}</dd></template>

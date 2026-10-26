@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from .foundation import FoundationState
 from .state import FocusState
 from .protocol import diagnostic_header
+from .history_config import HistorySettings
 
 PACKET_NAMES = {0: 'Heartbeat', 1: 'Status', 2: 'Decode', 3: 'Clear', 4: 'Reply', 5: 'QSO Logged',
                 6: 'Close', 7: 'Replay', 8: 'Halt Tx', 9: 'Free Text', 10: 'WSPR Decode',
@@ -20,6 +21,7 @@ PACKET_NAMES = {0: 'Heartbeat', 1: 'Status', 2: 'Decode', 3: 'Clear', 4: 'Reply'
 class WorkspaceState(FoundationState):
     def __init__(self, path):
         self.ready = False
+        self.history_settings = HistorySettings()
         super().__init__(path)
         self.sample_payload = deepcopy(self._saved)
         self.sample = True
@@ -93,15 +95,42 @@ class WorkspaceState(FoundationState):
             snapshot['qso'] = self.qso_service.snapshot()
         if getattr(self, 'qso_history', None) and self.qso_history.active:
             snapshot['qsoHistory'] = self.qso_history.snapshot()
+        snapshot['historySettings'] = self.history_settings.public()
+        if getattr(self, 'observations', None): snapshot['observations'] = self.observations.snapshot()
+        if getattr(self, 'forwarding', None): snapshot['forwarding'] = self.forwarding.snapshot()
         return snapshot
 
     def accept(self, packet, **kwargs):
+        if getattr(self, 'observations', None): self.observations.capture(packet)
         if getattr(self, 'qso_service', None): self.qso_service.capture(packet)
         super().accept(packet, **kwargs)
+
+    def configure_history(self, settings):
+        self.history_settings = settings
+        self.history_limit = settings.limit
+        self.prune_history()
+
+    def prune_history(self, now=None):
+        now = int(time.time() * 1000) if now is None else now
+        cutoff = now - self.history_settings.retention_days * 86400000 if self.history_settings.retention_days else 0
+        retained = [entry for entry in self.history if entry['selectedAt'] >= cutoff][:self.history_limit]
+        if retained == self.history: return False
+        self.history = retained
+        if self.call and not any(entry['call'] == self.call for entry in retained):
+            self.call, self.source = '', 'browse'
+        return True
+
+    def clear_history(self):
+        self.history = []
+        self.call, self.source = '', 'browse'
+        self.photo_urls = {}
+        # Preserve receiver baselines, actual logs, observations and delivery work.
+        self.publish()
 
     def publish(self):
         if not self.ready:
             return super().publish()
+        self.prune_history()
         sample = deepcopy(self.sample_payload) if not self.sample else dict(call=self.call, source=self.source,
             history=self.history, rigs=self.rigs, sequence=self.selection_sequence)
         sample['preferences'] = self.preferences
@@ -167,9 +196,15 @@ class WorkspaceState(FoundationState):
         self.receiver['lastPacketAt'] = now
 
     def diagnostic_rows(self):
+        # Small allowlisted radio previews; never send full ADIF/raw payloads in
+        # the polled packet list. Full fields remain in explicit packet details.
+        keys = ('version', 'frequency', 'mode', 'dxCall', 'transmitting', 'decoding', 'message', 'snr', 'deltaFrequency')
         return dict(generation=self.diagnostic_generation, latest=self.diagnostic_sequence,
                     limit=self.diagnostics.maxlen,
-                    rows=[{k: v for k, v in row.items() if k not in ('raw', 'fields')} for row in reversed(self.diagnostics)])
+                    rows=[{k: v for k, v in row.items() if k not in ('raw', 'fields')} | {
+                        'preview': {k: value[:240] if isinstance(value, str) else value
+                                    for k in keys if type(value := row['fields'].get(k)) in (str, int, float, bool)}
+                    } for row in reversed(self.diagnostics)])
 
     def diagnostic_detail(self, sequence):
         row = next((r for r in self.diagnostics if r['id'] == sequence), None)

@@ -25,6 +25,8 @@ npm run test:e2e:foundation
 npm run test:e2e:receiver
 npm run test:e2e:enrichment
 npm run test:e2e:wavelog
+npm run test:e2e:qso
+npm run test:e2e:steps57
 ```
 
 Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` when using installed macOS Chrome. The foundation browser suite runs the real installed server against a temporary config/database and production build. See the checkpoint for actual results. The receiver browser suite starts the installed entry point with loopback UDP 18238 and HTTP 8792; it sends synthetic protocol fixtures through an actual UDP socket. This validates socket/parse/state/browser behavior, not real WSJT-X or multicast.
@@ -45,3 +47,5 @@ The Wavelog browser workflow uses HTTP 8794 and loopback UDP 18240 with a tempor
 ## Optional history/delivery extension
 
 Run `npm run test:e2e:qso` for the isolated ADIF-only browser workflow (HTTP 8797 / loopback UDP 18241). It creates a temporary synthetic file, never uses station multicast or an operator log, and checks incomplete coverage, opt-in writes, duplicate suppression and cross-browser updates. `backend/tests/test_qso_architecture.py` covers provider and delivery contracts, 10,000 indexed contacts, append interruption, destination independence, persistent uncertain outcomes and automatic history recovery. The Python ADIF dependency is pinned in `requirements.lock`. See [the extension guide](qso-services.md) for acceptance limits and the required isolated real-Wavelog test.
+
+The Steps 5/7 workflow uses temporary HTTP 8796 / loopback UDP 18243 and a delayed read-only Wavelog fixture. It verifies immediate observed contacts with submissions off, automatic reconciliation, history provenance/order, two-browser retention/clear controls and raw UDP enable/disable/filtering. Backend suites additionally exercise actual loopback destinations, enriched wire encoding, independent outputs, duplicate receipts, restart recovery and unsafe loop rejection. Actual GridTracker2 acceptance remains separate from these fixtures; see [the milestone guide](steps-5-and-7.md).

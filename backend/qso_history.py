@@ -33,6 +33,7 @@ class ADIFHistoryProvider:
         self.index, self.stamp, self.error, self.complete = {}, None, '', False
         self.version = uuid4().hex
         self.loads = 0
+        self.available = False
         self.lock = threading.RLock()
 
     def load(self):
@@ -61,12 +62,14 @@ class ADIFHistoryProvider:
             after = self.path.stat()
             if (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) != stamp:
                 error = 'ADIF changed while loading; history is incomplete. Retry after the writer finishes.'
+            self.available = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) == stamp
             for rows in index.values(): rows.sort(key=lambda r: (r['date'], r['id']), reverse=True)
             self.index, self.stamp = index, stamp
             self.complete = self.coverage and not error
             self.error = error or ('' if self.coverage else 'Local History Only · historical coverage has not been declared complete.')
             self.version = uuid4().hex
         except (OSError, UnicodeError):
+            self.available = False
             message = 'ADIF history is missing, unreadable or not a regular file; worked status is unknown.'
             if self.complete or self.error != message: self.version = uuid4().hex
             self.complete, self.error = False, message
@@ -77,9 +80,11 @@ class ADIFHistoryProvider:
     def _lookup(self, call, band=None, mode=None):
         self.load()
         rows = deepcopy(self.index.get((call.upper(), band.lower() if band else None, mode.upper() if mode else None), []))
+        for row in rows: row['verifiedHistory'] = self.available
         return dict(call=call, worked=bool(rows) if self.complete else True if rows else None, status=('loaded' if rows else 'empty') if self.complete else ('incomplete' if rows else 'error'),
             complete=self.complete, records=rows, total=len(rows) if self.complete else None,
             source='adif', scope='Local ADIF file', message=self.error, coverage='complete' if self.complete else 'incomplete',
+            recordsVerified=self.available,
             confirmationStatus='file-only', cached=False, updatedAt=int(time.time()*1000), version=self.version)
 
 
@@ -136,6 +141,7 @@ class QsoHistoryService:
             self.event.clear()
             if not self.active or self.state.sample or not self.state.call: continue
             call, token = self.state.call, self.generation
+            observation_revision = getattr(getattr(self.state, 'observations', None), 'revision', 0)
             wr = self.wavelog.result
             enabled = self.wavelog.settings.enabled
             source = self.settings.history_source
@@ -156,8 +162,11 @@ class QsoHistoryService:
                 result = deepcopy(wr) | {'source': 'wavelog'} if source != 'adif' and wr.get('call') == call else dict(call=call, status='error', complete=False, records=[], source='none', message='No history source is configured; worked status is unknown.')
                 key = (result.get('source'), call, result.get('lookupId'), result.get('status'))
             if call != self.state.call or token != self.generation: continue
+            if observation_revision != getattr(getattr(self.state, 'observations', None), 'revision', 0): continue
             if key != self.key:
-                self.key = key; self.result = result | {'lookupId': uuid4().hex}; self.state.flush()
+                self.key = key; self.result = result | {'lookupId': uuid4().hex}
+                if getattr(self.state, 'observations', None): self.state.observations.remember(self.result, self.result.get('source', 'none'))
+                self.state.flush()
             if source != 'adif' and enabled and self.wavelog.connection.get('status') == 'error' and time.monotonic() >= self.next_probe and not self.wavelog.lock.locked():
                 self.next_probe = time.monotonic() + self.settings.recovery_seconds
                 for item in self.wavelog.client.cache.values(): item['updatedAt'] = 0

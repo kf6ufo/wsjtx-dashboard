@@ -54,6 +54,8 @@ def test_diagnostics_bounds_original_bytes_filters_and_no_disk_commit_for_decode
     ingest(b'broken', state, ('127.0.0.4', 4322))
     rows = state.diagnostic_rows()['rows']
     assert len(rows) == 50 and 'raw' not in rows[0] and 'fields' not in rows[0]
+    assert rows[2]['preview']['message'] == 'CQ W7DEMO AA00'
+    assert 'adif' not in rows[2]['preview']
     assert rows[0]['error'] == 'invalid magic'
     detail = state.diagnostic_detail(rows[1]['id'])
     assert detail['name'] == 'Unknown'
@@ -65,6 +67,18 @@ def test_diagnostics_bounds_original_bytes_filters_and_no_disk_commit_for_decode
     state.clear_diagnostics()
     assert not state.diagnostics and state.history == history and state.counters == counters
     assert state.diagnostic_rows()['generation'] == 1
+    state.close()
+
+
+def test_diagnostic_previews_are_bounded_and_omit_contact_payloads(tmp_path):
+    state = WorkspaceState(tmp_path / 'workspace.sqlite3')
+    from backend.protocol import Packet
+    state.record_datagram(b'fixture', ('127.0.0.1', 1), packet=Packet(12, 'Rig A', fields={
+        'adif': '<CALL:5>K1ABC', 'message': 'x' * 4096, 'frequency': 14074000,
+        'transmitting': False, 'unexpected': 'not previewed'}))
+    preview = state.diagnostic_rows()['rows'][0]['preview']
+    assert preview == dict(message='x' * 240, frequency=14074000, transmitting=False)
+    assert state.diagnostic_detail(1)['fields']['adif'] == '<CALL:5>K1ABC'
     state.close()
 
 

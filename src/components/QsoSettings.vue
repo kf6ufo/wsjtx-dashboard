@@ -36,7 +36,7 @@ async function action(path: string, data?: QsoConfig) {
    <label class="check-setting"><input type="checkbox" v-model="draft.logging_enabled"> Enable completed-QSO logging</label>
    <p>Enable after testing with an isolated Wavelog instance and arranging one uploader per destination. Enabling logging writes future valid Logged ADIF events to the configured ADIF file and, if selected below, Wavelog. Ordinary decodes never log QSOs.</p>
    <label class="check-setting"><input type="checkbox" v-model="draft.log_to_wavelog"> Deliver completed QSOs to Wavelog</label>
-   <p>Uses the Wavelog URL/token above, with <strong>qso:read, station:read and qso:write</strong>. No legacy fallback is enabled. An unknown submission outcome is held for reconciliation rather than blindly resubmitted.</p>
+   <p>Uses the URL/token saved in Wavelog connection, with <strong>qso:read, station:read and qso:write</strong>. No legacy fallback is enabled. An unknown submission outcome is held for reconciliation rather than blindly resubmitted.</p>
    <h4>WSJT-X station mappings</h4>
    <fieldset v-for="(rig, index) in draft.rigs" :key="index" class="qso-rig-mapping"><legend>Rig {{ index + 1 }}</legend>
     <label>WSJT-X network ID<input class="form-control" v-model.trim="rig.id" placeholder="WSJT-X - IC7300" required></label>

@@ -1,21 +1,27 @@
 # Step 1 — primary WSJT-X reception
 
-Step 0 was reviewed and accepted. This step adds a **receive-only** primary UDP interface and bounded Diagnostics. There is no QSO submission, forwarding, acknowledgement, radio command, callbook or Wavelog API call. Existing WaveLogGate and station services stay unchanged. Steps 2–7 remain the roadmap.
+The original Step 1 introduced the **receive-only** primary UDP interface and bounded Diagnostics. Later accepted milestones add callbook/history reads, passive completed-contact observation and optional one-way forwarding. Main now includes reviewed Steps 0–5 and 7. Dashboard submission remains disabled and existing WaveLogGate/radio services stay unchanged; no reverse commands are supported. See the [current checkpoint](current-checkpoint.md) for present scope.
 
 ## Start and configure
 
-Install/start using the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) guide. Install the reviewed source from `main`. Open http://127.0.0.1:8787/ and **Settings → WSJT-X receiver**.
+Install/start using the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md) guide. Install the reviewed source from `main`. Open http://127.0.0.1:8787/ and **Settings → Radio receiver**.
 
 - **Enabled:** opt-in, defaults false. Enabling opens only this dashboard's receiver.
 - **Listen address:** normally `0.0.0.0` to receive multicast. A specific loopback/private IPv4 is supported for unicast. The configured address must exist locally; bind/join failures are visible. HTTP remains loopback by default, independently of UDP binding.
 - **Port:** primary WSJT-X reporting port, unprivileged 1024–65535. Historical station example: `2238`.
 - **Multicast group:** historical example `239.255.0.73`. Blank selects unicast; no group is joined.
 - **Receiving interface:** the receiving computer's actual IPv4, never a sending radio's address. On this Mac `ifconfig` showed `en0` at `10.176.1.200` during implementation. Old notes' `10.176.1.7` and Ubuntu `10.176.1.6` are historical context, not defaults for every computer. Ubuntu: inspect `ip -br -4 addr`.
-- **Diagnostic retention:** 50–500 packets, default 200, in memory only. The browser renders 100 filtered rows per page. Packet bodies are fetched only when expanded.
+- **Diagnostic retention:** 50–500 packets, default 200, in memory only. The browser renders 100 filtered rows per page. The packet list includes small allowlisted radio previews in the packet list; full bodies and original bytes are fetched only when expanded.
 
 **Save receiver settings** validates and atomically updates the existing `config.toml` receiver fields, preserving HTTP configuration and operator comments. The button reports save/apply errors separately from a successful configuration save with a bind/join error. Network/enablement changes close/reopen only this receiver and reset all Status baselines; no browser/server restart is required. Retention-only changes apply without restarting or resetting baselines. **Restart receiver** also resets baselines without clearing selection history. Installed server shutdown allows five seconds for open browser streams before cancelling them and closing the receiver; browsers reconnect after restart. Disk TOML edits require restarting the server; HTTP edits always require server restart.
 
 Reception uses `SO_REUSEADDR`, and multicast membership on the selected interface; no outbound socket operation or `SO_REUSEPORT` load distribution is used. Parallel multicast reception should be validated on the actual OS with existing listeners left running. Unicast delivery to multiple sockets sharing a port is not guaranteed; use an unused port for isolated tests rather than sharing a production unicast port. Do not change WSJT-X/WaveLogGate configuration merely to match this dashboard.
+
+## Operator-friendly Diagnostics
+
+**Heard instance** selects an exact WSJT-X network ID from received instances and retained packets, including inactive instances; it no longer searches for a text fragment. **Radio activity** groups Decoded signals, Radio status, Logged contacts, Connection checks, Other messages and Invalid data. It combines with the exact packet-type filter and instance selection. Choose Decoded signals to hide frequent Heartbeat and Status traffic.
+
+Packet badges distinguish check-ins, radio state and received signals by text and color. Previews show reported frequency/mode/DX call and transmitting/decoding state, or decoded text/SNR/audio offset when parsed. Heartbeats are explicitly described as WSJT-X checking in. The retained list remains bounded and newest first; pause, pagination and clear affect diagnostics only. Technical JSON and original bytes remain available on expansion. Unknown/WSPR/contact payloads are not presented as fully parsed when their body is unavailable.
 
 ## Selection and persistence behavior
 

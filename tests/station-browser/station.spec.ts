@@ -41,6 +41,7 @@ test('running station receiver reports actual traffic in both browser windows', 
  if (snapshot.call) await first.screenshot({ path: 'test-results/step1-actual-focus.png', fullPage: true })
  if (snapshot.step >= 3) {
    await first.getByRole('button', { name: 'Settings', exact: true }).click()
+   await first.getByRole('tab', { name: 'Wavelog connection', exact: true }).click()
    await first.getByRole('region', { name: 'Wavelog QSO history', exact: true }).screenshot({ path: 'test-results/step3-actual-wavelog-settings.png' })
  }
  // Read-only check: no settings, focus or radio commands are sent.
