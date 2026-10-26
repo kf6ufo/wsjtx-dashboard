@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { Dashboard } from '../focus'
 import type { Snapshot, WavelogConfig, WavelogConnection } from '../types'
+import StationAssociations from './StationAssociations.vue'
 const props = defineProps<{ dashboard: Dashboard }>()
 const defaults: WavelogConfig = { enabled: false, url: '', scope_mode: 'all', station_ids: [], logbook_id: 0, cache_minutes: 5, cache_limit: 20, page_size: 100, max_pages: 100, max_records: 10000, timeout_seconds: 8 }
 const configuration = computed(() => props.dashboard.state.wavelog?.config ?? defaults)
@@ -65,6 +66,7 @@ async function save() {
    <div class="receiver-actions"><button class="btn btn-success" :disabled="disabled">{{ busy ? 'Working…' : 'Save Wavelog settings' }}</button><button class="btn console-button" type="button" :disabled="disabled" @click="action('/api/wavelog/test', 'POST')">Test saved connection &amp; load locations</button></div>
   </form>
   <p role="status">{{ message }}</p>
+  <StationAssociations :associations="dashboard.state.qso?.associations ?? []"/>
   <div class="provider-test-results"><h4>Wavelog connection · {{ connection.status }}</h4><p v-if="connection.message">{{ connection.message }}</p><p v-if="connection.owner">Token owner: {{ connection.owner }}<span v-if="connection.expiresAt"> · Expires {{ connection.expiresAt }} UTC</span></p><p v-if="connection.scopes.length">Granted scopes: {{ connection.scopes.join(', ') }}</p><p v-for="notice in connection.notices" :key="notice">{{ notice }}</p><ul v-if="connection.stations.length"><li v-for="station in connection.stations" :key="station.id">{{ station.callsign }} · {{ station.name }} · ID {{ station.id }}</li></ul></div>
  </section>
 </template>

@@ -15,6 +15,7 @@
     "test:e2e:enrichment": "playwright test --config playwright.enrichment.config.ts",
     "test:e2e:wavelog": "playwright test --config playwright.wavelog.config.ts",
     "test:e2e:qso": "playwright test --config playwright.qso.config.ts",
+    "test:e2e:mapping": "playwright test --config playwright.mapping.config.ts",
     "test:e2e:steps57": "playwright test --config playwright.steps57.config.ts"
   },
   "dependencies": {

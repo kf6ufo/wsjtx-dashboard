@@ -18,7 +18,7 @@ from .enrichment import EnrichmentService, EnrichmentSettings, update_settings
 from .state import normalize_call
 from .qso_config import update_qso_settings
 from .qso_history import QsoHistoryService
-from .qso_delivery import QsoDeliveryService
+from .qso_delivery import QsoDeliveryService, DeliveryError
 from .qso_model import QsoError
 from .config import save_qso_config
 from dataclasses import asdict
@@ -229,6 +229,17 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         @app.post('/api/qso/retry')
         async def qso_retry():
             delivery.retry(); state.flush()
+            return state.snapshot()
+
+        @app.post('/api/qso/delivery/{key}/resolve-external')
+        async def qso_resolve_external(key: str, request: Request):
+            try:
+                payload = await request.json()
+                if not isinstance(payload, dict) or set(payload) != {'station_id'}:
+                    raise DeliveryError('Select one authorized Wavelog location.')
+                await delivery.resolve_external(key,payload['station_id'])
+            except (DeliveryError, ValueError) as error:
+                raise HTTPException(409,str(error))
             return state.snapshot()
 
     if runtime:

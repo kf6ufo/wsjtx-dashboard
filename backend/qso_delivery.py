@@ -17,6 +17,8 @@ import threading
 import time
 from .qso_model import completed_fields, enriched_completed, identity, adif_text, adif_records, QsoError
 from .wavelog import WavelogClient, WavelogError
+from .station_mapping import resolve_station
+from .state import normalize_call
 import requests
 
 
@@ -73,16 +75,22 @@ class DeliveryQueue:
         with self.lock, self.db:
             self.db.execute("UPDATE qso_delivery SET status='delivered',attempts=attempts+1,message='',remote_id=? WHERE id=? AND destination=?", (str(remote),key,name))
             if name == 'adif': self.db.execute('DELETE FROM qso_file_journal WHERE id=?', (key,))
-            if not self.db.execute("SELECT 1 FROM qso_delivery WHERE id=? AND status!='delivered'",(key,)).fetchone():
+            if not self.db.execute("SELECT 1 FROM qso_delivery WHERE id=? AND status NOT IN ('delivered','resolved_external')",(key,)).fetchone():
                 # Keep a dedupe receipt, not a second permanent contact log.
                 self.db.execute("UPDATE qso_outbox SET status='delivered',original='{}',normalized=NULL,sources=NULL,message='' WHERE id=?",(key,))
+
+    def resolved_external(self, key, target, remote):
+        with self.lock, self.db:
+            self.db.execute("UPDATE qso_delivery SET target=?,status='resolved_external',remote_id=?,message='Exact existing Wavelog QSO verified; resolved externally without submission.' WHERE id=? AND destination='wavelog'", (json.dumps(target),str(remote),key))
+            if not self.db.execute("SELECT 1 FROM qso_delivery WHERE id=? AND status NOT IN ('delivered','resolved_external')",(key,)).fetchone():
+                self.db.execute("UPDATE qso_outbox SET status='delivered',original='{}',normalized=NULL,sources=NULL,message='' WHERE id=?", (key,))
 
     def summary(self):
         jobs = dict(self.execute('SELECT status,COUNT(*) FROM qso_outbox GROUP BY status'))
         destinations = self.execute('SELECT destination,status,COUNT(*) FROM qso_delivery GROUP BY destination,status')
-        recent = self.execute('SELECT id,rig,status,message,created FROM qso_outbox ORDER BY created DESC LIMIT 30')
+        recent = self.execute('SELECT id,rig,status,message,created,COALESCE(normalized,original) FROM qso_outbox ORDER BY created DESC LIMIT 30')
         details = self.execute('SELECT id,destination,status,attempts,message,remote_id FROM qso_delivery WHERE id IN (SELECT id FROM qso_outbox ORDER BY created DESC LIMIT 30)')
-        return dict(jobs=jobs, destinations=[dict(destination=d,status=s,count=n) for d,s,n in destinations], recent=[dict(id=i,rig=r,status=s,message=m,created=t,deliveries=[dict(destination=d,status=ds,attempts=a,message=dm,remoteId=remote) for qi,d,ds,a,dm,remote in details if qi==i]) for i,r,s,m,t in recent])
+        return dict(jobs=jobs, destinations=[dict(destination=d,status=s,count=n) for d,s,n in destinations], recent=[dict(id=i,rig=r,status=s,message=m,created=t,contact={k:v for k,v in json.loads(raw).items() if k in ('CALL','QSO_DATE','TIME_ON','BAND','MODE','SUBMODE','STATION_CALLSIGN')},deliveries=[dict(destination=d,status=ds,attempts=a,message=dm,remoteId=remote) for qi,d,ds,a,dm,remote in details if qi==i]) for i,r,s,m,t,raw in recent])
 
     def close(self):
         with self.lock: self.db.close()
@@ -152,7 +160,7 @@ class WavelogLogWriter:
         result = self.client.lookup(fields['CALL'])
         if not result.get('complete'): raise DeliveryError('Wavelog reconciliation could not read complete history')
         date = datetime.strptime(fields['QSO_DATE'] + fields['TIME_ON'], '%Y%m%d%H%M%S')
-        rows = [r for r in result['records'] if r.get('stationId') == self.station_id and r['date'][:19] == date.isoformat() and r['band'].lower() == fields['BAND'].lower() and r['mode'].upper() == fields.get('SUBMODE', fields['MODE']).upper()]
+        rows = [r for r in result['records'] if r.get('call','').upper() == fields['CALL'].upper() and r.get('station','').upper() == fields.get('STATION_CALLSIGN','').upper() and r.get('stationId') == self.station_id and r['date'][:19] == date.isoformat() and r['band'].lower() == fields['BAND'].lower() and r['mode'].upper() == fields.get('SUBMODE', fields['MODE']).upper()]
         if fields.get('FREQ'):
             frequency = Decimal(fields['FREQ']) * 1_000_000
             if any(not row.get('details', {}).get('freq') for row in rows): raise UncertainDelivery('Matching Wavelog contact lacks frequency; operator review required')
@@ -160,6 +168,14 @@ class WavelogLogWriter:
             except Exception: raise UncertainDelivery('Matching Wavelog frequency could not be verified') from None
         if len(rows) > 1: raise UncertainDelivery('Multiple matching Wavelog contacts; review duplicates in Wavelog')
         return rows[0]['id'] if rows else None
+
+    def verify_existing(self, fields):
+        """Read-only verification also works with a read-only API token."""
+        self.client.begin(); self.client.connect()
+        station = self.client.station_by_id(self.station_id)
+        if normalize_call(station['callsign']) != normalize_call(fields.get('STATION_CALLSIGN','')):
+            raise DeliveryError('QSO station callsign does not match the selected Wavelog location.')
+        return self.matches(fields)
 
     def prepare(self, fields, uncertain=False):
         self.client.begin(); connection = self.client.connect()
@@ -201,6 +217,28 @@ class QsoDeliveryService:
         self.last_error = ''
         self.accepting = True
         self.stopping = False
+        self.wavelog_action_lock = asyncio.Lock()
+
+    def profile_for(self, rig):
+        profile = next((deepcopy(r) for r in self.settings.rigs if r['id']==rig), {})
+        verified = normalize_call(self.state.rigs.get(rig, {}).get('stationCall', ''))
+        if not profile.get('station_callsign') and verified:
+            profile['station_callsign'] = verified
+        return profile
+
+    def associations(self):
+        connection = self.wavelog.connection
+        rows = []
+        for rig in self.state.rigs:
+            profile = self.profile_for(rig)
+            row = dict(rigId=rig, stationCall=profile.get('station_callsign',''), status='unknown', stationId=0, message='')
+            try:
+                if connection.get('status') != 'ready': raise QsoError('Test the saved Wavelog connection to refresh authorized locations.')
+                station, mode = resolve_station({}, profile, connection.get('stations', []))
+                row.update(status=mode,stationId=station['id'],location=station['name'])
+            except QsoError as error: row['message'] = str(error)
+            rows.append(row)
+        return rows
 
     def snapshot(self):
         configured = bool(self.settings.adif_path or self.settings.log_to_wavelog)
@@ -208,7 +246,7 @@ class QsoDeliveryService:
             self.last_error = 'A delivery worker stopped. Pending QSOs are retained; repair storage/configuration and restart this dashboard.'
         try: summary = self.queue.summary()
         except sqlite3.Error: summary = dict(jobs={},destinations=[],recent=[]); self.last_error = 'Delivery queue cannot be read. Check disk space and data-directory permissions.'
-        return dict(config=self.settings.public(), enabled=self.settings.logging_enabled,
+        return dict(config=self.settings.public(), enabled=self.settings.logging_enabled, associations=self.associations(),
             warning=('No historical source or logging destination is configured.' if not self.settings.adif_path and not self.wavelog.settings.enabled else '') if not self.settings.logging_enabled else ('No logging destinations configured; completed QSOs will not be persisted.' if not configured else ''),
             error=self.last_error, queue=summary)
 
@@ -217,10 +255,10 @@ class QsoDeliveryService:
         if not self.settings.adif_path and not self.settings.log_to_wavelog: return
         try:
             original = completed_fields(packet)
-            profile = next((deepcopy(r) for r in self.settings.rigs if r['id']==packet.rig_id), {})
+            profile = self.profile_for(packet.rig_id)
             targets = {}
             if self.settings.adif_path: targets['adif'] = {'path': self.settings.adif_path}
-            if self.settings.log_to_wavelog: targets['wavelog'] = {'url': self.wavelog.settings.url, 'station_id': profile.get('wavelog_station_id',0)}
+            if self.settings.log_to_wavelog: targets['wavelog'] = {'url': self.wavelog.settings.url, 'station_id': profile.get('wavelog_station_id',0), 'automatic_mapping': True}
             self.queue.capture(packet.rig_id, original, profile, targets)
             self.last_error = ''
         except (QsoError, OSError, sqlite3.Error, KeyError):
@@ -254,7 +292,7 @@ class QsoDeliveryService:
                 if profile.get('wavelog_station_id'):
                     targets = self.queue.execute("SELECT target FROM qso_delivery WHERE id=? AND destination='wavelog'", (key,))
                     if targets:
-                        target = json.loads(targets[0][0]); target['station_id'] = target['station_id'] or profile['wavelog_station_id']
+                        target = json.loads(targets[0][0]); target['station_id'] = target['station_id'] or (profile['wavelog_station_id'] if target.get('automatic_mapping') else 0)
                         self.queue.execute('UPDATE qso_delivery SET target=? WHERE id=? AND destination=?', (json.dumps(target),key,'wavelog'))
             except QsoError:
                 self.queue.execute("UPDATE qso_outbox SET status='blocked',message='Station identity is missing; configure the originating rig and retry.' WHERE id=?",(key,))
@@ -264,36 +302,97 @@ class QsoDeliveryService:
         while not self.stopping:
             await asyncio.sleep(.1)
             if self.stopping or not self.settings.logging_enabled: continue
-            rows = self.queue.execute("""SELECT d.id,d.target,d.status,d.attempts,q.normalized,q.profile FROM qso_delivery d JOIN qso_outbox q ON q.id=d.id
-                WHERE d.destination=? AND q.status='ready' AND d.status IN ('pending','error','uncertain') AND d.next_attempt<=? ORDER BY q.created LIMIT 1""",(name,time.time()))
-            if not rows: continue
-            key, raw_target, status, attempts, raw_fields, raw_profile = rows[0]
-            target, fields, profile = json.loads(raw_target), json.loads(raw_fields), json.loads(raw_profile)
+            if name == 'wavelog':
+                async with self.wavelog_action_lock:
+                    await self.deliver_once(name)
+            else:
+                await self.deliver_once(name)
+
+    async def deliver_once(self, name):
+        rows = self.queue.execute("""SELECT d.id,d.target,d.status,d.attempts,q.normalized,q.profile FROM qso_delivery d JOIN qso_outbox q ON q.id=d.id
+            WHERE d.destination=? AND q.status='ready' AND d.status IN ('pending','error','uncertain') AND d.next_attempt<=? ORDER BY q.created LIMIT 1""",(name,time.time()))
+        if not rows: return
+        key, raw_target, status, attempts, raw_fields, raw_profile = rows[0]
+        target, fields, profile = json.loads(raw_target), json.loads(raw_fields), json.loads(raw_profile)
+        try:
+            if name=='adif':
+                if target['path'] != self.settings.adif_path: raise DeliveryError('Queued ADIF destination differs from current configuration; delivery is held')
+                writer = ADIFLogWriter(target['path'],self.queue)
+            else:
+                if target.get('resolve_only'): raise DeliveryError('Held for read-only external resolution; automatic submission is disabled for this QSO.')
+                if not self.settings.log_to_wavelog or target['url'] != self.wavelog.settings.url: raise DeliveryError('Queued Wavelog destination is disabled or differs from current configuration')
+                if not target.get('station_id'):
+                    if not target.get('automatic_mapping'): raise DeliveryError('Legacy QSO has no frozen location mapping; automatic submission is held. Resolve as already logged using a verified location.')
+                    settings = self.wavelog.settings
+                    def resolve():
+                        client = WavelogClient(settings); client.begin()
+                        return resolve_station(fields, profile, client.connect()['stations'])
+                    current = next((r for r in self.settings.rigs if r['id']==self.queue.execute('SELECT rig FROM qso_outbox WHERE id=?',(key,))[0][0]), {})
+                    if current.get('wavelog_station_id'): profile['wavelog_station_id'] = current['wavelog_station_id']
+                    station, mode = await asyncio.to_thread(resolve)
+                    if settings != self.wavelog.settings: raise DeliveryError('Wavelog configuration changed during station resolution; delivery is held.')
+                    target.update(station_id=station['id'], mapping_source=mode)
+                    self.queue.execute("UPDATE qso_delivery SET target=? WHERE id=? AND destination='wavelog'", (json.dumps(target),key))
+                writer = WavelogLogWriter(self.wavelog.settings,target['station_id'],fields.get('STATION_CALLSIGN',''))
+            remote = await asyncio.to_thread(writer.prepare,fields,status=='uncertain')
+            if not remote:
+                if self.stopping or not self.settings.logging_enabled: raise DeliveryError('Delivery paused; QSO remains queued')
+                if name=='wavelog' and (not self.settings.log_to_wavelog or target['url'] != self.wavelog.settings.url): raise DeliveryError('Wavelog destination changed; delivery is held')
+                if name=='adif' and target['path'] != self.settings.adif_path: raise DeliveryError('ADIF destination changed; delivery is held')
+                self.queue.execute("UPDATE qso_delivery SET status='inflight' WHERE id=? AND destination=?",(key,name))
+                remote = await asyncio.to_thread(writer.write,key,fields)
+            self.queue.delivered(key,name,remote)
+            self.history.key = None; self.history.event.set()
+            if name=='wavelog':
+                self.wavelog.client.cache.pop(fields['CALL'],None)
+                if self.state.call==fields['CALL']: self.wavelog.call=None;self.wavelog.observe()
+        except Exception as error:
+            # Unknown HTTP outcomes are never blindly retried. Only reconciliation runs.
+            uncertain = name=='wavelog' and (status=='uncertain' or isinstance(error,UncertainDelivery))
+            message = str(error) if isinstance(error, (QsoError, WavelogError)) else 'Destination unavailable; delivery is retained for retry.'
+            self.queue.execute('UPDATE qso_delivery SET status=?,attempts=attempts+1,message=?,next_attempt=? WHERE id=? AND destination=?',('uncertain' if uncertain else 'error',message,time.time()+min(300,2**min(attempts+1,8)),key,name))
+        self.state.flush()
+
+    async def resolve_external(self, key, station_id):
+        if type(station_id) is not int or station_id < 1: raise DeliveryError('Select an authorized Wavelog location for verification.')
+        async with self.wavelog_action_lock:
+            rows = self.queue.execute("SELECT d.target,d.status,q.normalized,q.original FROM qso_delivery d JOIN qso_outbox q ON q.id=d.id WHERE d.id=? AND d.destination='wavelog'", (key,))
+            if not rows: raise DeliveryError('Wavelog delivery was not found.')
+            raw_target, status, normalized, original = rows[0]
+            if status == 'resolved_external': return
+            if status not in ('pending','error','uncertain','held'): raise DeliveryError('This Wavelog delivery is already complete or in flight; it cannot be resolved here.')
+            target = json.loads(raw_target)
+            settings = self.wavelog.settings
+            # Once explicitly requested, this entry is reconciliation-only even
+            # if verification fails or the server restarts. Never fall back to POST.
+            target['resolve_only'] = True
+            self.queue.execute("UPDATE qso_delivery SET target=?,status='held' WHERE id=? AND destination='wavelog'", (json.dumps(target),key))
+            fields = json.loads(normalized or original)
             try:
-                if name=='adif':
-                    if target['path'] != self.settings.adif_path: raise DeliveryError('Queued ADIF destination differs from current configuration; delivery is held')
-                    writer = ADIFLogWriter(target['path'],self.queue)
-                else:
-                    if not self.settings.log_to_wavelog or target['url'] != self.wavelog.settings.url or not target['station_id']: raise DeliveryError('Queued Wavelog destination/mapping is disabled or differs from current configuration')
-                    writer = WavelogLogWriter(self.wavelog.settings,target['station_id'],profile.get('station_callsign',''))
-                remote = await asyncio.to_thread(writer.prepare,fields,status=='uncertain')
-                if not remote:
-                    if self.stopping or not self.settings.logging_enabled: raise DeliveryError('Delivery paused; QSO remains queued')
-                    if name=='wavelog' and (not self.settings.log_to_wavelog or target['url'] != self.wavelog.settings.url): raise DeliveryError('Wavelog destination changed; delivery is held')
-                    if name=='adif' and target['path'] != self.settings.adif_path: raise DeliveryError('ADIF destination changed; delivery is held')
-                    self.queue.execute("UPDATE qso_delivery SET status='inflight' WHERE id=? AND destination=?",(key,name))
-                    remote = await asyncio.to_thread(writer.write,key,fields)
-                self.queue.delivered(key,name,remote)
+                if target['url'] != settings.url: raise DeliveryError('The queued Wavelog destination differs from the current server. Resolution is held.')
+                if target.get('station_id') and target['station_id'] != station_id: raise DeliveryError('Use the location already frozen in this delivery.')
+                def verify():
+                    client = WavelogClient(settings); client.begin()
+                    stations = client.connect()['stations']
+                    selected = next((s for s in stations if s['id'] == station_id), None)
+                    if not selected: raise DeliveryError('The selected location is not authorized by the saved Wavelog token.')
+                    values = dict(fields)
+                    if not values.get('STATION_CALLSIGN'): values['STATION_CALLSIGN'] = selected['callsign']
+                    resolve_station(values, {'wavelog_station_id':station_id}, stations)
+                    return WavelogLogWriter(settings,station_id,values['STATION_CALLSIGN']).verify_existing(values)
+                remote = await asyncio.to_thread(verify)
+                if settings != self.wavelog.settings: raise DeliveryError('Wavelog configuration changed during verification. Try again.')
+                if not remote: raise DeliveryError('No exact existing QSO matches this contact, UTC time, location, band, mode and frequency. Entry remains held; nothing was submitted.')
+                target['station_id'] = station_id
+                self.queue.resolved_external(key,target,remote)
+                self.wavelog.client.cache.pop(fields['CALL'],None)
                 self.history.key = None; self.history.event.set()
-                if name=='wavelog':
-                    self.wavelog.client.cache.pop(fields['CALL'],None)
-                    if self.state.call==fields['CALL']: self.wavelog.call=None;self.wavelog.observe()
             except Exception as error:
-                # Unknown HTTP outcomes are never blindly retried. Only reconciliation runs.
-                uncertain = name=='wavelog' and (status=='uncertain' or isinstance(error,UncertainDelivery))
-                message = str(error) if isinstance(error, DeliveryError) else 'Destination unavailable; delivery is retained for retry.'
-                self.queue.execute('UPDATE qso_delivery SET status=?,attempts=attempts+1,message=?,next_attempt=? WHERE id=? AND destination=?',('uncertain' if uncertain else 'error',message,time.time()+min(300,2**min(attempts+1,8)),key,name))
-            self.state.flush()
+                message = str(error) if isinstance(error,(QsoError,WavelogError)) else 'Read-only verification is unavailable. Entry remains held; nothing was submitted.'
+                self.queue.execute("UPDATE qso_delivery SET message=? WHERE id=? AND destination='wavelog'", (message,key))
+                raise DeliveryError(message) from None
+            finally:
+                self.state.flush()
 
     async def stop(self):
         self.accepting = False
