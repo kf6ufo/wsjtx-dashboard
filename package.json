@@ -18,8 +18,10 @@
     "test:e2e:steps57": "playwright test --config playwright.steps57.config.ts"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "0.1.4",
     "bootstrap": "^5.3.3",
     "leaflet": "1.9.4",
+    "maplibre-gl": "6.16.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
