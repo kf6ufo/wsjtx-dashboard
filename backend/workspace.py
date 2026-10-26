@@ -196,9 +196,15 @@ class WorkspaceState(FoundationState):
         self.receiver['lastPacketAt'] = now
 
     def diagnostic_rows(self):
+        # Small allowlisted radio previews; never send full ADIF/raw payloads in
+        # the polled packet list. Full fields remain in explicit packet details.
+        keys = ('version', 'frequency', 'mode', 'dxCall', 'transmitting', 'decoding', 'message', 'snr', 'deltaFrequency')
         return dict(generation=self.diagnostic_generation, latest=self.diagnostic_sequence,
                     limit=self.diagnostics.maxlen,
-                    rows=[{k: v for k, v in row.items() if k not in ('raw', 'fields')} for row in reversed(self.diagnostics)])
+                    rows=[{k: v for k, v in row.items() if k not in ('raw', 'fields')} | {
+                        'preview': {k: value[:240] if isinstance(value, str) else value
+                                    for k in keys if type(value := row['fields'].get(k)) in (str, int, float, bool)}
+                    } for row in reversed(self.diagnostics)])
 
     def diagnostic_detail(self, sequence):
         row = next((r for r in self.diagnostics if r['id'] == sequence), None)

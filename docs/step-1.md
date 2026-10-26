@@ -11,11 +11,17 @@ Install/start using the [macOS](install-macos.md) or [Ubuntu](install-ubuntu.md)
 - **Port:** primary WSJT-X reporting port, unprivileged 1024–65535. Historical station example: `2238`.
 - **Multicast group:** historical example `239.255.0.73`. Blank selects unicast; no group is joined.
 - **Receiving interface:** the receiving computer's actual IPv4, never a sending radio's address. On this Mac `ifconfig` showed `en0` at `10.176.1.200` during implementation. Old notes' `10.176.1.7` and Ubuntu `10.176.1.6` are historical context, not defaults for every computer. Ubuntu: inspect `ip -br -4 addr`.
-- **Diagnostic retention:** 50–500 packets, default 200, in memory only. The browser renders 100 filtered rows per page. Packet bodies are fetched only when expanded.
+- **Diagnostic retention:** 50–500 packets, default 200, in memory only. The browser renders 100 filtered rows per page. The review branch includes small allowlisted radio previews in the packet list; full bodies and original bytes are fetched only when expanded.
 
 **Save receiver settings** validates and atomically updates the existing `config.toml` receiver fields, preserving HTTP configuration and operator comments. The button reports save/apply errors separately from a successful configuration save with a bind/join error. Network/enablement changes close/reopen only this receiver and reset all Status baselines; no browser/server restart is required. Retention-only changes apply without restarting or resetting baselines. **Restart receiver** also resets baselines without clearing selection history. Installed server shutdown allows five seconds for open browser streams before cancelling them and closing the receiver; browsers reconnect after restart. Disk TOML edits require restarting the server; HTTP edits always require server restart.
 
 Reception uses `SO_REUSEADDR`, and multicast membership on the selected interface; no outbound socket operation or `SO_REUSEPORT` load distribution is used. Parallel multicast reception should be validated on the actual OS with existing listeners left running. Unicast delivery to multiple sockets sharing a port is not guaranteed; use an unused port for isolated tests rather than sharing a production unicast port. Do not change WSJT-X/WaveLogGate configuration merely to match this dashboard.
+
+## Operator-friendly Diagnostics (review branch)
+
+**Heard instance** selects an exact WSJT-X network ID from received instances and retained packets, including inactive instances; it no longer searches for a text fragment. **Radio activity** groups Decoded signals, Radio status, Logged contacts, Connection checks, Other messages and Invalid data. It combines with the exact packet-type filter and instance selection. Choose Decoded signals to hide frequent Heartbeat and Status traffic.
+
+Packet badges distinguish check-ins, radio state and received signals by text and color. Previews show reported frequency/mode/DX call and transmitting/decoding state, or decoded text/SNR/audio offset when parsed. Heartbeats are explicitly described as WSJT-X checking in. The retained list remains bounded and newest first; pause, pagination and clear affect diagnostics only. Technical JSON and original bytes remain available on expansion. Unknown/WSPR/contact payloads are not presented as fully parsed when their body is unavailable.
 
 ## Selection and persistence behavior
 

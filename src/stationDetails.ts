@@ -2,6 +2,11 @@ import type { EnrichmentResult, Lookup, Qso } from './types'
 
 export interface StationField { key: string; label: string; value: string; source?: string; href?: string }
 export interface StationGroup { title: string; fields: StationField[] }
+const detailCollator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
+export function sortStationFields(rows: StationField[], column: 'label' | 'value', direction: 'ascending' | 'descending'): StationField[] {
+ const order = direction === 'ascending' ? 1 : -1
+ return [...rows].sort((a, b) => order * detailCollator.compare(a[column], b[column]) || detailCollator.compare(a.label, b.label) || a.key.localeCompare(b.key))
+}
 
 export function hasValue(value: unknown): boolean {
  if (value === null || value === undefined) return false

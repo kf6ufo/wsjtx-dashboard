@@ -4,7 +4,7 @@ The reviewed Step 4 layout is on **`main`**, merged through PR #3 at `42220f0` o
 
 ## Station display
 
-Station, Diagnostics, Settings and Theme share the top bar with the receiver status. The workspace title, repeated listening banner and focused-station heading are removed. Settings no longer offers Station title; existing saved titles remain stored for compatibility. Station Desk’s local preview toggle is in Settings, alongside the saved radio-strip preference.
+Station, Diagnostics, Settings and Theme share the top bar with the receiver status. The workspace title, repeated listening banner and focused-station heading are removed. Settings no longer offers Station title; existing saved titles remain stored for compatibility. Station Desk’s local preview toggle is in Settings, alongside the saved radio-strip preference. On the current review branch, Settings uses separate Workspace, Radio receiver, Callbook & enrichment, Wavelog connection, QSO history & logging, Focus History, UDP forwarding and Installation tabs. The active panel names its save scope; its Save buttons affect only that section. Unsaved edits survive switching these tabs, and keyboard Left/Right/Home/End navigates them. Leaving Settings or reloading can discard unsaved edits.
 
 On wide screens, the focused-station area follows the operator's supplied arrangement. The left column starts with a large uncropped photo, followed by callsign, name, populated address/email and radio provenance. A matching photo area says **No profile pic** when no safe photo is available or loading fails. Identity, lookup status and key information now share one compact tile under the photo. Callsign/name share a centered row beneath the photo where space permits; the full address is combined into a wrapping line, with license, profile/email links and rig/band/UTC provenance on compact shared rows. Status and key values remain visible without separate card margins or large section headings. Distances retain the dashboard's existing kilometre units.
 
@@ -21,6 +21,8 @@ The [QRZ XML specification](https://www.qrz.com/docs/xml/current_spec.html) docu
 **Refresh details** refreshes enrichment independently from Wavelog history. **Refresh Wavelog history** retains its own action. Neither action restarts the receiver or alters focus/history ordering. Independent pending, empty, disabled, partial and error behavior is retained.
 
 Previous contacts remain complete/paginated, sortable and independently scrollable. Contact dialogs now scroll within the viewport, hide missing optional fields and show labeled UTC times, recorded grids/reports, station provenance and available confirmations. Contact locations are never replaced by a QRZ home address/grid. The modal supports keyboard navigation between Close and its scroll region. Ordinary Decode/SSE updates preserve an open dialog and expanded contact rows; changing the callsign or loaded contact result closes it and resets the row window.
+
+The main **Details** table defaults to alphabetical **Field** order. Click **Field** or **Value** to sort; click again to reverse direction. An arrow and accessible sort state identify the active direction. English natural-text comparison handles embedded numbers, with deterministic field-name ties. Biography/QRZ links take part in sorting, and empty fields stay omitted. Sorting affects only this browser's table; it does not change focused callsigns, providers or contact logs.
 
 ## Station map
 
