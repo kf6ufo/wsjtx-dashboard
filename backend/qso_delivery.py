@@ -8,7 +8,6 @@ import fcntl
 import hashlib
 import io
 import json
-import math
 import os
 from pathlib import Path
 from typing import Protocol
@@ -20,30 +19,12 @@ from .qso_model import completed_fields, enriched_completed, identity, adif_text
 from .wavelog import WavelogClient, WavelogError
 from .station_mapping import resolve_station
 from .state import normalize_call
-from .enrichment_config import grid
-from pyhamtools.locator import calculate_distance
+from .qso_fields import destination_fields, qso_distance as wavelog_distance, qso_heading
 import requests
 
 
 class DeliveryError(QsoError): pass
 class UncertainDelivery(DeliveryError): pass
-
-
-def wavelog_distance(fields: dict) -> float | None:
-    """Payload-only kilometres: preserve a valid supplied value, otherwise use QSO grids."""
-    try:
-        value = float(fields.get('DISTANCE', ''))
-        if not isinstance(fields.get('DISTANCE'), bool) and math.isfinite(value) and value >= 0:
-            return value
-    except (ValueError, TypeError, OverflowError):
-        pass
-    try:
-        station, contact = grid(fields.get('MY_GRIDSQUARE', '')), grid(fields.get('GRIDSQUARE', ''))
-        if station and contact:
-            return round(calculate_distance(station, contact), 3)
-    except (ValueError, TypeError, AttributeError):
-        pass
-    return None
 
 
 class LoggingDestination(Protocol):
@@ -159,7 +140,7 @@ class ADIFLogWriter:
             finally: wrapper.detach()
             if duplicate: return 'Existing ADIF contact verified'
             stream.seek(0, os.SEEK_END); offset = stream.tell()
-            payload = (('WSJT-X Dashboard\n<ADIF_VER:5>3.1.0<PROGRAMID:16>WSJT-X Dashboard<EOH>\n' if offset == 0 else '\n') + adif_text(fields | {'APP_WSJT_DASHBOARD_ID': key})).encode('utf-8')
+            payload = (('WSJT-X Dashboard\n<ADIF_VER:5>3.1.6<PROGRAMID:16>WSJT-X Dashboard<EOH>\n' if offset == 0 else '\n') + adif_text(fields | {'APP_WSJT_DASHBOARD_ID': key})).encode('utf-8')
             prefix_hash = self.hash_prefix(stream, offset)
             self.queue.execute('INSERT INTO qso_file_journal VALUES(?,?,?,?,?)', (key,str(self.path),offset,prefix_hash,payload))
             stream.seek(offset); stream.write(payload); stream.flush(); os.fsync(stream.fileno())
@@ -208,14 +189,20 @@ class WavelogLogWriter:
         if uncertain: raise UncertainDelivery('Previous Wavelog outcome is unknown; no matching contact yet. Reconciliation only; automatic resubmission is held.')
         return None
 
-    def write(self, key, fields):
-        payload = {k.lower(): v for k,v in fields.items() if not k.startswith('APP_')}
+    def payload(self, fields):
+        payload = {k.lower(): v for k,v in destination_fields(fields, 'wavelog').items()}
         payload.pop('distance', None)
         distance = wavelog_distance(fields)
         if distance is not None: payload['distance'] = distance
+        heading = qso_heading(fields)
+        if heading is not None: payload['heading'] = heading
         payload.update(station_profile_id=self.station_id, qso_date=fields['QSO_DATE'][:4]+'-'+fields['QSO_DATE'][4:6]+'-'+fields['QSO_DATE'][6:], mode=fields.get('SUBMODE', fields['MODE']))
         for key in ('freq','freq_rx'):
             if key in payload: payload[key] = int(Decimal(payload[key])*1_000_000)
+        return payload
+
+    def write(self, key, fields):
+        payload = self.payload(fields)
         try:
             with requests.post(self.settings.url + '/api/v2/qso', json=payload, headers={'Authorization': 'Bearer '+self.settings.token, 'Accept':'application/json'}, timeout=(5,self.settings.timeout_seconds), allow_redirects=False, stream=True) as response:
                 # Rejections before creation are retryable after operator/config repair.

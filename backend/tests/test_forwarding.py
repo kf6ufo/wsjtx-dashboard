@@ -109,7 +109,7 @@ def test_enriched_completed_messages_are_valid_deduplicated_independent_and_rest
         output=parse_completed(enriched.fields['adif'])
         assert enriched.kind==12 and enriched.rig_id=='Rig A'
         assert all(output[k]==v for k,v in original.items())
-        assert output['NAME']=='Fixture É' and output['COUNTRY']=='Verified'
+        assert output['NAME']=='Fixture E' and output['NAME_INTL']=='Fixture É' and output['COUNTRY']=='Verified'
         ingest(header(rig='Rig A',kind=5),state);ingest(raw,state);ingest(raw,state)
         ingest(header(rig='Rig B',kind=12)+text(adif_text(original)),state)
         with pytest.raises(asyncio.TimeoutError):await receive(enriched_sink,.08)

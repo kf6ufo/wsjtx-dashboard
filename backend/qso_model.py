@@ -5,9 +5,14 @@ import hashlib
 import io
 import json
 import re
+import unicodedata
 from functools import lru_cache
 from copy import deepcopy
 import adif_io
+from urllib.parse import urlsplit
+from .qso_fields import (adif_coordinate, destination_fields, number, qso_distance,
+    valid_grid, locator_to_latlong)
+from .enrichment_config import PROVIDERS
 from .state import normalize_call
 from .protocol import band_from_hz
 
@@ -137,7 +142,7 @@ def observed_identity(fields, rig):
 
 
 def adif_text(fields):
-    return adif_io.qso_to_adif(adif_io.qso_from_dict(fields)) + '\n'
+    return adif_io.qso_to_adif(adif_io.qso_from_dict(destination_fields(fields, 'adif'))) + '\n'
 
 
 def history_record(fields, number):
@@ -163,18 +168,87 @@ def enrich_qso(original, profile, enrichment):
     for key, name in (('STATION_CALLSIGN', 'station_callsign'), ('OPERATOR', 'operator'), ('TX_PWR', 'tx_power')):
         if not result.get(key) and profile.get(name): result[key] = profile[name]; sources[key] = 'Station configuration'
     fields, providers = enrichment.get('fields', {}), enrichment.get('providers', {})
-    qrz = providers.get('qrz', {}).get('fields', {})
+    qrz_provider = providers.get('qrz', {})
+    qrz = qrz_provider.get('fields', {}) if qrz_provider.get('status', 'loaded') == 'loaded' else {}
+    def text(value):
+        return value.strip() if isinstance(value, str) else ''
+    def put(key, value, source):
+        if not result.get(key) and isinstance(value, (str, int, float)) and not isinstance(value, bool) and str(value).strip():
+            result[key], sources[key] = str(value).strip(), source
+
+    reported, home = valid_grid(original.get('GRIDSQUARE')), valid_grid(qrz.get('locator'))
+    conflict = bool(reported and home and not (reported.startswith(home) or home.startswith(reported)))
+    precise = text(qrz.get('geoloc')).lower() not in ('zip', 'state', 'dxcc', 'none')
+    location = qrz if not conflict and precise else {}
     # Only station-specific QRZ information may supply these fields.
-    county = str(qrz.get('county') or '')
+    county = text(location.get('county'))
     if county and ',' not in county:
-        county = f"{qrz['state']},{county}" if str(qrz.get('adif')) == '291' and qrz.get('state') else ''
-    station = {'NAME': qrz.get('name_fmt') or ' '.join(str(qrz.get(k, '')) for k in ('fname', 'name')).strip(),
-        'QTH': qrz.get('addr2'), 'GRIDSQUARE': qrz.get('locator'), 'STATE': qrz.get('state'), 'CNTY': county,
-        'QSL_VIA': str(qrz.get('qslmgr') or '').strip()}
-    common = {'DXCC': 'adif', 'COUNTRY': 'country', 'CQZ': 'cqz', 'ITUZ': 'ituz', 'CONT': 'continent'}
+        county = f"{location['state']},{county}" if str(location.get('adif')) == '291' and text(location.get('state')) else ''
+    station = {'NAME': text(qrz.get('name_fmt')) or ' '.join(filter(None, (text(qrz.get(k)) for k in ('fname', 'name')))),
+        'QTH': text(location.get('addr2')), 'GRIDSQUARE': home if location else '',
+        'STATE': text(location.get('state')), 'CNTY': county, 'QSL_VIA': text(qrz.get('qslmgr'))}
+    email, web, iota = text(qrz.get('email')), text(qrz.get('url')), text(location.get('iota')).upper()
+    if re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email): station['EMAIL'] = email
+    try:
+        parsed = urlsplit(web)
+        if parsed.scheme in ('http', 'https') and parsed.hostname and not parsed.username and not parsed.password: station['WEB'] = web
+    except ValueError: pass
+    if re.fullmatch(r'(?:AF|AN|AS|EU|NA|OC|SA)-\d{3}', iota): station['IOTA'] = iota
+    if text(qrz.get('addr1')):
+        city = ', '.join(filter(None, (text(qrz.get('addr2')), text(qrz.get('state')))))
+        city = ' '.join(filter(None, (city, text(qrz.get('zipcode')))))
+        station['ADDRESS'] = '\n'.join(filter(None, (text(qrz.get('attn')), text(qrz.get('addr1')), city, text(qrz.get('country')))))
+    common = {'DXCC': 'adif', 'COUNTRY': 'country', 'CQZ': 'cqz', 'ITUZ': 'ituz', 'CONT': 'continent', 'PFX': 'prefix'}
     for key, value in station.items():
-        if not result.get(key) and value not in (None, ''): result[key] = str(value); sources[key] = 'QRZ XML'
+        if key in ('NAME', 'QTH', 'ADDRESS'):
+            if original.get(key) or original.get(key + '_INTL'): continue
+            if isinstance(value, str) and not value.isascii():
+                put(key + '_INTL', value, 'QRZ XML')
+                transcription = ''.join(c for c in unicodedata.normalize('NFKD', value) if not unicodedata.combining(c))
+                value = transcription if transcription.isascii() else ''
+        put(key, value, 'QRZ XML')
     for key, name in common.items():
-        value = qrz.get(name, fields.get(name))
-        if not result.get(key) and value not in (None, ''): result[key] = str(value); sources[key] = enrichment.get('fieldSources', {}).get(name, 'Callsign enrichment')
+        candidates = []
+        if not conflict and precise and str(qrz.get('adif')) not in ('998','999'): candidates.append((qrz.get(name), 'QRZ XML'))
+        for provider, data in providers.items():
+            if provider != 'qrz' and data.get('status', 'loaded') == 'loaded' and str(data.get('fields', {}).get('adif')) not in ('998','999'):
+                candidates.append((data.get('fields', {}).get(name), PROVIDERS.get(provider, 'Callsign enrichment')))
+        if not providers and str(fields.get('adif')) not in ('998','999'): candidates.append((fields.get(name), enrichment.get('fieldSources', {}).get(name, 'Callsign enrichment')))
+        for value, source in candidates:
+            if key in ('DXCC', 'CQZ', 'ITUZ'):
+                limit = {'DXCC': 522, 'CQZ': 40, 'ITUZ': 90}[key]
+                parsed = number(value, 1, limit)
+                value = str(int(parsed)) if parsed is not None and parsed.is_integer() else ''
+            elif key == 'CONT': value = text(value).upper() if text(value).upper() in ('AF','AN','AS','EU','NA','OC','SA') else ''
+            elif key == 'PFX': value = text(value).upper() if re.fullmatch(r'[A-Za-z0-9/]{1,16}', text(value)) else ''
+            else: value = text(value) if text(value).lower() not in ('unknown','n/a','none','invalid') else ''
+            if value not in ('', None):
+                if key == 'COUNTRY' and not result.get(key) and not original.get('COUNTRY_INTL') and not value.isascii():
+                    put('COUNTRY_INTL', value, source)
+                    transcription = ''.join(c for c in unicodedata.normalize('NFKD', value) if not unicodedata.combining(c))
+                    value = transcription if transcription.isascii() else ''
+                if key != 'COUNTRY' or not original.get('COUNTRY_INTL'): put(key, value, source)
+                break
+
+    # Use the completed contact's grids, never a display estimate or another rig's focus.
+    put('MY_GRIDSQUARE', valid_grid(enrichment.get('stationGrid')), enrichment.get('stationGridSource', 'Configured station grid'))
+    for prefix, grid_key in (('', 'GRIDSQUARE'), ('MY_', 'MY_GRIDSQUARE')):
+        if result.get(prefix + 'LAT') or result.get(prefix + 'LON'): continue
+        locator = valid_grid(result.get(grid_key))
+        coords, source = None, 'Grid centre (' + grid_key + ')'
+        if locator: coords = locator_to_latlong(locator)
+        if not prefix and location:
+            lat, lon = number(qrz.get('latitude'), -90, 90), number(qrz.get('longitude'), -180, 180)
+            if lat is not None and lon is not None and text(qrz.get('geoloc')).lower() in ('user','geocode','grid'):
+                # QRZ coordinates must agree with the chosen grid, not just its home grid.
+                from pyhamtools.locator import latlong_to_locator
+                try: compatible = not locator or latlong_to_locator(lat, lon, precision=len(locator)).upper() == locator.upper()
+                except ValueError: compatible = False
+                if compatible: coords, source = (lat, lon), 'QRZ XML'
+        if coords:
+            put(prefix + 'LAT', adif_coordinate(coords[0], True), source)
+            put(prefix + 'LON', adif_coordinate(coords[1], False), source)
+    if not result.get('DISTANCE'):
+        distance = qso_distance(result)
+        if distance is not None: put('DISTANCE', str(distance), 'Great-circle distance from QSO grids')
     return result, sources
