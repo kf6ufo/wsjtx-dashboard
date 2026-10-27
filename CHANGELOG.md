@@ -17,6 +17,9 @@ First proposed public beta; **not tagged or published**. The application was pre
 
 ### Release preparation
 
+- Narrow HTTP trusted-host validation for localhost, loopback and the configured LAN IP, retaining existing Origin restrictions.
+- Owner-only configuration/SQLite files and private state directories, with repeat-install/restart preservation tests and no ADIF or ownership changes.
+
 - Rewritten operator-focused README and navigable installation, configuration, operating, logging, troubleshooting and architecture guides.
 - Sanitized Station screenshot using fictional demonstration records.
 - Draft release notes and an explicit platform/integration readiness checklist.

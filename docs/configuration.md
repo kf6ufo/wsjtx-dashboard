@@ -1,5 +1,7 @@
 # Configuration
 
+HTTP requests accept only `localhost`, `127.0.0.1` and the configured `[http].host` IP. For access from another trusted LAN computer, bind `[http].host` to the Dashboard computer's specific LAN IPv4 and use that address in the browser. The client's own address does not need to be allowlisted. Custom DNS names and wildcard Host headers are not accepted; existing same-origin protections remain enabled.
+
 [Documentation](README.md) · [Quick start](quick-start.md) · [Troubleshooting](troubleshooting.md)
 
 Settings has separate save scopes. A button saves its own section; switching tabs retains unsaved edits. Credentials live in the server's ignored `config.toml`, not readable browser settings. Blank credential entries retain existing secrets unless explicitly cleared. Protect configuration and backups.
