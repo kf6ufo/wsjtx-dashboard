@@ -21,7 +21,7 @@ from .forwarding_config import PACKET_TYPES
 def encode_logged_adif(packet, fields):
     """WSJT-X schema 2/3 header and UTF-8 QByteArray, never a naked ADIF datagram."""
     if packet.schema not in (2, 3): raise ValueError('Unsupported schema for enriched encoding')
-    header = 'WSJT-X Dashboard\n<ADIF_VER:5>3.1.0<PROGRAMID:16>WSJT-X Dashboard<EOH>\n'
+    header = 'WSJT-X Dashboard\n<ADIF_VER:5>3.1.6<PROGRAMID:16>WSJT-X Dashboard<EOH>\n'
     rig, body = packet.rig_id.encode('utf-8'), (header + adif_text(fields)).encode('utf-8')
     data = struct.pack('!IIII', 0xADBCCBDA, packet.schema, 12, len(rig)) + rig + struct.pack('!I', len(body)) + body
     if len(data) > 65507: raise ValueError('Enriched datagram exceeds UDP size limit')

@@ -1,0 +1,111 @@
+"""Pure destination field support and grid calculations; no persistence or networking.
+
+Field names checked against ADIF 3.1.6 QSO fields and Wavelog 3.2.3
+Logbook_model::import. Keep vendor metadata out of ordinary QSO fields.
+"""
+import math
+import re
+from .enrichment_config import grid
+from pyhamtools.locator import calculate_distance, calculate_heading, locator_to_latlong
+
+
+def number(value, minimum=0, maximum=math.inf):
+    try:
+        parsed = float(value)
+        if not isinstance(value, bool) and math.isfinite(parsed) and minimum <= parsed <= maximum:
+            return parsed
+    except (ValueError, TypeError, OverflowError):
+        pass
+    return None
+
+
+def valid_grid(value):
+    try:
+        return grid(value)
+    except (ValueError, TypeError, AttributeError):
+        return ''
+
+
+def qso_distance(fields):
+    supplied = number(fields.get('DISTANCE'))
+    if supplied is not None: return supplied
+    station, contact = valid_grid(fields.get('MY_GRIDSQUARE')), valid_grid(fields.get('GRIDSQUARE'))
+    if station and contact:
+        try: return number(round(calculate_distance(station, contact), 3))
+        except ValueError: pass
+    return None
+
+
+def qso_heading(fields):
+    supplied = number(fields.get('HEADING'), 0, 360)
+    if supplied is not None: return supplied
+    station, contact = valid_grid(fields.get('MY_GRIDSQUARE')), valid_grid(fields.get('GRIDSQUARE'))
+    if station and contact and station != contact:
+        try: return number(round(calculate_heading(station, contact), 1), 0, 360)
+        except ValueError: pass
+    return None
+
+
+def adif_coordinate(value, latitude):
+    parsed = number(value, -90 if latitude else -180, 90 if latitude else 180)
+    if parsed is None: return ''
+    # Round total minutes first so 59.9999 minutes carries into the next degree.
+    degrees, minutes = divmod(round(abs(parsed) * 60000), 60000)
+    hemisphere = ('S' if parsed < 0 else 'N') if latitude else ('W' if parsed < 0 else 'E')
+    return f'{hemisphere}{degrees:03d} {minutes / 1000:06.3f}'
+
+
+def destination_fields(fields, destination):
+    allowed = ADIF_QSO_FIELDS if destination == 'adif' else WAVELOG_QSO_FIELDS
+    result = {k: v for k, v in fields.items() if (k in allowed or
+        (destination == 'adif' and re.fullmatch(r'APP_[A-Z0-9_]+', k))) and
+        isinstance(v, (str, int, float)) and not isinstance(v, bool) and str(v).strip() and
+        (not isinstance(v, float) or math.isfinite(v))}
+    if 'DISTANCE' in result and number(result['DISTANCE']) is None: result.pop('DISTANCE')
+    return result
+
+ADIF_QSO_FIELDS = frozenset("""
+ADDRESS ADDRESS_INTL AGE ALTITUDE ANT_AZ ANT_EL ANT_PATH ARRL_SECT AWARD_GRANTED AWARD_SUBMITTED
+A_INDEX BAND BAND_RX CALL CHECK CLASS CLUBLOG_QSO_UPLOAD_DATE CLUBLOG_QSO_UPLOAD_STATUS CNTY
+CNTY_ALT COMMENT COMMENT_INTL CONT CONTACTED_OP CONTEST_ID COUNTRY COUNTRY_INTL CQZ CREDIT_GRANTED
+CREDIT_SUBMITTED DARC_DOK DCL_QSLRDATE DCL_QSLSDATE DCL_QSL_RCVD DCL_QSL_SENT DISTANCE DXCC EMAIL
+EQSL_AG EQSL_QSLRDATE EQSL_QSLSDATE EQSL_QSL_RCVD EQSL_QSL_SENT EQ_CALL FISTS FISTS_CC FORCE_INIT
+FREQ FREQ_RX GRIDSQUARE GRIDSQUARE_EXT GUEST_OP HAMLOGEU_QSO_UPLOAD_DATE HAMLOGEU_QSO_UPLOAD_STATUS
+HAMQTH_QSO_UPLOAD_DATE HAMQTH_QSO_UPLOAD_STATUS HRDLOG_QSO_UPLOAD_DATE HRDLOG_QSO_UPLOAD_STATUS IOTA
+IOTA_ISLAND_ID ITUZ K_INDEX LAT LON LOTW_QSLRDATE LOTW_QSLSDATE LOTW_QSL_RCVD LOTW_QSL_SENT
+MAX_BURSTS MODE MORSE_KEY_INFO MORSE_KEY_TYPE MS_SHOWER MY_ALTITUDE MY_ANTENNA MY_ANTENNA_INTL
+MY_ARRL_SECT MY_CITY MY_CITY_INTL MY_CNTY MY_CNTY_ALT MY_COUNTRY MY_COUNTRY_INTL MY_CQ_ZONE
+MY_DARC_DOK MY_DXCC MY_FISTS MY_GRIDSQUARE MY_GRIDSQUARE_EXT MY_IOTA MY_IOTA_ISLAND_ID MY_ITU_ZONE
+MY_LAT MY_LON MY_MORSE_KEY_INFO MY_MORSE_KEY_TYPE MY_NAME MY_NAME_INTL MY_POSTAL_CODE
+MY_POSTAL_CODE_INTL MY_POTA_REF MY_RIG MY_RIG_INTL MY_SIG MY_SIG_INFO MY_SIG_INFO_INTL MY_SIG_INTL
+MY_SOTA_REF MY_STATE MY_STREET MY_STREET_INTL MY_USACA_COUNTIES MY_VUCC_GRIDS MY_WWFF_REF NAME
+NAME_INTL NOTES NOTES_INTL NR_BURSTS NR_PINGS OPERATOR OWNER_CALLSIGN PFX POTA_REF PRECEDENCE
+PROP_MODE PUBLIC_KEY QRZCOM_QSO_DOWNLOAD_DATE QRZCOM_QSO_DOWNLOAD_STATUS QRZCOM_QSO_UPLOAD_DATE
+QRZCOM_QSO_UPLOAD_STATUS QSLMSG QSLMSG_INTL QSLMSG_RCVD QSLRDATE QSLSDATE QSL_RCVD QSL_RCVD_VIA
+QSL_SENT QSL_SENT_VIA QSL_VIA QSO_COMPLETE QSO_DATE QSO_DATE_OFF QSO_RANDOM QTH QTH_INTL REGION RIG
+RIG_INTL RST_RCVD RST_SENT RX_PWR SAT_MODE SAT_NAME SFI SIG SIG_INFO SIG_INFO_INTL SIG_INTL
+SILENT_KEY SKCC SOTA_REF SRX SRX_STRING STATE STATION_CALLSIGN STX STX_STRING SUBMODE SWL TEN_TEN
+TIME_OFF TIME_ON TX_PWR UKSMG USACA_COUNTIES VE_PROV VUCC_GRIDS WEB WWFF_REF
+""".split())
+
+WAVELOG_QSO_FIELDS = frozenset("""
+ADDRESS ADDRESS_INTL AGE ANT_AZ ANT_EL ANT_PATH ARRL_SECT AWARD_GRANTED AWARD_SUBMITTED A_INDEX BAND
+BAND_RX CALL CHECK CLASS CLUBLOG_QSO_UPLOAD_DATE CLUBLOG_QSO_UPLOAD_STATUS CNTY CNTY_ALT COMMENT
+COMMENT_INTL CONT CONTACTED_OP CONTEST_ID COUNTRY COUNTRY_INTL CQZ CREDIT_GRANTED CREDIT_SUBMITTED
+DARC_DOK DCL_QSLRDATE DCL_QSLSDATE DCL_QSL_RCVD DCL_QSL_SENT DISTANCE DXCC EMAIL EQSL_AG
+EQSL_QSLRDATE EQSL_QSLSDATE EQSL_QSL_RCVD EQSL_QSL_SENT EQ_CALL FISTS FISTS_CC FORCE_INIT FREQ
+FREQ_RX GRIDSQUARE HEADING HRDLOG_QSO_UPLOAD_DATE HRDLOG_QSO_UPLOAD_STATUS IOTA ITUZ K_INDEX LAT LON
+LOTW_QSLRDATE LOTW_QSLSDATE LOTW_QSL_RCVD LOTW_QSL_SENT MAX_BURSTS MODE MORSE_KEY_INFO
+MORSE_KEY_TYPE MS_SHOWER MY_ANTENNA MY_ANTENNA_INTL MY_CITY MY_CITY_INTL MY_CNTY MY_CNTY_ALT
+MY_COUNTRY MY_COUNTRY_INTL MY_DARC_DOK MY_DXCC MY_FISTS MY_GRIDSQUARE MY_IOTA MY_IOTA_ISLAND_ID
+MY_ITU_ZONE MY_LAT MY_LON MY_NAME MY_NAME_INTL MY_POSTAL_CODE MY_POTA_REF MY_RIG MY_RIG_INTL MY_SIG
+MY_SIG_INFO MY_SIG_INFO_INTL MY_SIG_INTL MY_SOTA_REF MY_STATE MY_STREET MY_STREET_INTL
+MY_USACA_COUNTIES MY_VUCC_GRIDS MY_WWFF_REF NAME NAME_INTL NOTES NOTES_INTL NR_BURSTS NR_PINGS
+OPERATOR OWNER_CALLSIGN PFX POTA_REF PRECEDENCE PROP_MODE PUBLIC_KEY QRZCOM_QSO_DOWNLOAD_DATE
+QRZCOM_QSO_DOWNLOAD_STATUS QRZCOM_QSO_UPLOAD_DATE QRZCOM_QSO_UPLOAD_STATUS QSLMSG QSLMSG_RCVD
+QSLRDATE QSLSDATE QSL_RCVD QSL_RCVD_VIA QSL_SENT QSL_SENT_VIA QSL_VIA QSO_COMPLETE QSO_DATE
+QSO_DATE_OFF QTH QTH_INTL REGION RIG RIG_INTL RST_RCVD RST_SENT RX_PWR SAT_MODE SAT_NAME SFI SIG
+SIG_INFO SIG_INFO_INTL SIG_INTL SILENT_KEY SKCC SOTA_REF SRX SRX_STRING STATE STATION_CALLSIGN STX
+STX_STRING SUBMODE SWL TEN_TEN TIME_OFF TIME_ON TX_PWR UKSMG USACA_COUNTIES VUCC_GRIDS WEB WWFF_REF
+""".split())
+

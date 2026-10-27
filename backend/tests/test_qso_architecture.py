@@ -66,9 +66,9 @@ def test_adif_queries_thousands_and_incomplete_coverage(tmp_path):
 
 
 def test_source_precedence_preserves_authoritative_qso_and_zero_power():
-    original=fields(NAME='Original',GRIDSQUARE='PM85',TX_PWR='0',COMMENT='Operator comment')
-    result,sources=enrich_qso(original,PROFILE,dict(fields=dict(country='Prediction',adif=999,locator='AA00',cqz=5),providers=dict(qrz=dict(fields=dict(name='QRZ Name',locator='FN31',country='Verified',adif=291,state='CT',county='New Haven')))))
-    assert result['NAME']=='Original' and result['GRIDSQUARE']=='PM85' and result['TX_PWR']=='0'
+    original=fields(NAME='Original',GRIDSQUARE='FN31',TX_PWR='0',COMMENT='Operator comment')
+    result,sources=enrich_qso(original,PROFILE,dict(fields=dict(country='Prediction',adif=999,locator='AA00',cqz=5),providers=dict(qrz=dict(fields=dict(name='QRZ Name',locator='FN31PR',country='Verified',adif=291,state='CT',county='New Haven')))))
+    assert result['NAME']=='Original' and result['GRIDSQUARE']=='FN31' and result['TX_PWR']=='0'
     assert result['COUNTRY']=='Verified' and result['DXCC']=='291' and result['STATE']=='CT' and result['CNTY']=='CT,New Haven'
     assert result['COMMENT']=='Operator comment' and sources['NAME']=='WSJT-X'
     assert 'GRIDSQUARE' not in enrich_qso({k:v for k,v in original.items() if k!='GRIDSQUARE'},PROFILE,dict(fields=dict(locator='AA00')))[0]
