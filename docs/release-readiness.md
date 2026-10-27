@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Draft release notes](releases/v0.9.0-beta.1.md) · [Changelog](../CHANGELOG.md)
 
-**Candidate:** `v0.9.0-beta.1`, proposed October 27, 2026. This is preparation for review, not a published release. No tag, GitHub release, visibility change or merge is authorized by this task.
+**Candidate:** `v0.9.0-beta.1`, proposed October 27, 2026. The operator authorized merging the preparation into main for testing; [PR #11](https://github.com/kf6ufo/wsjtx-dashboard/pull/11) merged at `a4d7ceb`. This is not a published release. Tagging, GitHub release publication and repository visibility changes still require separate approval.
 
 ## What the evidence supports
 
