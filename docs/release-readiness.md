@@ -24,7 +24,7 @@
 - [x] Source has an MIT license; no new image license dependency is introduced by the original demo illustration.
 - [x] Proposed package metadata version is consistent; Node range reflects installer behavior.
 - [x] New examples/screenshot data are fictional; no credentials or live logbooks are deliberately included.
-- [ ] Complete fresh install/repeat-install, tests, screenshot and local document-link checks; record exact results below.
+- [x] Complete fresh install/repeat-install, tests, screenshot and local document-link checks; exact results are below.
 - [ ] Review the final diff and screenshot with the maintainer, then approve the release candidate commit/version.
 - [ ] Review **all historical documents and Git history** before making the repository public. Existing development records include station callsigns, LAN addresses and machine-specific paths. This branch does not rewrite history or change visibility.
 - [ ] Confirm third-party dependency/data/attribution obligations for distribution. Basemap attribution must remain visible; source licensing does not grant rights to QRZ photographs or external datasets.
@@ -42,8 +42,24 @@ Historical field-coverage validation at application `b2338e6` passed **179 backe
 
 ## Fresh candidate validation
 
-Pending execution in an isolated checkout. Record the tested commit, clean/repeat native installation, exact tests, document checks, screenshot provenance and any failures here before review. macOS evidence must not be relabeled as Ubuntu evidence. The live station checkout, settings, QSO files and queues are outside this validation environment.
+On October 27, the documented installer was run from a **clean clone at `69e48aa`**, with a newly created virtual environment and `npm ci`, on actual macOS 26.6.1 arm64 / Python 3.13.1 / Node 24.21.0 / Chrome. Dependencies used the normal package caches where available; this is a clean installation, not an empty-cache download benchmark. Installation, type checking and production build passed. The built server served HTTP 200 on an isolated loopback port with receiver/providers/logging/forwarding disabled, and shut down gracefully. The live station on port 8787 was untouched.
+
+A real repeat `./install.sh` preserved byte-identical configuration, a synthetic ADIF file and all four SQLite databases, including one pending delivery. Example TOML parsed successfully; the template's parsed defaults equal main's, package/lock versions agree, and dependency versions are unchanged.
+
+| Check | Result |
+| --- | --- |
+| Backend suite, including installed shutdown | **179 passed** |
+| Frontend unit suite | **35 passed** |
+| Type checking / production build | Passed |
+| Isolated browser workflows | **13 passed**: 3 demo, 1 foundation, 1 receiver, 3 enrichment, 1 Wavelog, 1 ADIF, 2 Steps 5/7, 1 mapping |
+| Local Markdown file/image/anchor links | **172 checked across 37 Markdown files; zero errors** |
+| Sanitized screenshot | Captured at 1560 × 1492 from actual built UI with fictional API/photo fixtures; visually inspected, basemap attribution retained |
+| Public-facing example scan | No operator paths, station-specific LAN addresses, operator callsigns or credential/key patterns found in the new guides/capture fixture; this is not a full Git-history secret audit |
+
+The initial demo browser test counted hidden Diagnostics rows as QSOs after opening Settings. Its row/header assertions were narrowed to the contact scroller; the full browser set then passed. This is a test-only correction with no UI change. Backend/unit/build results apply to the same application code and metadata; the selector correction was synchronized into the clean validation checkout before the passing browser run. Later screenshot/report additions do not change the application.
+
+Warnings: existing Starlette/httpx adapter deprecation, separately loaded map-renderer size advisory, npm `whatwg-encoding` deprecation and an optional `fsevents` install-script advisory. `npm ci` reported zero known vulnerabilities in that run; this is not a comprehensive security audit. Actual Ubuntu/Windows/Docker execution and external write acceptance remain outside these results. The live station checkout, settings, QSO files and queues were not updated or used as a write-test target.
 
 ## Scope of preparation changes
 
-README and user guides, changelog/release draft, readiness checklist, a reproducible sanitized screenshot and a local link checker. Configuration-template comments are clarified without changing defaults. Package version is proposed as `0.9.0-beta.1`; its Node engine range changes from `>=24.15.0` to `>=24.15.0 <25` to match the existing installer. No dependency versions, UI behavior, logging architecture or production configuration are changed.
+README and user guides, changelog/release draft, readiness checklist, a reproducible sanitized screenshot and a local link checker. Configuration-template comments are clarified without changing defaults. Package version is proposed as `0.9.0-beta.1`; its Node engine range changes from `>=24.15.0` to `>=24.15.0 <25` to match the existing installer. Demo browser assertions now count only contact-table rows/headers, excluding hidden Diagnostics tables. No dependency versions, UI behavior, logging architecture or production configuration are changed.

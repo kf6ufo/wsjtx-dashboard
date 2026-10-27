@@ -21,6 +21,7 @@ First proposed public beta; **not tagged or published**. The application was pre
 - Sanitized Station screenshot using fictional demonstration records.
 - Draft release notes and an explicit platform/integration readiness checklist.
 - Proposed package metadata version `0.9.0-beta.1`; Node engine range aligned with the installer's actual 24.x requirement. No dependency upgrades, UI redesign or logging architecture changes.
+- Corrected demo browser test selectors to exclude hidden Diagnostics rows from contact counts; the complete isolated browser suite passes.
 
 ### Known limitations
 
