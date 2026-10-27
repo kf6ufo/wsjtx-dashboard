@@ -8,7 +8,7 @@ const hero = process.argv.includes('--hero')
 if (base.hostname !== '127.0.0.1' || base.port === '8787') throw new Error('Use an isolated loopback static server, not port 8787')
 const stamp = Date.UTC(2026, 9, 27, 12, 30), call = 'K1DEMO'
 const fields = { callsign:call, fname:'Example', name:'Operator', addr2:'Sample station', state:'OR', country:'United States', locator:'CN85', latitude:45.5, longitude:-123, adif:291, cqz:3, ituz:6, email:'operator@example.invalid', url:'https://example.invalid', lotw:'Y', eqsl:'N', image:'https://images.example.invalid/antenna.svg', qslmgr:'Direct or bureau' }
-const calls = [call, 'DL1DEMO', 'VK3DEMO', 'JA1DEMO', 'W7DEMO', 'ZS6DEMO'].slice(0, hero ? 4 : 6)
+const calls = [call, 'DL1DEMO', 'VK3DEMO', 'JA1DEMO', 'W7DEMO', 'ZS6DEMO']
 const history = calls.map((c,i)=>({call:c,rigId:i%2?'WSJT-X - Radio B':'WSJT-X - Radio A',selectedAt:stamp-i*120000,band:i%2?'15m':'20m',mode:'FT8',frequency:14074000,dxGrid:i?'':'CN85',deGrid:'FN31',recency:6-i}))
 const records = [0,1,2].map(i=>({id:`demo-${i}`,call,date:`2026-10-${26-i*2}T12:15:00Z`,band:i===1?'15m':'20m',mode:i===2?'FT4':'FT8',sent:'-07',received:'-10',station:'N0CALL',stationId:1,grid:'CN85',confirmed:i!==1,confirmations:i===1?[]:[{type:'LoTW',date:''}],details:{name:'Example Operator',qth:'Sample station'}}))
 const result={call,status:'loaded',complete:true,lookupId:'documentation-fixture',recordCount:3,total:3,scope:'Demonstration ADIF history',cached:false}
@@ -30,11 +30,16 @@ try {
  await page.waitForTimeout(6500)
  const output = fileURLToPath(new URL(`../docs/assets/${hero ? 'dashboard-hero' : 'dashboard'}.png`,import.meta.url))
  if (hero) {
-  // Keep the header and complete station cards; omit the map/contact area.
-  // Four fictional history entries avoid cutting a fifth entry at the crop edge.
-  const bounds = await page.locator('.station-primary').boundingBox()
-  if (!bounds) throw new Error('Station summary not found; cannot frame the hero safely')
-  await page.screenshot({path:output,clip:{x:0,y:0,width:1560,height:Math.ceil(bounds.y+bounds.height+14)}})
+  // Frame the complete station summary and Details cards only.
+  // Exclude the shared header, Focus History, map and contact area.
+  const summary = await page.locator('.station-primary').boundingBox()
+  const details = await page.locator('.station-details').boundingBox()
+  if (!summary || !details) throw new Error('Station cards not found; cannot frame the hero safely')
+  const x = Math.floor(Math.min(summary.x,details.x)-12)
+  const y = Math.floor(Math.min(summary.y,details.y)-12)
+  const right = Math.ceil(Math.max(summary.x+summary.width,details.x+details.width)+12)
+  const bottom = Math.ceil(Math.max(summary.y+summary.height,details.y+details.height)+12)
+  await page.screenshot({path:output,clip:{x,y,width:right-x,height:bottom-y}})
  } else await page.screenshot({path:output,fullPage:true})
  console.log(`Captured fictional Station ${hero ? 'hero' : 'screenshot'}; no live API or operator data used.`)
 } finally {await browser.close()}

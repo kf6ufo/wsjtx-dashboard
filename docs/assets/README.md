@@ -2,7 +2,7 @@
 
 `dashboard.png` captures the actual built Station view with fictional records supplied by [the capture script](../../scripts/capture-doc-screenshot.mjs). It uses an original MIT-licensed [antenna illustration](demo-antenna.svg), generic callsign examples and an `example.invalid` email. No live server/configuration/logbook or real operator photograph is used. The basemap retains its on-screen attribution.
 
-`dashboard-hero.png` is a wide capture of the same interface and fixtures, framed around the complete header, station summary, Details and four Focus History entries. The map and contact area are outside its frame. Both README images use GitHub's responsive Markdown image rendering; the hero links to its original PNG for closer viewing.
+`dashboard-hero.png` is a wide capture of the same interface and fixtures, framed around the complete station summary and Details cards. The header, Focus History, map and contact area are outside its frame. Both README images use GitHub's responsive Markdown image rendering; the hero links to its original PNG for closer viewing.
 
 Reproduce from an installed development checkout:
 
