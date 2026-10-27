@@ -1,6 +1,6 @@
 # Completed-QSO field coverage audit
 
-October 26, 2026. `feature/qso-field-coverage` reviews the existing provider → completed-QSO → ADIF/Wavelog path. It changes field selection/encoding only. Queue schema, target resolution, receipts, reconciliation, retry rules, duplicate identity, receiver behavior and logging flags are unchanged. No past QSO is edited, resubmitted or backfilled.
+Published October 26, 2026 on **main** through [PR #10](https://github.com/kf6ufo/wsjtx-dashboard/pull/10), merge `faa16b6`, application source `b2338e6`. This audit covers the existing provider → completed-QSO → ADIF/Wavelog path. It changes field selection/encoding only. Queue schema, target resolution, receipts, reconciliation, retry rules, duplicate identity, receiver behavior and logging flags are unchanged. No past QSO is edited, resubmitted or backfilled.
 
 ## Included fields
 

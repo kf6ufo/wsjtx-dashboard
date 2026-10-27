@@ -1,6 +1,6 @@
 # Optional QSO history, enrichment and delivery infrastructure
 
-The [completed-QSO field audit](qso-field-audit.md) documents the current field inventory, destination support, reliability rules and read-only export comparison command. Its follow-up correction is on `feature/qso-field-coverage`; no new logging architecture or duplicate policy is introduced.
+The [completed-QSO field audit](qso-field-audit.md), published on main through PR #10, documents the current field inventory, destination support, reliability rules and read-only export comparison command. No new logging architecture or duplicate policy is introduced. Its current tested/untested limits are recorded in the [checkpoint](current-checkpoint.md).
 
 This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`main`**, merged through PR #4 at `e9fa332` after Step 4 PR #3 at `42220f0` on October 25, 2026. At the operator’s request, the extension now runs as the single dashboard on port 8787, preserving the existing station configuration/history with Dashboard submissions disabled. Production WaveLogGate is still the uploader.
 
