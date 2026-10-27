@@ -14,6 +14,8 @@ Step 6 isolated write acceptance and managed production cutover remain unverifie
 
 The later automatic-station-mapping request authorizes exact authorized-location matching for new deliveries, explicit overrides and per-QSO read-only external resolution of the failed W4WFC delivery. It does not authorize automatic POST of legacy missing-mapping entries. On October 26, the operator requested publication and restart of the worked-status, automatic-mapping and distance/QSL_VIA corrections; PRs #7–#9 are merged on main at `15fbafc` (application source `77b2c54`). Existing logging flags, ADIF files and queue receipts are preserved. See `docs/current-checkpoint.md` and `docs/wavelog-station-mapping.md`.
 
+The subsequent completed-QSO field audit authorizes field coverage/reliability corrections and read-only Wavelog export verification, preserving original values and existing logging/duplicate architecture. `feature/qso-field-coverage` is a separate unmerged preview; see `docs/qso-field-audit.md`. Do not turn known Wavelog exporter omissions into repair writes or claim new optional fields have live acceptance until an ordinary post-deployment contact/export demonstrates it. Never create a synthetic production QSO for this audit.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).
