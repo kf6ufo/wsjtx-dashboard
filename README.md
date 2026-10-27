@@ -2,6 +2,10 @@
 
 *See who you're working. Know who you've worked. Log the contact automatically.*
 
+> [!WARNING]
+> **Beta software — `v0.9.0-beta.1`**
+> This beta is intended for testing and may contain bugs, incomplete behavior or unverified integrations. Back up your configuration and QSO data, and verify logging results before relying on it. See [known limitations and release readiness](docs/release-readiness.md).
+
 [![WSJT-X Dashboard showing a fictional selected station, profile illustration, worked-before indicators and station details](docs/assets/dashboard-hero.png)](docs/assets/dashboard-hero.png)
 
 A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
