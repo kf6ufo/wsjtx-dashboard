@@ -1,4 +1,4 @@
-# Native macOS/Ubuntu Step 1. Copied only when config.toml does not exist.
+# Native configuration template. Copied only when config.toml does not exist.
 [http]
 host = "127.0.0.1"
 port = 8787
@@ -14,7 +14,7 @@ listen = "0.0.0.0"
 # In-memory diagnostic packets; never a permanent QSO log.
 retention = 200
 
-# Optional Step 2. Older configuration files remain valid without this section.
+# Optional callbook/enrichment. Older files remain valid without this section.
 [enrichment]
 enabled = false
 source = "countryfile"
@@ -32,7 +32,7 @@ clublog_key = ""
 qrz_username = ""
 qrz_password = ""
 
-# Optional Step 3. API v2 reads only; never submits or changes QSOs.
+# Wavelog history/connection. QSO submission is enabled separately under [qso].
 [wavelog]
 enabled = false
 url = ""
@@ -53,19 +53,19 @@ history_source = "auto"
 adif_path = ""
 # Explicit historical coverage assertion, never inferred from an empty file.
 adif_complete = false
-# Separate from read-only Wavelog settings above. Leave off until isolated review.
+# Explicit delivery opt-in. Validate destinations and choose a single uploader first.
 logging_enabled = false
 log_to_wavelog = false
 recovery_seconds = 30
 # Settings writes inline mappings keyed by exact WSJT-X network ID.
 rigs = []
 
-# Step 5: radio-selection history only, independent of QSO logs and the outbox.
+# Radio-selection history, independent of QSO logs and the outbox.
 [history]
 limit = 200
 # 0 = retain until manually cleared; other choices are 7 or 30 days.
 retention_days = 0
 
-# Step 7: opt-in one-way UDP distribution. Each destination defaults disabled.
+# Opt-in one-way UDP distribution. Each destination defaults disabled.
 [forwarding]
 destinations = []
