@@ -2,13 +2,15 @@
 
 *See who you're working. Know who you've worked. Log the contact automatically.*
 
+[![WSJT-X Dashboard showing a fictional selected station, profile illustration, worked-before indicators, station details and Focus History](docs/assets/dashboard-hero.png)](docs/assets/dashboard-hero.png)
+
 A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
 
 **Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station in WSJT-X immediately brings its callsign into focus; available operator details, photographs, map and worked-before information load automatically.
 
 ![WSJT-X Dashboard Station view with fictional station information, worked-before indicators, map and contact history](docs/assets/dashboard.png)
 
-*The actual Station interface with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown.*
+*The actual Station interface with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View the full Dashboard screenshot at full resolution](docs/assets/dashboard.png).*
 
 ## Why WSJT-X Dashboard?
 
