@@ -1,6 +1,6 @@
 # Automatic Wavelog station mapping and read-only queue resolution
 
-This focused correction is on `feature/automatic-wavelog-mapping`, stacked on the unmerged worked-status preview. Neither preview is approved for merging yet. Production Wavelog submissions are not enabled by this change, and WaveLogGate remains unchanged.
+This correction was published on `main` through PR #8 on October 26, following the operator's merge request. The worked-status and distance/QSL_VIA corrections are also published through PRs #7/#9. These changes preserve existing logging flags and leave WaveLogGate unchanged. [Current installation and verification](current-checkpoint.md).
 
 ## Automatic station locations
 

@@ -2,6 +2,8 @@
 
 This extension implements the [operator’s architecture request](qso-architecture-request.md) on **`main`**, merged through PR #4 at `e9fa332` after Step 4 PR #3 at `42220f0` on October 25, 2026. At the operator’s request, the extension now runs as the single dashboard on port 8787, preserving the existing station configuration/history with Dashboard submissions disabled. Production WaveLogGate is still the uploader.
 
+The installation/disabled-state descriptions below record that initial release. Subsequent corrections are published through PRs #7–#9. For current runtime and logging flags, use [the latest checkpoint](current-checkpoint.md): upgrades preserve the operator's existing settings, including the currently enabled local/Wavelog destinations.
+
 ## Install and review
 
 The single local dashboard is **http://127.0.0.1:8787/**. Its serving checkout is `/private/tmp/wsjtx-step3-native` on `main`. Stop only this dashboard’s foreground process with Ctrl+C (or SIGTERM when detached); restart with `.venv/bin/python -m backend.server` from that directory. The former 8798 synthetic preview is stopped/retired; its files are retained for reference and must not be started as a second instance. The active instance uses the original station settings/history, no synthetic ADIF path, and logging off.
@@ -74,13 +76,13 @@ Do not hand-edit pending queue rows or delete the append journal. Disk-full/perm
 
 The subsequent [Steps 5/7 review milestone](steps-5-and-7.md) adds an independent bounded forwarding service that reuses the shared QSO model/enrichment; routine UDP does not use the durable logging outbox. The original QSO architecture extension itself does not enable forwarding. UI changes are limited to settings, source labels and delivery status. Ubuntu and actual Wavelog write acceptance remain separately unverified until recorded in the current checkpoint.
 
-## Automatic mapping correction preview
+## Automatic mapping correction
 
-The unmerged `feature/automatic-wavelog-mapping` correction adds exact automatic callsign-to-authorized-location matching, optional detected-instance overrides and read-only per-QSO external resolution. Legacy missing-mapping entries are never automatically repaired and posted. [Behavior, verification and queue preservation](wavelog-station-mapping.md). Submission enablement remains a separate operator decision.
+Published through PR #8, the correction adds exact automatic callsign-to-authorized-location matching, optional detected-instance overrides and read-only per-QSO external resolution. Legacy missing-mapping entries are never automatically repaired and posted. [Behavior, verification and queue preservation](wavelog-station-mapping.md). Submission enablement remains a separate operator decision; upgrades preserve existing settings.
 
 ## Wavelog distance correction preview
 
-`feature/wavelog-qso-distance` adds numeric `distance` (kilometres) to the original JSON create request only. A finite, nonnegative existing `DISTANCE` wins; otherwise the adapter uses the great-circle short path between the centres of the QSO's `MY_GRIDSQUARE` and `GRIDSQUARE`, supporting 4/6/8-character locators and rounding calculated values to 0.001 km. Missing/invalid grids leave distance omitted. ADIF fields/output, queue state, fingerprints, reconciliation and HTTP request count are unchanged; no follow-up edit or configuration/UI change is added.
+Published through PR #9, numeric `distance` (kilometres) is added to the original JSON create request only. A finite, nonnegative existing `DISTANCE` wins; otherwise the adapter uses the great-circle short path between the centres of the QSO's `MY_GRIDSQUARE` and `GRIDSQUARE`, supporting 4/6/8-character locators and rounding calculated values to 0.001 km. Missing/invalid grids leave distance omitted. ADIF fields/output, queue state, fingerprints, reconciliation and HTTP request count are unchanged; no follow-up edit or configuration/UI change is added. This section retains its former preview heading for existing links.
 
 Compatibility was checked against tagged **Wavelog 3.2.3** source: [`Qso_resource::create_from_json` / `body_to_record`](https://github.com/wavelog/wavelog/blob/3.2.3/application/libraries/api_v2/Qso_resource.php#L284) pass the numeric field through, and [`Logbook_model`'s import path](https://github.com/wavelog/wavelog/blob/3.2.3/application/models/Logbook_model.php#L5582) stores it as `COL_DISTANCE`. That version's importer treats zero as empty; Dashboard still sends numeric zero when supplied or calculated. This is source-level compatibility verification, not a live API write test. Production Wavelog and the running Dashboard remain unchanged; isolated real write acceptance is still outstanding.
 
