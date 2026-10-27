@@ -2,6 +2,8 @@
 
 [Documentation](README.md) · [Installation](installation.md) · [Configuration](configuration.md)
 
+**Click a callsign in WSJT-X to focus the Dashboard on that station.** After connecting UDP reporting below, selecting a different station brings its callsign into focus immediately; configured station and history lookups follow automatically.
+
 ## 1. Start locally
 
 Install/run the server and open **http://127.0.0.1:8787/**. A new installation can show labeled sample data. It is not your logbook. Reception, online providers, logging and forwarding default off.
@@ -17,9 +19,9 @@ Open **Settings → Radio receiver**. Set the listen address (usually `0.0.0.0` 
 
 Use distinct WSJT-X network IDs for different instances. Dashboard distinguishes them by ID rather than sender IP, including multiple radios on one computer.
 
-## 3. Make a selection
+## 3. Click a callsign in WSJT-X to focus
 
-In **Diagnostics**, confirm expected instances and recent **Heartbeat**, **Status** and **Decode** traffic. Return to Station, then select a **different** valid callsign in WSJT-X.
+In **Diagnostics**, confirm expected instances and recent **Heartbeat**, **Status** and **Decode** traffic. Return to Station, then click a **different** valid callsign in WSJT-X to select it. The Dashboard focuses on that station automatically; you do not need to enter the callsign again in the Dashboard.
 
 The first Status per instance establishes a baseline. A later changed DX Call drives focus and Focus History. Routine decodes, blank calls and unchanged Status values do not select. This detects reported selection changes, not every physical click or repeat click on the same call.
 

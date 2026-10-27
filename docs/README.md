@@ -2,7 +2,7 @@
 
 [Project overview](../README.md) · [Release readiness](release-readiness.md)
 
-Start with reception, then add the services you need. You can use the Dashboard without Wavelog, without QRZ, or without automatic logging.
+**Click a callsign in WSJT-X to focus the Dashboard on that station.** Start by connecting UDP reception, then select a different station in WSJT-X to see its profile and history load automatically. Add the services you need: you can use the Dashboard without Wavelog, without QRZ, or without automatic logging.
 
 | Guide | What it covers |
 | --- | --- |

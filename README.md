@@ -4,6 +4,8 @@
 
 A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
 
+**Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station in WSJT-X immediately brings its callsign into focus; available operator details, photographs, map and worked-before information load automatically.
+
 ![WSJT-X Dashboard Station view with fictional station information, worked-before indicators, map and contact history](docs/assets/dashboard.png)
 
 *The actual Station interface with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown.*
@@ -12,7 +14,7 @@ A self-hosted companion for WSJT-X: put the operator, previous contacts and stat
 
 ## At the operating desk
 
-- **See the station.** A changed callsign selection in WSJT-X brings up available operator details, QRZ photographs, location and a zoomable map. The callsign appears first; lookups follow without interrupting you.
+- **Click to focus from WSJT-X.** Click a callsign in WSJT-X to select a different station and see available operator details, QRZ photographs, location and a zoomable map in the Dashboard. The callsign appears first; lookups follow without interrupting you.
 - **Know your history.** Compact callsign and current-band indicators show whether you have worked the station. Browse previous QSOs, bands and modes. Failed or incomplete history never becomes a false “NEW”.
 - **Revisit a contact.** Shared Focus History follows deliberate selections across multiple WSJT-X instances. Browse an older station without changing the radio.
 - **Improve the record before logging.** Optional pyhamtools and QRZ enrichment fills reliable missing information, including QSL routing, contact details and calculated distance. Original WSJT-X values take priority, reducing later callbook-update work.
@@ -35,7 +37,7 @@ cd wsjtx-dashboard
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the proposed beta tag does **not** exist yet. Repository access is required while the project remains private.
 
-Next, open **Settings → Radio receiver**, match WSJT-X's UDP destination, and enable reception. For multicast, select this computer's receiving network interface. The first Status establishes a baseline; then select a different callsign in WSJT-X. [Connect your first station](docs/quick-start.md).
+Next, open **Settings → Radio receiver**, match WSJT-X's UDP destination, and enable reception. For multicast, select this computer's receiving network interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
 
 ## Use the combination that fits your station
 

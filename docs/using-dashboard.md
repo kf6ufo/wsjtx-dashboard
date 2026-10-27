@@ -4,6 +4,8 @@
 
 ## Station view
 
+**Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station updates the Dashboard automatically.
+
 Station shows the focused callsign, available operator information/photo, compact worked status, key facts, sortable Details, map and previous contacts. Empty provider fields are omitted. No photograph is a legitimate result. QRZ profile links are distinct from QSL confirmation methods.
 
 The callsign and Focus History update immediately after a reported selection change. Enrichment and history arrive independently; a slow lookup for an older station cannot replace your newer focus. Opening several browsers shares the server's focus/history. A reconnect obtains a fresh snapshot.
