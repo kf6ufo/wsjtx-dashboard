@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from .receiver import Settings, create_socket, receive
 from .state import FocusState
@@ -131,6 +132,13 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 from fastapi.responses import JSONResponse
                 return JSONResponse({'detail': 'Use the dashboard on the same origin'}, status_code=403)
         return await call_next(request)
+
+    # Registered last so Host validation runs before Origin checks and routes.
+    # Host is the server address requested by the browser, not the client's IP.
+    hosts = {'localhost', '127.0.0.1'}
+    if config_path:
+        hosts.add(load_config(config_path).host)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=sorted(hosts), www_redirect=False)
 
     if isinstance(state, FoundationState):
         if settings.enabled and not runtime:

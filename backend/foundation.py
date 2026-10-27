@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 import time
 from .state import FocusState
+from .private_storage import private_database
 
 CALLS = ('JA2HDE', 'VK3DEMO', 'DL1DEMO', 'PY2DEMO', 'ZS6DEMO', 'W7DEMO')
 RIGS = (
@@ -17,8 +18,7 @@ RIGS = (
 class FoundationState(FocusState):
     def __init__(self, path: Path):
         super().__init__()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        self.database = sqlite3.connect(path, check_same_thread=False)
+        self.database = private_database(path)
         self.database.execute('CREATE TABLE IF NOT EXISTS workspace (id INTEGER PRIMARY KEY CHECK(id=1), version INTEGER NOT NULL, payload TEXT NOT NULL)')
         self.preferences = dict(title='My station', appearance='dark', radioStrip=False)
         row = self.database.execute('SELECT version, payload FROM workspace WHERE id=1').fetchone()

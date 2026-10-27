@@ -7,13 +7,12 @@ from dataclasses import asdict
 from decimal import Decimal, InvalidOperation
 import json
 import hashlib
-import os
-from pathlib import Path
 import sqlite3
 import time
 import threading
 from uuid import uuid4
 from .qso_model import completed_fields, observed_identity, history_record, QsoError
+from .private_storage import private_database
 
 
 def matches_contact(fields, row):
@@ -33,10 +32,8 @@ class ObservationService:
 
     def __init__(self, state, path, history, wavelog):
         self.state, self.history, self.wavelog = state, history, wavelog
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(path, check_same_thread=False)
+        self.db = private_database(path)
         self.lock = threading.RLock()
-        os.chmod(path, 0o600)
         version = self.db.execute('PRAGMA user_version').fetchone()[0]
         if version not in (0, 1): self.db.close(); raise ValueError('Unsupported observation database version')
         self.db.execute('PRAGMA user_version=1')

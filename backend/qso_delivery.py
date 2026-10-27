@@ -20,6 +20,7 @@ from .wavelog import WavelogClient, WavelogError
 from .station_mapping import resolve_station
 from .state import normalize_call
 from .qso_fields import destination_fields, qso_distance as wavelog_distance, qso_heading
+from .private_storage import private_database
 import requests
 
 
@@ -34,9 +35,7 @@ class LoggingDestination(Protocol):
 
 class DeliveryQueue:
     def __init__(self, path):
-        Path(path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self.db = sqlite3.connect(path, check_same_thread=False)
-        os.chmod(path, 0o600)
+        self.db = private_database(path)
         self.lock = threading.RLock()
         version = self.db.execute('PRAGMA user_version').fetchone()[0]
         if version not in (0,1): self.db.close(); raise ValueError('Unsupported delivery queue version')

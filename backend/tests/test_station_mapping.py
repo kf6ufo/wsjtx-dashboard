@@ -162,7 +162,7 @@ def test_external_resolution_api_enforces_origin_and_read_only_location_selectio
     config=tmp_path/'config.toml';config.write_text(Path('config.example.toml').read_text())
     save_wavelog_config(config,WavelogSettings(url='http://wavelog.invalid',token='wl2_fixture'))
     state=WorkspaceState(tmp_path/'workspace.sqlite3')
-    with TestClient(create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
         service=state.qso_service
         # Synthetic pre-upgrade delivery; ADIF receipt is already successful.
         key=service.queue.capture('Rig A',fields(),{},dict(wavelog=dict(url='http://wavelog.invalid',station_id=0)))

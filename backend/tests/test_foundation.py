@@ -30,7 +30,7 @@ def test_sample_order_provenance_persistence_and_settings(tmp_path):
 
 def test_http_validation_and_real_saved_preferences(tmp_path):
     path = tmp_path / 'workspace.sqlite3'
-    with TestClient(create_app(Settings(), FoundationState(path), serve_frontend=False)) as client:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(), FoundationState(path), serve_frontend=False)) as client:
         assert client.get('/api/snapshot').json()['receiver']['status'] == 'disabled'
         assert client.post('/api/sample/select', json={'call': 'UNKNOWN', 'rigId': RIGS[0][0]}).status_code == 422
         assert client.post('/api/sample/select', json={'call': 'JA2HDE', 'rigId': RIGS[2][0]}).status_code == 200

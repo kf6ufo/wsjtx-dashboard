@@ -203,7 +203,7 @@ def test_config_saves_preserve_qrz_receiver_and_secret_retention(tmp_path):
 def test_api_metadata_omits_records_and_qso_fetch_does_not_mutate_history(tmp_path, gateway):
     path = tmp_path / 'config.toml'; path.write_text(Path('config.example.toml').read_text())
     state = WorkspaceState(tmp_path / 'workspace.sqlite3')
-    with TestClient(create_app(Settings(), state, config_path=path, serve_frontend=False)) as api:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(), state, config_path=path, serve_frontend=False)) as api:
         state.enter_radio_workspace(); ingest(status(call='K0BASE'), state); ingest(status(call='K1ABC'), state)
         before = json.loads(json.dumps(state.history)); previous = state.previous.copy()
         response = api.put('/api/wavelog', json=dict(enabled=True, url='http://wavelog.test/api', token='wl2_fixture-secret', page_size=10))
