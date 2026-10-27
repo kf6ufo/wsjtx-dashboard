@@ -29,13 +29,13 @@
 - [x] Perform the reachable-history, GitHub text/assets and targeted security review at `8d315c3`; [findings and evidence](security-history-review.md) are recorded. No confirmed production credential exposure was found.
 - [x] Resolve hostname/initial-file-permission findings with narrow trusted hosts, 0600 configuration/SQLite files and 0700 private directories; [hardening evidence](security-history-review.md#hardening-validation--october-27) records 199 backend tests, 35 frontend tests, 13 browser workflows, LAN-address/SSE checks and repeat-install preservation.
 - [x] Record the operator's October 27 acceptance of publishing historical callsigns, private LAN addresses, machine paths and QSO-related development examples, retaining Git history.
-- [ ] Resolve publication of the personal email in existing commit attribution separately from the accepted station context. No visibility change, release publication or history rewrite is authorized by this task.
+- [x] Record the operator's explicit confirmation to keep existing Git attribution, including the personal email. Preserve history and attribution; this does not authorize visibility changes, release publication or credential disclosure.
 - [ ] Confirm third-party dependency/data/attribution obligations for distribution. Basemap attribution must remain visible; source licensing does not grant rights to QRZ photographs or external datasets.
 - [ ] Complete isolated Wavelog 3.2.3 write/retry/outage acceptance and ordinary post-field-audit contact/export verification, or explicitly retain experimental logging status in the published beta notes. Exporter omissions are not proof of failed submission.
 - [ ] Obtain actual Ubuntu acceptance before advertising it as tested. Do not advertise verified Windows/Docker/MacLoggerDX support.
 - [ ] Only after review: choose public visibility, create the approved tag and publish a GitHub **pre-release**. No binaries/container images are currently validated release artifacts.
 
-Public release is intentionally **not yet ready for an unqualified production-logging claim**. A limited beta may be published after approval with these limitations plainly stated; the remaining commit-email decision and maintainer release approval remain publication gates.
+Public release is intentionally **not yet ready for an unqualified production-logging claim**. The historical disclosure decisions are accepted. A limited beta may be published after separate approval with the remaining distribution, platform and integration limitations plainly stated; repository visibility and release publication have not been authorized by these confirmations.
 
 ## Known limits
 

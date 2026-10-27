@@ -2,7 +2,7 @@
 
 Reviewed October 27, 2026, at main **`8d315c3`**. The repository was verified private. This is a review, not approval to change visibility, publish a release or rewrite history.
 
-**Current result:** no confirmed production credential exposure was found. The October 27 security-hardening update fixes the hostname and initial-permission findings, with validation at application commit **`b7b8599`** described below. The operator explicitly accepts publication of historical callsigns, private LAN addresses, machine paths and QSO-related development examples. Git history is preserved. The personal email in commit attribution remains a separate publication decision; this acceptance does not authorize exposing credentials, changing visibility or publishing a release.
+**Current result:** no confirmed production credential exposure was found. The October 27 security-hardening update fixes the hostname and initial-permission findings, with validation at application commit **`b7b8599`** described below; [PR #12](https://github.com/kf6ufo/wsjtx-dashboard/pull/12) merged at **`6f72cf3`**. The operator explicitly accepts publication of historical callsigns, private LAN addresses, machine paths and QSO-related development examples, and subsequently confirmed **“Yes, keep existing attribution”** for the personal email in Git commit attribution. Git history and attribution are preserved. This acceptance does not authorize exposing credentials, changing visibility or publishing a release.
 
 ## Initial findings and resolutions
 
@@ -24,13 +24,13 @@ The update creates/opens configuration and all four SQLite stores through [priva
 
 ### 3. Decide what personal/station history may become public
 
-**Station-context disclosure accepted; commit-email decision remains separate.** In the October 27 hardening request, the operator accepts publishing historical callsigns, private LAN addresses, machine paths and QSO-related development examples. Current and historical development records contain this context, distinct from the fictional README screenshot fixtures. Author metadata also contains one personal email address; both author/committer email variants were inventoried privately. This request does not explicitly accept that email disclosure, so it remains open before visibility changes.
+**Station-context and existing commit-attribution disclosure accepted.** In the October 27 hardening request, the operator accepts publishing historical callsigns, private LAN addresses, machine paths and QSO-related development examples. Current and historical development records contain this context, distinct from the fictional README screenshot fixtures. Author metadata also contains one personal email address; both author/committer email variants were inventoried privately. In the follow-up confirmation, the operator explicitly accepted retaining the existing attribution, closing that disclosure decision without rewriting history or reproducing the email here.
 
 | Surface | Examples of locations | Decision/status |
 | --- | --- | --- |
 | Current development records | [Current checkpoint](current-checkpoint.md), [Step 4 checkpoint](step-4-checkpoint.md), [QSO preview](qso-preview-checkpoint.md), [Steps 5/7 review](steps-5-and-7-review-checkpoint.md) | Historical station/QSO context accepted; retain records |
 | Project instructions and earlier history | [AGENTS.md](../AGENTS.md), [handoff](../WSJTX-REBUILD-HANDOFF.md), earlier versions of README/install/validation records | Historical station/network/path context accepted; retain Git history |
-| Commit metadata | Author/committer identities across 103 initially reviewed reachable commits | Personal email disclosure remains a separate decision; no rewrite is authorized |
+| Commit metadata | Author/committer identities across 103 initially reviewed reachable commits | Existing attribution, including the personal email, explicitly accepted; retain unchanged |
 | GitHub pull-request text | PRs #5/#6 contain station network context; #8 contains specific failed-contact context | Covered by accepted historical station/QSO examples |
 | Existing historical pre-release | `m2-validation-20261012` release text and frontend archive | Historical station context accepted; keep this old milestone distinct from the proposed v0.9 beta |
 
@@ -80,7 +80,7 @@ The LAN-address check ran both client contexts on the same Mac. Actual access fr
 ## Before changing visibility
 
 1. Review the hardening diff and validation evidence; the operator authorized merging after checks pass. Deployment to the operating installation is a separate action and was excluded from this task.
-2. Retain the accepted historical station context and resolve the remaining personal commit-email decision before publication. Do not rewrite history without explicit authorization.
+2. Retain the accepted historical station context and existing commit attribution. The operator's disclosure decisions are recorded; do not rewrite history without explicit authorization.
 3. Review the old milestone release's text/assets alongside the new README and release notes.
 4. Establish a private vulnerability-reporting channel. Review GitHub secret scanning/push protection and add a scoped recurring dependency/secret check; no workflow exists today.
 5. Rerun scans at the exact publication commit after any cleanup. Retain the separate [release acceptance limitations](release-readiness.md), including Ubuntu and external write validation, and obtain explicit visibility/release approval.
