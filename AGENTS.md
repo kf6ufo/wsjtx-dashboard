@@ -12,6 +12,8 @@ Completed-QSO observation/reconciliation is independent of submission, with boun
 
 Step 6 production cutover remains excluded from publication approval. Dashboard logging and Wavelog delivery remain disabled; do not change production WaveLogGate. Isolated actual Wavelog write validation and explicit sole-uploader cutover approval are still required; no isolated Wavelog instance currently exists. Ubuntu execution and inline biography retrieval remain unverified/deferred. The absence of an isolated test instance does not block publication of disabled infrastructure.
 
+The later automatic-station-mapping request authorizes exact authorized-location matching for new deliveries, explicit overrides and per-QSO read-only external resolution of the failed W4WFC delivery. It does not authorize a production submission cutover or automatic POST of legacy missing-mapping entries. Existing logging flags must be preserved. See `docs/wavelog-station-mapping.md`; this correction and the worked-status preview remain unmerged pending review.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

@@ -33,7 +33,8 @@ export interface WavelogState { config: WavelogConfig; connection: WavelogConnec
 
 export interface QsoConfig { history_source: 'auto' | 'wavelog' | 'adif'; adif_path: string; adif_complete: boolean; logging_enabled: boolean; log_to_wavelog: boolean; recovery_seconds: number; rigs: { id: string; station_callsign: string; operator: string; wavelog_station_id: number; tx_power: string }[] }
 export interface HistorySelectionState { provider: string; label: string; notice?: string; result: WavelogResult }
-export interface QsoServiceState { config: QsoConfig; enabled: boolean; warning: string; error: string; queue: { jobs: Record<string, number>; destinations: { destination: string; status: string; count: number }[]; recent: { id: string; rig: string; status: string; message: string; created: number; deliveries: { destination: string; status: string; attempts: number; message: string; remoteId?: string }[] }[] } }
+export interface StationAssociation { rigId: string; stationCall: string; status: string; stationId: number; location?: string; message: string }
+export interface QsoServiceState { associations?: StationAssociation[]; config: QsoConfig; enabled: boolean; warning: string; error: string; queue: { jobs: Record<string, number>; destinations: { destination: string; status: string; count: number }[]; recent: { contact?: Record<string,string>; id: string; rig: string; status: string; message: string; created: number; deliveries: { destination: string; status: string; attempts: number; message: string; remoteId?: string }[] }[] } }
 
 export interface HistorySettings { limit: 50 | 100 | 200 | 500; retention_days: 0 | 7 | 30 }
 export interface HistorySummary { count?: number; complete?: boolean; source?: string; bands?: string[]; modes?: string[]; pendingObserved?: number }

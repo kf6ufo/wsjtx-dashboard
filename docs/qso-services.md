@@ -73,3 +73,7 @@ Stop this dashboard before copying `config.toml`, the entire `data` directory (i
 Do not hand-edit pending queue rows or delete the append journal. Disk-full/permission failures are explicit; after repairing storage, restart if a worker has stopped. Abrupt OS/power loss and ambiguous remote outcomes are handled conservatively, but UDP receipt and a failed local disk cannot provide an end-to-end delivery guarantee. A malformed completed event is shown in diagnostics and rejected rather than logged as valid.
 
 The subsequent [Steps 5/7 review milestone](steps-5-and-7.md) adds an independent bounded forwarding service that reuses the shared QSO model/enrichment; routine UDP does not use the durable logging outbox. The original QSO architecture extension itself does not enable forwarding. UI changes are limited to settings, source labels and delivery status. Ubuntu and actual Wavelog write acceptance remain separately unverified until recorded in the current checkpoint.
+
+## Automatic mapping correction preview
+
+The unmerged `feature/automatic-wavelog-mapping` correction adds exact automatic callsign-to-authorized-location matching, optional detected-instance overrides and read-only per-QSO external resolution. Legacy missing-mapping entries are never automatically repaired and posted. [Behavior, verification and queue preservation](wavelog-station-mapping.md). Submission enablement remains a separate operator decision.
