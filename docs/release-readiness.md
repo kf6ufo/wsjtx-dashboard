@@ -26,7 +26,8 @@
 - [x] New examples/screenshot data are fictional; no credentials or live logbooks are deliberately included.
 - [x] Complete fresh install/repeat-install, tests, screenshot and local document-link checks; exact results are below.
 - [ ] Review the final diff and screenshot with the maintainer, then approve the release candidate commit/version.
-- [ ] Review **all historical documents and Git history** before making the repository public. Existing development records include station callsigns, LAN addresses and machine-specific paths. This branch does not rewrite history or change visibility.
+- [x] Perform the reachable-history, GitHub text/assets and targeted security review at `8d315c3`; [findings and evidence](security-history-review.md) are recorded. No confirmed production credential exposure was found.
+- [ ] Resolve the security review's hostname/initial-file-permission findings and record the operator's decision about personal/station metadata in documents, commit history, PRs and the historical release. No history cleanup or visibility change has been authorized by this review.
 - [ ] Confirm third-party dependency/data/attribution obligations for distribution. Basemap attribution must remain visible; source licensing does not grant rights to QRZ photographs or external datasets.
 - [ ] Complete isolated Wavelog 3.2.3 write/retry/outage acceptance and ordinary post-field-audit contact/export verification, or explicitly retain experimental logging status in the published beta notes. Exporter omissions are not proof of failed submission.
 - [ ] Obtain actual Ubuntu acceptance before advertising it as tested. Do not advertise verified Windows/Docker/MacLoggerDX support.
