@@ -151,7 +151,7 @@ def test_loop_rejection_at_save_and_at_dispatch_and_settings_validation(tmp_path
     asyncio.run(scenario())
     config=tmp_path/'config.toml';config.write_text(Path('config.example.toml').read_text())
     state=WorkspaceState(tmp_path/'data/workspace.sqlite3')
-    with TestClient(create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
         result=api.put('/api/forwarding',json={'destinations':[destination('loop',2238)]})
         assert result.status_code==422
         row=destination('stored',18349,enabled=False)

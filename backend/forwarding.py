@@ -5,8 +5,6 @@ from copy import deepcopy
 import hashlib
 import ipaddress
 import json
-import os
-from pathlib import Path
 from types import SimpleNamespace
 import socket
 import sqlite3
@@ -16,6 +14,7 @@ import threading
 from .protocol import read_header, PacketError
 from .qso_model import completed_fields, enriched_completed, observed_identity, adif_text, QsoError
 from .forwarding_config import PACKET_TYPES
+from .private_storage import private_database
 
 
 def encode_logged_adif(packet, fields):
@@ -55,8 +54,7 @@ async def resolve_target(destination, receiver):
 class ForwardingService:
     def __init__(self, state, settings, enrichment, qso_settings, path):
         self.state, self.settings, self.enrichment, self.qso_settings = state, settings, enrichment, qso_settings
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(path, check_same_thread=False); os.chmod(path, 0o600)
+        self.db = private_database(path)
         self.lock = threading.RLock()
         version = self.db.execute('PRAGMA user_version').fetchone()[0]
         if version not in (0, 1): self.db.close(); raise ValueError('Unsupported forwarding receipt version')

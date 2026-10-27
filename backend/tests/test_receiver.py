@@ -111,7 +111,7 @@ def test_bounded_history_rigs_and_full_snapshot_on_reconnect():
 def test_api_snapshot_navigation_no_injection_route_and_origin_check():
     s = FocusState()
     ingest(status(call='N0BASE'), s); ingest(status(), s)
-    with TestClient(create_app(Settings(), s)) as client:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(), s)) as client:
         assert client.get('/api/snapshot').json()['call'] == 'JA2HDE'
         assert client.post('/api/focus', json={'call': 'JA2HDE'}).json()['source'] == 'browse'
         assert client.post('/api/focus', json={'call': 'N0MISSING'}).status_code == 404
@@ -138,7 +138,7 @@ def test_failed_join_is_visible_without_claiming_reception(monkeypatch):
     def fail(_settings):
         raise OSError('fixture interface unavailable')
     monkeypatch.setattr('backend.app.create_socket', fail)
-    with TestClient(create_app(Settings(enabled=True, interface='10.176.1.6'))) as client:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(enabled=True, interface='10.176.1.6'))) as client:
         snapshot = client.get('/api/snapshot').json()
         assert snapshot['receiver']['status'] == 'error'
         assert snapshot['call'] == ''

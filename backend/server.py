@@ -1,8 +1,10 @@
 """Installed server entry point: configuration file, built frontend, one worker."""
 import argparse
+import os
 from pathlib import Path
 import sys
 from .config import load_config
+from .private_storage import private_file
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -12,10 +14,11 @@ def main():
     parser.add_argument('--config', type=Path, default=ROOT / 'config.toml')
     args = parser.parse_args()
     try:
+        os.close(private_file(args.config))
         config = load_config(args.config)
         if not (ROOT / 'dist/index.html').is_file():
             raise ValueError('Built frontend missing; run ./install.sh before starting.')
-    except ValueError as exc:
+    except (ValueError, OSError) as exc:
         print(exc, file=sys.stderr)
         return 1
     import uvicorn

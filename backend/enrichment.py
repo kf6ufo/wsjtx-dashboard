@@ -16,6 +16,7 @@ from pyhamtools.frequency import freq_to_band
 from pyhamtools.locator import (calculate_distance, calculate_distance_longpath,
     calculate_heading, calculate_heading_longpath, latlong_to_locator)
 from .enrichment_config import EnrichmentSettings, update_settings, grid, PROVIDERS
+from .private_storage import private_directory
 
 
 def safe_values(value):
@@ -134,7 +135,7 @@ class Providers:
     def _download_library(self, source, target):
         url = 'https://www.country-files.com/cty/cty.plist' if source == 'countryfile' else 'https://cdn.clublog.org/cty.php'
         params = {'api': self.settings.clublog_key} if source == 'clublogxml' else None
-        self.directory.mkdir(parents=True, exist_ok=True)
+        private_directory(self.directory)
         pending = None
         try:
             with requests.get(url, params=params, timeout=(5, 10), stream=True, allow_redirects=False) as response:
@@ -170,7 +171,7 @@ class Providers:
         # Upstream strips XML headers into a sibling file. Keep that work away
         # from operator-owned files and clean up its intermediate output.
         import shutil
-        self.directory.mkdir(parents=True, exist_ok=True)
+        private_directory(self.directory)
         with tempfile.TemporaryDirectory(dir=self.directory) as temporary:
             local = Path(temporary) / 'cty.xml'
             shutil.copyfile(path, local)

@@ -141,7 +141,7 @@ def test_api_saves_sanitized_settings_without_receiver_restart(tmp_path, country
     config = tmp_path / 'config.toml'
     config.write_text(Path('config.example.toml').read_text())
     state = WorkspaceState(tmp_path / 'data/workspace.sqlite3')
-    with TestClient(create_app(Settings(), state, config_path=config, serve_frontend=False)) as client:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(), state, config_path=config, serve_frontend=False)) as client:
         state.previous['A'] = 'K1ABC'
         response = client.put('/api/enrichment', json={'enabled': True, 'filename': str(countryfile), 'qrz_password': 'keep-secret'})
         assert response.status_code == 200

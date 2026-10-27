@@ -1,5 +1,6 @@
 """Unprivileged source installer shared by macOS and Ubuntu. Never manages services."""
 from pathlib import Path
+import os
 import shutil
 import subprocess
 import sys
@@ -7,6 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.config import load_config
+from backend.private_storage import private_file
 
 
 def main():
@@ -22,9 +24,11 @@ def main():
         config = ROOT / 'config.toml'
         if not config.exists():
             # Exclusive creation prevents replacement of an operator file.
-            with config.open('x') as target:
+            with os.fdopen(private_file(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL), 'w') as target:
                 target.write((ROOT / 'config.example.toml').read_text())
             print('Created config.toml from example', flush=True)
+        else:
+            os.close(private_file(config))
         settings = load_config(config)
         for command in ([sys.executable, '-m', 'venv', '.venv'],
                         [str(ROOT / '.venv/bin/python'), '-m', 'pip', 'install', '-r', 'requirements.lock'],

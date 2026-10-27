@@ -71,6 +71,8 @@ The `data/` directory lives beside that configuration file; built frontend asset
 
 The default HTTP listener is loopback. The server has **no user authentication**. A specific private LAN address is allowed for trusted clients, but anyone who can reach it can use administrative settings. Keep it off the public internet. Protect configuration, backups and logs; they may contain credentials or QSO data.
 
+The installer/startup restricts configuration and private SQLite files to `0600`, and app-owned private data directories to `0700`. Existing contents/ownership are preserved; ADIF files and unrelated paths are not swept. Configuration/database files and private directory targets must be regular files/directories rather than symlinks. Access the server through `localhost`, `127.0.0.1` or its configured LAN IP; custom DNS names are rejected by the trusted-host policy.
+
 ## Files to preserve
 
 - `config.toml`: configuration and server-side credentials.

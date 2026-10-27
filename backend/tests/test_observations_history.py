@@ -157,7 +157,7 @@ def test_retention_uses_selection_time_and_clear_keeps_rigs_pending_work_and_con
 def test_history_settings_api_limits_persistence_clear_and_secret_preservation(tmp_path):
     config=tmp_path/'config.toml';config.write_text(Path('config.example.toml').read_text())
     state=WorkspaceState(tmp_path/'data/workspace.sqlite3')
-    with TestClient(create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(),state,config_path=config,serve_frontend=False)) as api:
         for limit in (50,100,200,500):
             assert api.put('/api/history/settings',json={'limit':limit,'retention_days':30}).status_code==200
             assert load_config(config).history.limit==limit

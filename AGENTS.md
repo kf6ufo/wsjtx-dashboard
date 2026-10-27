@@ -18,6 +18,8 @@ The completed-QSO field audit and reliability corrections are published on main 
 
 October 27 pre-release preparation was merged into main for testing at `a4d7ceb` through PR #11 after the operator explicitly requested publication to main. Current operator documentation starts at `docs/README.md`; release evidence/gates are in `docs/release-readiness.md`. This work changes documentation, sanitized screenshot tooling, proposed package version/Node metadata and stale browser-test selectors only. The proposed beta is not released; do not tag, publish a release or change visibility without separate review. Keep historical evidence distinct from current operator instructions and preserve the live station installation.
 
+The October 27 final-security request authorizes narrow trusted-host validation and private configuration/state permissions, with isolated validation and merge after passing checks. It explicitly accepts publication of historical callsigns, private LAN addresses, machine paths and QSO-related development examples. Personal commit-email disclosure remains a separate decision. Preserve history; do not change visibility, publish a release or modify/restart the operating installation as part of this hardening task. See `docs/security-history-review.md` for actual evidence and remaining limits.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

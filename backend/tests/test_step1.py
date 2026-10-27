@@ -137,7 +137,7 @@ def test_real_loopback_udp_runtime_and_settings_restart(tmp_path):
     config = tmp_path / 'config.toml'
     config.write_text('[http]\nhost="127.0.0.1"\nport=8787\n[wsjtx]\nenabled=false\nport=2238\ngroup="239.255.0.73"\ninterface="127.0.0.1"\n')
     state = WorkspaceState(tmp_path / 'data/workspace.sqlite3')
-    with TestClient(create_app(Settings(), state, serve_frontend=False, config_path=config)) as client, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(), state, serve_frontend=False, config_path=config)) as client, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
         settings = Settings(enabled=True, group='', interface='', listen='127.0.0.1', port=port, retention=50)
         response = client.put('/api/receiver', json=asdict(settings))
         assert response.status_code == 200

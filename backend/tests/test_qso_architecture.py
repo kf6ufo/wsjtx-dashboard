@@ -240,7 +240,7 @@ def test_installed_api_adif_history_no_wavelog_and_no_secret_leaks(tmp_path):
     log=tmp_path/'history.adi';log.write_text(adif_text(fields()))
     save_qso_config(path,QsoSettings(adif_path=str(log),adif_complete=True))
     state=WorkspaceState(tmp_path/'workspace.sqlite3')
-    with TestClient(create_app(Settings(),state,config_path=path,serve_frontend=False)) as api:
+    with TestClient(base_url='http://127.0.0.1', app=create_app(Settings(),state,config_path=path,serve_frontend=False)) as api:
         state.enter_radio_workspace();ingest(status(call='K0BASE'),state);ingest(status(call='K1ABC'),state)
         for _ in range(100):
             s=api.get('/api/snapshot').json()
