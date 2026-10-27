@@ -24,11 +24,13 @@ The server durably captures the event before background enrichment. Reliable mis
 
 Fields include available operator/QTH, entity/zones, QSL routing, mailing/contact information, IOTA, coherent coordinates and calculated distance. Conflicting home coordinates cannot overwrite an operating grid. License class is not a contest CLASS, and LoTW membership is not a received confirmation. Standard ADIF and Wavelog support differ; the [complete field matrix](qso-field-audit.md) documents both.
 
+For Wavelog, available operator details, location, DXCC, grid, QSL routing, distance and other supported enrichment fields are included in the **original API v2 submission**. This can reduce or eliminate the repetitive “Update from Callbook” step after logging. Provider access and returned data determine what can be filled; unknown or unsupported fields are omitted, and some contacts may still need manual updates.
+
 For Wavelog, the station callsign must resolve to an authorized location. One exact match is automatic; ambiguity requires an override. The target ID is saved before submission. A completed event uses its captured identity, not whichever callsign is currently displayed.
 
 ## Replacing WaveLogGate's logging role
 
-Direct API v2 submission is implemented. When configured, it can take over the upload function previously performed by WaveLogGate; it does not replace unrelated CAT/radio functions. It never stops another application automatically.
+With Dashboard logging enabled and correctly configured, a separate WaveLogGate uploader is no longer required for those QSOs. Direct API v2 submission combines enrichment, automatic station-location matching when unambiguous, persistent delivery queues and duplicate protection. This replaces WaveLogGate's **QSO logging function**, not every capability. Disable competing upload routes to avoid duplicate QSOs; Dashboard never stops another application automatically.
 
 Before changing an established uploader:
 

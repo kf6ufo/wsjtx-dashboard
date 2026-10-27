@@ -10,6 +10,19 @@ A self-hosted companion for WSJT-X: put the operator, previous contacts and stat
 
 *The actual Station interface with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown.*
 
+## Why WSJT-X Dashboard?
+
+**Replace WaveLogGate's QSO logging function.** Dashboard submits completed contacts directly to Wavelog through API v2, with enrichment, automatic station-location matching when unambiguous, persistent delivery queues and duplicate protection. When Dashboard logging is enabled and correctly configured, a separate WaveLogGate uploader is no longer needed for those contacts. This replaces its QSO logging function, not every WaveLogGate capability.
+
+**Reduce or eliminate “Update from Callbook”.** Dashboard enriches completed QSOs **before submission**, using QRZ, pyhamtools and calculated information. Available operator details, location, DXCC, grid, QSL routing, distance and other supported fields go into the original submission. Original WSJT-X values are preserved; enrichment depends on provider access and available data, so some contacts may still need manual updates.
+
+| Workflow | WaveLogGate + manual callbook updates | Dashboard logging |
+| --- | --- | --- |
+| Send completed QSOs to Wavelog | Separate WaveLogGate uploader | Direct API v2 submission with a persistent queue and duplicate protection |
+| Add station information | Use Wavelog's “Update from Callbook” afterward as needed | Include reliable, available enrichment before submission |
+
+**Use one uploader per contact.** Disable competing WaveLogGate or downstream upload routes before enabling Dashboard's Wavelog logging to avoid duplicate QSOs. Dashboard does not disable other applications for you. [Logging setup and recovery](docs/logging.md).
+
 **Proposed first pre-release: v0.9.0-beta.1.** The core application is implemented; beta preparation focuses on documentation and verification. macOS has been exercised on real station hardware. Ubuntu is a documented target, not yet execution-verified. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
 
 ## At the operating desk
