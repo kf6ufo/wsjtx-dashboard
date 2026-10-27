@@ -27,7 +27,7 @@ test('built workspace synchronizes windows, preserves browsing provenance and re
  await b.setOffline(false)
  await second.evaluate(() => window.dispatchEvent(new Event('online')))
  await expect(second.getByTestId('focused-call')).toHaveText('VK3DEMO')
- await expect(second.getByText('Lookup complete · 0 sample contacts')).toBeVisible()
+ await expect(second.getByTestId('callsign-status')).toContainText('NEW CALLSIGN')
  await first.getByRole('button', { name: 'Settings', exact: true }).click()
  await expect(first.getByLabel('Station title', { exact: true })).toHaveCount(0)
  await first.getByLabel('Saved appearance').selectOption('light')

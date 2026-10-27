@@ -36,7 +36,7 @@ test('actual local UDP drives two browsers and bounded interactive diagnostics',
  await b.setOffline(false); await second.evaluate(() => window.dispatchEvent(new Event('online')))
  await expect(second.getByTestId('focused-call')).toHaveText('K3ACT')
  await expect(second.getByText('Available operator and license information appears in Details.', { exact: false })).toBeVisible()
- await expect(second.getByText('History is disabled · worked-before status unknown')).toBeVisible()
+ await expect(second.locator('.worked-status-context').getByText('None configured · History disabled')).toBeVisible()
  await first.getByRole('button', { name: 'Diagnostics', exact: true }).click()
  await expect(first.locator('.instance-table tbody tr')).toHaveCount(2)
  await expect(first.locator('.instance-table')).toContainText('127.0.0.1:')
