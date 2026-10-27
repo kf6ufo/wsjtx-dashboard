@@ -87,6 +87,38 @@ def test_adif_atomic_recovery_and_duplicate_appends(tmp_path):
     queue.close()
 
 
+@pytest.mark.parametrize('existing', ['', 'K2ORIGINAL'])
+def test_qsl_via_qrz_fills_missing_only_and_survives_outputs(existing, monkeypatch):
+    original = fields(QSL_VIA=existing)
+    before = deepcopy(original)
+    result, sources = enrich_qso(original, PROFILE, {'providers': {'qrz': {'fields': {'qslmgr': ' K1MANAGER via bureau '}}}})
+    expected = existing or 'K1MANAGER via bureau'
+    assert result['QSL_VIA'] == expected
+    assert sources['QSL_VIA'] == ('WSJT-X' if existing else 'QRZ XML')
+    assert original == before
+    assert list(adif_records(io.StringIO(adif_text(result))))[0]['QSL_VIA'] == expected
+
+    sent = []
+    class Response:
+        status_code = 201
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def iter_content(self, size): yield b'{"data":{"id":42}}'
+    def post(url, **kwargs):
+        sent.append((url, kwargs['json']))
+        return Response()
+    monkeypatch.setattr('backend.qso_delivery.requests.post', post)
+    writer = WavelogLogWriter(WavelogSettings(url='http://wavelog.invalid', token='wl2_fixture'), 1, 'KF6UFO')
+    assert writer.write('fixture-key', result) == '42'
+    assert len(sent) == 1 and sent[0][1]['qsl_via'] == expected
+
+
+@pytest.mark.parametrize('qrz', [{}, {'qslmgr': ''}, {'qslmgr': None}, {'qslmgr': '   '}, {'lotw': 'Y', 'eqsl': 'Y'}])
+def test_qsl_via_not_inferred_without_qrz_manager(qrz):
+    result, sources = enrich_qso(fields(), PROFILE, dict(fields=dict(qslmgr='Generic prediction'), providers=dict(qrz=dict(fields=qrz))))
+    assert 'QSL_VIA' not in result and 'QSL_VIA' not in sources
+
+
 def test_config_roundtrip_and_default_read_only(tmp_path):
     path=tmp_path/'config.toml'; path.write_text(Path('config.example.toml').read_text())
     assert not load_config(path).qso.logging_enabled

@@ -8,6 +8,7 @@ import fcntl
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path
 from typing import Protocol
@@ -19,11 +20,30 @@ from .qso_model import completed_fields, enriched_completed, identity, adif_text
 from .wavelog import WavelogClient, WavelogError
 from .station_mapping import resolve_station
 from .state import normalize_call
+from .enrichment_config import grid
+from pyhamtools.locator import calculate_distance
 import requests
 
 
 class DeliveryError(QsoError): pass
 class UncertainDelivery(DeliveryError): pass
+
+
+def wavelog_distance(fields: dict) -> float | None:
+    """Payload-only kilometres: preserve a valid supplied value, otherwise use QSO grids."""
+    try:
+        value = float(fields.get('DISTANCE', ''))
+        if not isinstance(fields.get('DISTANCE'), bool) and math.isfinite(value) and value >= 0:
+            return value
+    except (ValueError, TypeError, OverflowError):
+        pass
+    try:
+        station, contact = grid(fields.get('MY_GRIDSQUARE', '')), grid(fields.get('GRIDSQUARE', ''))
+        if station and contact:
+            return round(calculate_distance(station, contact), 3)
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return None
 
 
 class LoggingDestination(Protocol):
@@ -190,6 +210,9 @@ class WavelogLogWriter:
 
     def write(self, key, fields):
         payload = {k.lower(): v for k,v in fields.items() if not k.startswith('APP_')}
+        payload.pop('distance', None)
+        distance = wavelog_distance(fields)
+        if distance is not None: payload['distance'] = distance
         payload.update(station_profile_id=self.station_id, qso_date=fields['QSO_DATE'][:4]+'-'+fields['QSO_DATE'][4:6]+'-'+fields['QSO_DATE'][6:], mode=fields.get('SUBMODE', fields['MODE']))
         for key in ('freq','freq_rx'):
             if key in payload: payload[key] = int(Decimal(payload[key])*1_000_000)

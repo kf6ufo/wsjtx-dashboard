@@ -169,7 +169,8 @@ def enrich_qso(original, profile, enrichment):
     if county and ',' not in county:
         county = f"{qrz['state']},{county}" if str(qrz.get('adif')) == '291' and qrz.get('state') else ''
     station = {'NAME': qrz.get('name_fmt') or ' '.join(str(qrz.get(k, '')) for k in ('fname', 'name')).strip(),
-        'QTH': qrz.get('addr2'), 'GRIDSQUARE': qrz.get('locator'), 'STATE': qrz.get('state'), 'CNTY': county}
+        'QTH': qrz.get('addr2'), 'GRIDSQUARE': qrz.get('locator'), 'STATE': qrz.get('state'), 'CNTY': county,
+        'QSL_VIA': str(qrz.get('qslmgr') or '').strip()}
     common = {'DXCC': 'adif', 'COUNTRY': 'country', 'CQZ': 'cqz', 'ITUZ': 'ituz', 'CONT': 'continent'}
     for key, value in station.items():
         if not result.get(key) and value not in (None, ''): result[key] = str(value); sources[key] = 'QRZ XML'

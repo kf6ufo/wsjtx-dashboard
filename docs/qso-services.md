@@ -77,3 +77,13 @@ The subsequent [Steps 5/7 review milestone](steps-5-and-7.md) adds an independen
 ## Automatic mapping correction preview
 
 The unmerged `feature/automatic-wavelog-mapping` correction adds exact automatic callsign-to-authorized-location matching, optional detected-instance overrides and read-only per-QSO external resolution. Legacy missing-mapping entries are never automatically repaired and posted. [Behavior, verification and queue preservation](wavelog-station-mapping.md). Submission enablement remains a separate operator decision.
+
+## Wavelog distance correction preview
+
+`feature/wavelog-qso-distance` adds numeric `distance` (kilometres) to the original JSON create request only. A finite, nonnegative existing `DISTANCE` wins; otherwise the adapter uses the great-circle short path between the centres of the QSO's `MY_GRIDSQUARE` and `GRIDSQUARE`, supporting 4/6/8-character locators and rounding calculated values to 0.001 km. Missing/invalid grids leave distance omitted. ADIF fields/output, queue state, fingerprints, reconciliation and HTTP request count are unchanged; no follow-up edit or configuration/UI change is added.
+
+Compatibility was checked against tagged **Wavelog 3.2.3** source: [`Qso_resource::create_from_json` / `body_to_record`](https://github.com/wavelog/wavelog/blob/3.2.3/application/libraries/api_v2/Qso_resource.php#L284) pass the numeric field through, and [`Logbook_model`'s import path](https://github.com/wavelog/wavelog/blob/3.2.3/application/models/Logbook_model.php#L5582) stores it as `COL_DISTANCE`. That version's importer treats zero as empty; Dashboard still sends numeric zero when supplied or calculated. This is source-level compatibility verification, not a live API write test. Production Wavelog and the running Dashboard remain unchanged; isolated real write acceptance is still outstanding.
+
+## QSL via enrichment
+
+For newly prepared contacts, an existing `QSL_VIA` is preserved. Otherwise the existing QRZ lookup's nonblank [`qslmgr` (QSL manager info)](https://www.qrz.com/docs/xml/current_spec.html) fills it, with QRZ provenance. No additional lookup, inferred confirmation method, follow-up edit or historical backfill is added. The shared enriched ADIF carries `QSL_VIA`, and the original Wavelog JSON submission carries `qsl_via`. Wavelog 3.2.3's [importer maps that field to `COL_QSL_VIA`](https://github.com/wavelog/wavelog/blob/3.2.3/application/models/Logbook_model.php#L5714). Absent/failed QRZ data leaves it absent. Existing files, delivered QSOs, queue targets and receipts are unchanged; UI/configuration are unchanged.
