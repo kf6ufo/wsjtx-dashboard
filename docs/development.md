@@ -1,5 +1,7 @@
 # Development and checks
 
+Current operator documentation starts at [docs/README.md](README.md). Release preparation uses the [readiness checklist](release-readiness.md), `python3 scripts/check-doc-links.py` and the [sanitized screenshot procedure](assets/README.md). Keep release validation in an isolated checkout; `test:e2e:station` reads an actual configured station and captures private screenshots, so it is excluded from the sanitized release workflow.
+
 The installed production path is [native macOS](install-macos.md) / [Ubuntu](install-ubuntu.md). For development, first run `./install.sh`. The backend still owns workspace state:
 
 ```sh

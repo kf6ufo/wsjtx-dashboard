@@ -1,5 +1,7 @@
 # Native Ubuntu installation — reviewed Steps 0–4
 
+> Historical milestone guide. Use [current installation instructions](installation.md#ubuntu-prerequisites) and the [readiness checklist](release-readiness.md). Actual Ubuntu execution remains unverified; the dated installation states below are not current operator defaults.
+
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
 Target Ubuntu 24.04+ with Python 3.12–3.14, Git, Node 24 LTS (24.15+) and npm. Install prerequisites as needed:

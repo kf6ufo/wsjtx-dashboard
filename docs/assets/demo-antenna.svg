@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480">
+ <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#739fb9"/><stop offset="1" stop-color="#c7d6cf"/></linearGradient></defs>
+ <path fill="url(#sky)" d="M0 0h800v480H0z"/>
+ <path fill="#597575" d="M0 390L120 330 220 380 370 315 540 380 680 325 800 365v115H0z"/>
+ <path fill="#263f41" d="M0 435l100-35 110 25 150-40 110 35 150-15 180 35v40H0z"/>
+ <g stroke="#243a42" fill="none" stroke-width="5">
+  <path d="M385 440l15-355 15 355M389 370l23-48-21-52 18-52-15-50 12-42M385 440l30-70-26-48 23-52-18-52 15-50"/>
+  <path d="M220 118h360M250 170h300M290 222h220M180 85l440 65M235 79v82M330 92v80M475 114v78M565 128v79"/>
+ </g>
+ <text x="28" y="38" fill="#24404d" font-family="sans-serif" font-size="19" letter-spacing="3">DEMONSTRATION STATION · ILLUSTRATION</text>
+</svg>
