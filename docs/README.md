@@ -10,6 +10,7 @@
 | --- | --- |
 | [Installation](installation.md) | Requirements, macOS/Ubuntu, startup, updates, backups and rollback |
 | [Quick start](quick-start.md) | WSJT-X reporting, first live selection and choosing history |
+| [WSJT-X Reporting setup](wsjtx-reporting.md) | Primary UDP Server, multicast group/interface, disabled secondary broadcast and WaveLogGate distinction |
 | [Configuration](configuration.md) | Settings save scopes, providers, Wavelog API v2, ADIF and UDP destinations |
 | [Using the Dashboard](using-dashboard.md) | Station, worked-before status, map, Focus History and Diagnostics |
 | [Logging](logging.md) | Enrichment, destinations, replacing an uploader, delivery and recovery |

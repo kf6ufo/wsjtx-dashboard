@@ -10,7 +10,7 @@ Install/run the server and open **http://127.0.0.1:8787/**. A new installation c
 
 ## 2. Connect WSJT-X reporting
 
-In WSJT-X, inspect **Settings/Preferences → Reporting** for its UDP server address/port. Dashboard must listen to the destination WSJT-X actually uses.
+In WSJT-X, open **Settings/Preferences → Reporting → UDP Server (primary)**. Dashboard must listen to that primary destination. It does **not** require **Secondary UDP Server (deprecated)** or its **Enable logged contact ADIF broadcast** checkbox. Follow the [WSJT-X Reporting setup](wsjtx-reporting.md) for the working multicast example and WaveLogGate distinction.
 
 - **Multicast:** use the same group/port. Set Dashboard's **Receiving interface IPv4** to the LAN address of the computer running Dashboard—not the radio or WSJT-X computer. The example default is `239.255.0.73:2238`, not a universal required setting.
 - **Unicast:** leave the multicast group empty. Send reporting to the Dashboard computer's address/port. A feed to a different application is not automatically shared; plan forwarding before changing a working station setup.

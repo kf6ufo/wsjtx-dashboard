@@ -18,7 +18,7 @@ Use a dedicated ADIF file, separate from WSJT-X's own log. Dashboard must be its
 
 ## From WSJT-X to an enriched record
 
-Log the completed contact in WSJT-X and ensure it broadcasts **Logged ADIF (type 12)**. Confirm that event in Diagnostics. Decode and selection events never log; paired QSO Logged type 5 is diagnostic-only for the permanent delivery pipeline.
+Log the completed contact in WSJT-X and ensure its **primary UDP Server** feed delivers **Logged ADIF (type 12)**. Confirm that event in Diagnostics. Dashboard does not require the deprecated **Secondary UDP Server → Enable logged contact ADIF broadcast** setting; see [WSJT-X Reporting setup](wsjtx-reporting.md). Decode and selection events never log; paired QSO Logged type 5 is diagnostic-only for the permanent delivery pipeline.
 
 The server durably captures the event before background enrichment. Reliable missing values can come from verified station identity, an explicit profile, QRZ and pyhamtools. Originals win, including zero power/distance. Missing or failed provider information is omitted; a provider outage need not block a valid original QSO.
 

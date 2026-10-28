@@ -63,7 +63,7 @@ After installation succeeds, start Dashboard:
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the proposed beta tag does **not** exist yet. Repository access is required while the project remains private.
 
-Next, open **Settings → Radio receiver**, match WSJT-X's UDP destination, and enable reception. For multicast, select this computer's receiving network interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
+Next, configure [WSJT-X → Settings → Reporting → UDP Server (primary)](docs/wsjtx-reporting.md), then match that destination in **Dashboard → Settings → Radio receiver** and enable reception. The deprecated secondary UDP server is not required. For multicast, select the Dashboard computer's receiving interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
 
 ### Update an existing installation
 

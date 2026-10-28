@@ -22,6 +22,8 @@ Keep loopback unless trusted LAN access is deliberately required. This beta has 
 
 One primary IPv4 UDP receiver supports multicast/unicast and multiple WSJT-X instances distinguished by network ID. Dashboard does not configure radios.
 
+Set WSJT-X's **Reporting → UDP Server (primary)** to match. The deprecated secondary ADIF broadcast is not required; in the documented Dashboard replacement setup it remains disabled. [WSJT-X Reporting fields and matching receiver settings](wsjtx-reporting.md).
+
 ```toml
 # Illustrative settings. Replace interface with this computer's LAN IPv4.
 [wsjtx]
