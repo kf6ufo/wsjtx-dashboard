@@ -45,7 +45,7 @@ The current-band indicator includes **all modes**; the mode overview and individ
 
 ## Start here
 
-You need **Git, Python 3.12–3.14 and Node.js 24 LTS (24.15 or newer within 24.x), including npm**. A modern browser with WebGL displays the map. Providers and map tiles need internet access; QRZ XML requires suitable QRZ access.
+You need **Git, Python 3.12–3.14 and internet access**. No separate Node installation is required: the installer reuses compatible Node/npm if available, or downloads a checksum-verified temporary Node toolchain for macOS/Ubuntu (x64 or ARM64), builds the frontend, then removes the toolchain. A modern browser with WebGL displays the map; QRZ XML requires suitable QRZ access.
 
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git

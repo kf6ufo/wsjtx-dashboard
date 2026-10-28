@@ -6,7 +6,7 @@
 
 | Symptom | Check |
 | --- | --- |
-| Unsupported Node/Python | Use Python 3.12–3.14 and Node **24.x**, at least 24.15; reopen Terminal and check PATH |
+| Python/build-tool setup fails | Use Python 3.12–3.14. The installer obtains temporary Node automatically; check connectivity to nodejs.org. If necessary, install Node **24.x**, at least 24.15, with npm and check PATH |
 | Missing built frontend | Finish `./install.sh` successfully before running the server |
 | Package download failure | Verify internet/proxy/certificates, retain configuration/data and rerun; do not start a partially built update |
 | Port 8787 occupied | Identify the existing service; reuse it or choose a different port in the new checkout's `[http]` section. Do not kill unrelated station services |

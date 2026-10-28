@@ -1,6 +1,7 @@
 # Native macOS installation — reviewed Steps 0–4
 
 > Historical milestone guide. For the current beta, use [Installation and updates](installation.md) and [Logging](logging.md). The dated disabled-state and operator-installation statements below are retained as development evidence.
+> Current installer: compatible Node/npm is reused, or a checksum-verified temporary toolchain is downloaded automatically; the manual Node prerequisites below describe the earlier setup.
 
 This installs a built frontend served by the Python server, independent of VS Code/Codex. Keep any existing station installation running and use a separate directory and unused HTTP port. The default is loopback port 8787. No radio/network/service settings are changed by the installer.
 

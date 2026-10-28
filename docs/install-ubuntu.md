@@ -1,6 +1,7 @@
 # Native Ubuntu installation — reviewed Steps 0–4
 
 > Historical milestone guide. Use [current installation instructions](installation.md#ubuntu-prerequisites) and the [readiness checklist](release-readiness.md). Actual Ubuntu execution remains unverified; the dated installation states below are not current operator defaults.
+> Current installer: compatible Node/npm is reused, or a checksum-verified temporary toolchain is downloaded automatically; the manual Node prerequisites below describe the earlier setup.
 
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 

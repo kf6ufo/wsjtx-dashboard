@@ -17,6 +17,7 @@ First proposed public beta; **not tagged or published**. The application was pre
 
 ### Release preparation
 
+- Automatic checksum-pinned temporary Node build tools when compatible Node/npm is unavailable; no global Node installation required for supported macOS/Ubuntu architectures.
 - Narrow HTTP trusted-host validation for localhost, loopback and the configured LAN IP, retaining existing Origin restrictions.
 - Owner-only configuration/SQLite files and private state directories, with repeat-install/restart preservation tests and no ADIF or ownership changes.
 

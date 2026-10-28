@@ -11,17 +11,15 @@
 | Windows | No verified native installation; the ADIF writer uses POSIX file locking |
 | Docker | No maintained, verified container installation in this pre-release |
 
-Install Git, **Python 3.12–3.14**, and **Node 24 LTS, version 24.15+ within 24.x**, with npm. The installer requires Node major version 24. Map rendering needs a modern browser with WebGL. Building downloads dependencies from PyPI/npm. Online enrichment and basemap tiles need internet access. No editor or global Python package installation is required.
+Install Git and **Python 3.12–3.14**. Node/npm need not be installed beforehand: the installer can fetch a temporary build toolchain for macOS or Ubuntu on x64/ARM64. Map rendering needs a modern browser with WebGL. Installation downloads dependencies from PyPI/npm and, when needed, Node.js. Online enrichment and basemap tiles need internet access. No editor or global Python package installation is required.
 
 ### macOS prerequisites
 
-Install Git through Apple's Command Line Tools if needed (`xcode-select --install`). Obtain Python from [python.org](https://www.python.org/downloads/macos/) and Node from [nodejs.org](https://nodejs.org/en/download), or use your established package manager. Reopen Terminal, then check:
+Install Git through Apple's Command Line Tools if needed (`xcode-select --install`). Obtain Python from [python.org](https://www.python.org/downloads/macos/) or use your established package manager. Reopen Terminal, then check:
 
 ```sh
 git --version
 python3 --version
-node --version
-npm --version
 ```
 
 ### Ubuntu prerequisites
@@ -33,7 +31,15 @@ sudo apt update
 sudo apt install git python3 python3-venv ca-certificates
 ```
 
-Install Node **24.x** using the official Node instructions for your architecture; Ubuntu's default package may be too old. Verify the four commands above. Use sudo for OS packages only, not for the Dashboard installer/server.
+No Node apt package is needed for the automatic build-tool setup. Verify Git/Python using the commands above. Use sudo for OS packages only, not for the Dashboard installer/server. Actual Ubuntu execution remains unverified.
+
+### Temporary Node build tool
+
+The installer reuses Node **24.x, at least 24.15**, when both `node` and `npm` are available on PATH. Otherwise it downloads the appropriate **Node 24.21.0** archive from the [official release directory](https://nodejs.org/dist/v24.21.0/), verifies SHA-256 against the platform-specific hash pinned in the installer, and extracts it with Python's safe data filter. Downloads have size/time bounds; checksum failure stops installation before executing the downloaded tools.
+
+The toolchain lives in a private temporary directory and is added only to the installer's child-process PATH. It is removed on completion or failure; shell profiles and global packages are unchanged. A later install/update downloads it again if no compatible Node/npm is available. The Python server needs only the built frontend afterward.
+
+For offline/restricted-download environments or unsupported automatic-download architectures, install compatible Node/npm manually using [Node's instructions](https://nodejs.org/en/download), then check `node --version` and `npm --version`. Dependency installation still needs network access or suitable local package caches. Development commands such as `npm test` and `npm run dev` require Node/npm on PATH independently of the installer's temporary toolchain.
 
 ## Install from source
 
