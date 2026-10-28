@@ -80,12 +80,10 @@ mkdir "backups/$backup_stamp"
 cp config.toml "backups/$backup_stamp/"
 cp -R data "backups/$backup_stamp/"
 git status --short
-git pull --ff-only
-./install.sh
-.venv/bin/python -m backend.server
+./update.sh
 ```
 
-This update command assumes the tracking `main` branch. For a detached reviewed commit, choose the next reviewed commit explicitly with `git fetch origin` and `git checkout --detach COMMIT`. Stop on local changes, divergent Git history or any installer error. Do not recopy example defaults. Failed installs are not automatically rolled back; do not start a partially built update. Repeated installs preserve configuration/state. No service is stopped/started by the installer.
+The updater requires a clean `main` branch and the expected GitHub origin. Restart the server manually only after it reports success; see [the current update workflow](installation.md#updates-and-backups). For a detached reviewed commit, choose the next reviewed commit explicitly with `git fetch origin` and `git checkout --detach COMMIT`. Stop on local changes, divergent Git history or any installer error. Do not recopy example defaults. Failed installs are not automatically rolled back; do not start a partially built update. Repeated installs preserve configuration/state. No service is stopped/started by the installer.
 
 For rollback, stop the dashboard, preserve the failed checkout and current data, check out the recorded prior reviewed commit (or clone it separately), restore that revision's backed-up config/data, rerun `./install.sh`, then start. Never use `git reset --hard` or delete user work. A pre-rebuild rollback uses the preserved predecessor checkout and its historical installation procedure; do not point predecessor code at the new workspace database. No predecessor persistent history existed to migrate. For an existing Step 0 or `rebuild/step-1` checkout, stop only that dashboard, back up config/data, then switch to the reviewed installation branch:
 
@@ -119,11 +117,11 @@ Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2
 
 ## Step 3 configuration
 
-Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+Step 3 is included on **`main`**. For subsequent updates, stop only this Dashboard, back up config/data/ADIF, and run `./update.sh` from a clean `main` checkout. Restart manually only after success; see [current update instructions](installation.md#updates-and-backups). Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
 
 Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. History read results use memory caches; preserve the entire `data/` directory, including the durable delivery outbox, and any independently located ADIF file. See [optional QSO services](qso-services.md).
 
-The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
+The installation commands use `main`. The updater verifies `main` and refuses local tracked edits, unexpected origins and non-fast-forward changes; verify the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
 
 ## Current baseline and optional delivery
 

@@ -42,11 +42,11 @@ Step 3 includes the Step 2 enrichment and profile-photo work. Follow the [Step 2
 
 ## Step 3 configuration
 
-Step 3 is included on **`main`**. For an existing clean checkout, stop only this dashboard, make the cold config/data backup above, then run `git fetch origin`, `git switch main` and `git pull --ff-only`, followed by `./install.sh`. Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
+Step 3 is included on **`main`**. For subsequent updates, stop only this Dashboard, back up config/data/ADIF, and run `./update.sh` from a clean `main` checkout. Restart manually only after success; see [current update instructions](installation.md#updates-and-backups). Do not replace your config with the example. Step 0–2 configurations remain valid, with Wavelog disabled by default.
 
 Configure the URL, API v2 token, station/logbook scope and cache limits in **Settings → Wavelog QSO history**. See [Step 3 setup](step-3.md). Saving this section applies immediately without restarting UDP or changing radio baselines. Tokens are stored only in the server’s ignored `config.toml`; protect backups too. History read results use memory caches; preserve the entire `data/` directory, including the durable delivery outbox, and any independently located ADIF file. See [optional QSO services](qso-services.md).
 
-The installation commands use `main`. The update `git pull --ff-only` command follows whichever branch is currently checked out; verify `git branch --show-current` and the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
+The installation commands use `main`. The updater verifies `main` and refuses local tracked edits, unexpected origins and non-fast-forward changes; verify the checkpoint before upgrading. To roll back to Step 2, stop the dashboard, preserve current files, use the prior revision and its pre-upgrade config/data backup, then rerun the installer. Step 2 rejects the new `[wavelog]` section, so restore its backed-up configuration too.
 
 ## Current baseline and optional delivery
 
