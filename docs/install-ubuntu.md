@@ -1,17 +1,18 @@
 # Native Ubuntu installation — reviewed Steps 0–4
 
 > Historical milestone guide. Use [current installation instructions](installation.md#ubuntu-prerequisites) and the [readiness checklist](release-readiness.md). Actual Ubuntu execution remains unverified; the dated installation states below are not current operator defaults.
+> Current installer: compatible Node/npm is reused, or a checksum-verified temporary toolchain is downloaded automatically. A separate Node installation is optional.
 
 **Ubuntu execution is untested for this rebuild.** These instructions use the same core installer/server/config/data as macOS. Mac reception and previous receiver experiments do not validate this installation or Linux behavior. Keep all current station services running; install separately on loopback port 8787. No systemd unit is installed or replaced.
 
-Target Ubuntu 24.04+ with Python 3.12–3.14, Git, Node 24 LTS (24.15+) and npm. Install prerequisites as needed:
+Target Ubuntu 24.04+ with Python 3.12–3.14, Git and internet access; the installer obtains temporary Node build tools when needed. Install prerequisites as needed:
 
 ```sh
 sudo apt update
 sudo apt install git python3 python3-venv ca-certificates
 ```
 
-Install Node 24 LTS for your architecture using [official Node instructions/downloads](https://nodejs.org/en/download); Ubuntu's default Node package may not meet the required version. Verify `node --version`, `npm --version`, and `python3 --version`. Native installer commands run as an ordinary user, without sudo. It does not upgrade global packages, modify radio/network settings or manage services.
+No separate Node installation is required. See [temporary build tools](installation.md#temporary-node-build-tool) for automatic setup and the optional manual fallback. Verify `python3 --version` and `git --version`. Run the installer as an ordinary user, without sudo; it does not change global packages, radio settings or services.
 
 Follow the [private GitHub authentication instructions](install-macos.md#private-repository-access), then run:
 

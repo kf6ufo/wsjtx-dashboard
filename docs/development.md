@@ -8,6 +8,8 @@ The installed production path is [native macOS](install-macos.md) / [Ubuntu](ins
 .venv/bin/python -m backend.server
 ```
 
+The installer's temporary Node toolchain is removed after building. For development/test commands that invoke npm directly, keep compatible Node 24 (24.15+ within 24.x) and npm on PATH.
+
 For hot reload, in another terminal:
 
 ```sh

@@ -1,19 +1,18 @@
 # Native macOS installation — reviewed Steps 0–4
 
 > Historical milestone guide. For the current beta, use [Installation and updates](installation.md) and [Logging](logging.md). The dated disabled-state and operator-installation statements below are retained as development evidence.
+> Current installer: compatible Node/npm is reused, or a checksum-verified temporary toolchain is downloaded automatically. A separate Node installation is optional.
 
 This installs a built frontend served by the Python server, independent of VS Code/Codex. Keep any existing station installation running and use a separate directory and unused HTTP port. The default is loopback port 8787. No radio/network/service settings are changed by the installer.
 
 ## Prerequisites
 
-Supported target: macOS 14+ with Python 3.12–3.14, Git, and Node 24 LTS (24.15+) with npm. The checkpoint records the actual tested macOS/Python/Node versions, not a claim that every supported combination was exercised.
+Supported target: macOS 14+ with Python 3.12–3.14, Git and internet access. The installer manages temporary Node build tools when needed. The checkpoint records the actual tested macOS/Python/Node versions, not a claim that every supported combination was exercised.
 
-Install Python from [python.org](https://www.python.org/downloads/macos/) and Node 24 LTS from [nodejs.org](https://nodejs.org/en/download), or use your existing package manager. Git is available through Apple's command line tools (`xcode-select --install` if missing). Reopen Terminal after installing. Verify:
+Install Python from [python.org](https://www.python.org/downloads/macos/) or use your existing package manager. Node/npm are optional prerequisites; see [temporary build tools](installation.md#temporary-node-build-tool). Git is available through Apple's command line tools (`xcode-select --install` if missing). Reopen Terminal after installing. Verify:
 
 ```sh
 python3 --version
-node --version
-npm --version
 git --version
 ```
 
@@ -104,7 +103,7 @@ With the Dashboard stopped and logging disabled, copy `config.toml`, the complet
 
 ## Troubleshooting and validation
 
-- `node`/`npm` missing or unsupported: install Node 24 LTS, reopen Terminal, and check PATH. The installer reports the failure and can be rerun.
+- Node setup/download fails: check connectivity to nodejs.org and rerun the installer. A manual compatible Node 24/npm installation is an optional fallback; see [temporary build tools](installation.md#temporary-node-build-tool).
 - Python/venv/pip failure: verify supported Python and internet access. Use the same interpreter for repeat installs. Do not share virtual environments across OS/interpreter installations.
 - `Address already in use`: identify the listener with `lsof -nP -iTCP:8787 -sTCP:LISTEN`; choose another port in this checkout's config. Do not kill station services to free a port.
 - Config error: the message includes the file. Compare keys with the example; repair the file rather than overwrite your settings. HTTP edits require a server restart; receiver changes in Settings apply immediately.
