@@ -47,6 +47,8 @@ The current-band indicator includes **all modes**; the mode overview and individ
 
 You need **Git, Python 3.12–3.14 and internet access**. No separate Node installation is required: the installer reuses compatible Node/npm if available, or downloads a checksum-verified temporary Node toolchain for macOS/Ubuntu (x64 or ARM64), builds the frontend, then removes the toolchain. A modern browser with WebGL displays the map; QRZ XML requires suitable QRZ access.
 
+**First installation:**
+
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git
 cd wsjtx-dashboard
@@ -55,6 +57,8 @@ cd wsjtx-dashboard
 ```
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the proposed beta tag does **not** exist yet. Repository access is required while the project remains private.
+
+**Subsequent updates:** stop Dashboard and [back up configuration, state and ADIF files](docs/installation.md#updates-and-backups), then run `./update.sh` from the installation directory as your normal user. It verifies the repository/main branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. Restart Dashboard only after success; the updater never manages services.
 
 Next, open **Settings → Radio receiver**, match WSJT-X's UDP destination, and enable reception. For multicast, select this computer's receiving network interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
 

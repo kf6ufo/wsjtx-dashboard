@@ -43,7 +43,7 @@ For offline/restricted-download environments or unsupported automatic-download a
 
 ## Install from source
 
-Choose a new directory so an existing station installation remains intact. The repository currently requires authorized access; use your GitHub credential manager or SSH setup, never a token embedded in a URL.
+For a **first installation**, choose a new directory so an existing station installation remains intact. The repository currently requires authorized access; use your GitHub credential manager or SSH setup, never a token embedded in a URL. Use `./install.sh` for installation and `./update.sh` for subsequent main-branch updates.
 
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git
@@ -94,21 +94,49 @@ Stop **only this Dashboard**, record `git rev-parse HEAD`, and make a private ba
 ```sh
 mkdir -p backups
 backup_stamp=$(date +%Y%m%d-%H%M%S)
-mkdir "backups/$backup_stamp"
+mkdir -m 700 "backups/$backup_stamp"
 cp config.toml "backups/$backup_stamp/"
 cp -R data "backups/$backup_stamp/"
 git status --short
 ```
 
-Inspect local changes before continuing. On a clean checkout tracking `main`:
+For a foreground Dashboard, press **Ctrl+C** in its server terminal and wait for shutdown before updating. Close other terminals that could edit this checkout while the updater runs. On a clean checkout of `main`, run as your normal operator account, **without sudo**:
 
 ```sh
-git pull --ff-only
-./install.sh
+./update.sh
+```
+
+The updater verifies its Git root, expected project files, GitHub `origin` identity and `main` branch. It stops for tracked edits, staged changes, a detached HEAD, unpublished/diverged local commits or Git errors. It fetches `origin/main`, uses fast-forward only, disables autostash and refuses to overwrite ignored/untracked operator files that conflict with upstream. It prints previous/updated commit hashes and runs the existing installer. An already-current checkout still runs the installer, allowing a failed build to be retried. It never resets, rebases, cleans, stashes, switches branches or silently manages services. [Git's merge options](https://git-scm.com/docs/git-merge) describe the underlying safeguards.
+
+**Only after an explicit “Update successful” message**, restart the foreground server using the same configuration as before:
+
+```sh
 .venv/bin/python -m backend.server
 ```
 
-Do not replace configuration with defaults or reset local changes. Stop on installer failure; do not start a partially built update. A detached release checkout needs an explicit `git fetch origin` and selection of the next reviewed commit. Repeated installation preserves settings/state, including previously enabled integrations.
+If you use `--config /absolute/path/to/config.toml`, retain that argument when restarting and back up that configuration's adjacent `data/` directory as well. The installer validates the checkout's configuration; it does not reset either configuration or relocate queued targets.
+
+If fetching or fast-forwarding fails, inspect the reported error and `git status`; the installer was not run. If installation fails, source may already be at the printed updated commit and build dependencies/assets may be partial. **Keep Dashboard stopped**, fix the reported problem and rerun `./update.sh`. There is no automatic rollback or restart. Do not replace configuration with defaults, delete queues or reset local changes to force an update. Repeated installation preserves settings/state, including previously enabled integrations.
+
+Older checkouts without `update.sh` need a one-time manual bootstrap: after stopping/backing up and verifying a clean `main`, run `git fetch origin main`, then `git merge --ff-only --no-autostash --no-overwrite-ignore origin/main`, then `./update.sh`. Run commands one at a time and stop on failure. Detached/tagged release checkouts are deliberately refused by the updater; choose the intended revision manually after preserving your work.
+
+### Future systemd-managed deployments
+
+The project does not currently install or validate a systemd service. If you later configure a **user service**, stop it explicitly before backing up or updating. For an example unit named `wsjtx-dashboard.service`:
+
+```sh
+systemctl --user stop wsjtx-dashboard.service
+systemctl --user is-active wsjtx-dashboard.service
+```
+
+Confirm it is inactive (an inactive result normally has a nonzero exit status), make the backup, then run `./update.sh` as the operator. Only after update success:
+
+```sh
+systemctl --user start wsjtx-dashboard.service
+systemctl --user status wsjtx-dashboard.service
+```
+
+Use your actual unit name and preserve its configuration arguments. A system-wide unit requires the administrator's established stop/start procedure outside this updater; do not run the updater itself with sudo. No service is created, stopped, started or enabled by `update.sh`. See the [systemctl reference](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html). Actual Ubuntu/systemd execution remains unverified.
 
 ## Rollback or move to another host
 
