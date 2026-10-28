@@ -2,12 +2,21 @@
 
 [Documentation](README.md) · [Next: quick start](quick-start.md)
 
+## Choose your workflow
+
+| Task | Command | When to run it |
+| --- | --- | --- |
+| First installation | `./install.sh` | After cloning the repository; then start Dashboard |
+| Update an existing installation | `./update.sh` | After stopping Dashboard and backing up its files; restart only after success |
+
+Run both as your normal user, without sudo. The updater calls the installer automatically, including temporary Node setup. Follow the detailed [first-install steps](#install-from-source) or [update/backup steps](#updates-and-backups) below.
+
 ## Platforms and requirements
 
 | Platform | Status |
 | --- | --- |
 | Native macOS | Verified on macOS 26.6.1 arm64, Python 3.13.1, Node 24.21.0 and Chrome; earlier guides target macOS 14+, but other combinations have not all been exercised |
-| Native Ubuntu 24.04+ | Intended target using the same installer/configuration/storage; actual Ubuntu execution is not yet verified |
+| Native Ubuntu (24.04+ target) | Successful testing reported by the operator; exact tested version/architecture and detailed acceptance matrix are not yet recorded |
 | Windows | No verified native installation; the ADIF writer uses POSIX file locking |
 | Docker | No maintained, verified container installation in this pre-release |
 
@@ -24,14 +33,14 @@ python3 --version
 
 ### Ubuntu prerequisites
 
-These instructions await execution on Ubuntu:
+The operator reports successful Ubuntu testing with this installation path:
 
 ```sh
 sudo apt update
 sudo apt install git python3 python3-venv ca-certificates
 ```
 
-No Node apt package is needed for the automatic build-tool setup. Verify Git/Python using the commands above. Use sudo for OS packages only, not for the Dashboard installer/server. Actual Ubuntu execution remains unverified.
+No Node apt package is needed for the automatic build-tool setup. Verify Git/Python using the commands above. Use sudo for OS packages only, not for the Dashboard installer/server. The exact Ubuntu test version/architecture has not yet been recorded.
 
 ### Temporary Node build tool
 
@@ -50,6 +59,11 @@ git clone https://github.com/kf6ufo/wsjtx-dashboard.git
 cd wsjtx-dashboard
 git rev-parse HEAD
 ./install.sh
+```
+
+After installation reports success, start the server:
+
+```sh
 .venv/bin/python -m backend.server
 ```
 
@@ -136,7 +150,7 @@ systemctl --user start wsjtx-dashboard.service
 systemctl --user status wsjtx-dashboard.service
 ```
 
-Use your actual unit name and preserve its configuration arguments. A system-wide unit requires the administrator's established stop/start procedure outside this updater; do not run the updater itself with sudo. No service is created, stopped, started or enabled by `update.sh`. See the [systemctl reference](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html). Actual Ubuntu/systemd execution remains unverified.
+Use your actual unit name and preserve its configuration arguments. A system-wide unit requires the administrator's established stop/start procedure outside this updater; do not run the updater itself with sudo. No service is created, stopped, started or enabled by `update.sh`. See the [systemctl reference](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html). Actual systemd-managed operation remains unverified; general Ubuntu testing does not establish service-management acceptance.
 
 ## Rollback or move to another host
 

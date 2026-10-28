@@ -8,7 +8,7 @@
 
 [![WSJT-X Dashboard showing a fictional selected station, profile illustration, worked-before indicators and station details](docs/assets/dashboard-hero.png)](docs/assets/dashboard-hero.png)
 
-A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
+**Tested on macOS and Ubuntu.** A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
 
 **Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station in WSJT-X immediately brings its callsign into focus; available operator details, photographs, map and worked-before information load automatically.
 
@@ -29,7 +29,7 @@ A self-hosted companion for WSJT-X: put the operator, previous contacts and stat
 
 **Use one uploader per contact.** Disable competing WaveLogGate or downstream upload routes before enabling Dashboard's Wavelog logging to avoid duplicate QSOs. Dashboard does not disable other applications for you. [Logging setup and recovery](docs/logging.md).
 
-**Proposed first pre-release: v0.9.0-beta.1.** The core application is implemented; beta preparation focuses on documentation and verification. macOS has been exercised on real station hardware. Ubuntu is a documented target, not yet execution-verified. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
+**Proposed first pre-release: v0.9.0-beta.1.** The core application is implemented; beta preparation focuses on documentation and verification. macOS has been exercised on real station hardware; the operator also reports successful Ubuntu testing. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
 
 ## At the operating desk
 
@@ -47,20 +47,40 @@ The current-band indicator includes **all modes**; the mode overview and individ
 
 You need **Git, Python 3.12–3.14 and internet access**. No separate Node installation is required: the installer reuses compatible Node/npm if available, or downloads a checksum-verified temporary Node toolchain for macOS/Ubuntu (x64 or ARM64), builds the frontend, then removes the toolchain. A modern browser with WebGL displays the map; QRZ XML requires suitable QRZ access.
 
-**First installation:**
+### First installation
 
 ```sh
 git clone https://github.com/kf6ufo/wsjtx-dashboard.git
 cd wsjtx-dashboard
 ./install.sh
+```
+
+After installation succeeds, start Dashboard:
+
+```sh
 .venv/bin/python -m backend.server
 ```
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the proposed beta tag does **not** exist yet. Repository access is required while the project remains private.
 
-**Subsequent updates:** stop Dashboard and [back up configuration, state and ADIF files](docs/installation.md#updates-and-backups), then run `./update.sh` from the installation directory as your normal user. It verifies the repository/main branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. Restart Dashboard only after success; the updater never manages services.
-
 Next, open **Settings → Radio receiver**, match WSJT-X's UDP destination, and enable reception. For multicast, select this computer's receiving network interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
+
+### Update an existing installation
+
+1. Stop Dashboard with Ctrl+C and wait for shutdown. [Back up configuration, state and ADIF files](docs/installation.md#updates-and-backups).
+2. From the existing installation directory on `main`, run as your normal user:
+
+   ```sh
+   ./update.sh
+   ```
+
+3. Only after **Update successful**, restart with the same configuration as before:
+
+   ```sh
+   .venv/bin/python -m backend.server
+   ```
+
+The updater checks the repository/branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. It never manages services. Retain any custom `--config` argument; see the [full update and service instructions](docs/installation.md#updates-and-backups).
 
 ## Use the combination that fits your station
 
@@ -83,7 +103,7 @@ Start with reception and history. When enabling logging, ensure another uploader
 
 ## Beta status
 
-Real macOS operation includes multiple WSJT-X radios, QRZ/Wavelog reads and GridTracker2 reception. Enriched logging, recovery and field selection have extensive isolated automated coverage, but full isolated Wavelog write/outage acceptance and the new optional-field live export check remain outstanding. Ubuntu execution, Windows, Docker, MacLoggerDX integration and inline biography retrieval are unverified or deferred. [Evidence and limits](docs/release-readiness.md).
+The Dashboard has been tested on **macOS and Ubuntu**, including successful Ubuntu testing reported by the operator. Detailed macOS evidence includes multiple WSJT-X radios, QRZ/Wavelog reads and GridTracker2 reception. Enriched logging, recovery and field selection have extensive isolated automated coverage, but full isolated Wavelog write/outage acceptance and the new optional-field live export check remain outstanding. Windows, Docker, MacLoggerDX integration and inline biography retrieval remain unverified or deferred. [Evidence and limits](docs/release-readiness.md).
 
 The server has no login system and binds to loopback by default. Keep it local, or use only a trusted network with appropriate access control. Credentials stay on the server; protect configuration, backups and logs. Never expose the Dashboard directly to the public internet.
 

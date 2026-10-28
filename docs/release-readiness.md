@@ -16,7 +16,8 @@
 | ADIF history/logging and durable delivery | Implemented; extensive parser, append/recovery, independent destination and dedupe tests |
 | UDP forwarding | Actual raw reception from two instances confirmed in GridTracker2 2.261019.5.991; isolated enriched receiver tests; not blanket compatibility with other versions/apps |
 | macOS | Actual macOS 26.6.1 arm64, Python 3.13.1, Node 24.21.0 and Chrome evidence |
-| Ubuntu / Windows / Docker | Ubuntu documented target only; no actual Ubuntu, Windows or Docker acceptance. POSIX file locking limits native Windows assumptions |
+| Ubuntu | Operator-reported successful testing; exact version/architecture and detailed test matrix not recorded |
+| Windows / Docker | No actual Windows or Docker acceptance. POSIX file locking limits native Windows assumptions |
 
 ## Before public publication
 
@@ -32,7 +33,7 @@
 - [x] Record the operator's explicit confirmation to keep existing Git attribution, including the personal email. Preserve history and attribution; this does not authorize visibility changes, release publication or credential disclosure.
 - [ ] Confirm third-party dependency/data/attribution obligations for distribution. Basemap attribution must remain visible; source licensing does not grant rights to QRZ photographs or external datasets.
 - [ ] Complete isolated Wavelog 3.2.3 write/retry/outage acceptance and ordinary post-field-audit contact/export verification, or explicitly retain experimental logging status in the published beta notes. Exporter omissions are not proof of failed submission.
-- [ ] Obtain actual Ubuntu acceptance before advertising it as tested. Do not advertise verified Windows/Docker/MacLoggerDX support.
+- [x] Record the operator's successful Ubuntu testing report. Do not infer a specific Ubuntu version/architecture or verified systemd, Windows, Docker or MacLoggerDX support.
 - [ ] Only after review: choose public visibility, create the approved tag and publish a GitHub **pre-release**. No binaries/container images are currently validated release artifacts.
 
 Public release is intentionally **not yet ready for an unqualified production-logging claim**. The historical disclosure decisions are accepted. A limited beta may be published after separate approval with the remaining distribution, platform and integration limitations plainly stated; repository visibility and release publication have not been authorized by these confirmations.
@@ -73,7 +74,7 @@ On actual macOS arm64, a fresh install and real repeat install both passed with 
 
 Updater source **`dab0871`** adds `./update.sh` without changing the existing installer or runtime code. **235 backend tests passed**, including **20 isolated real-Git updater cases** covering clean/already-current updates, staged/unstaged edits, wrong branches/detached HEAD, missing/wrong origins, Git/installer failures, ahead/diverged history, ignored/untracked collisions, edits arriving during fetch and self-update safety. `sh -n update.sh` passed.
 
-A separate actual macOS end-to-end run used a private local Git transport and the real installer: it printed the correct previous/updated hashes, fast-forwarded successfully, provisioned/removed temporary Node and built the frontend with neither Node nor npm on the parent PATH. Configuration, synthetic ADIF, all four SQLite stores and pending delivery/receipt state retained identical bytes, modes and ownership. No operating station or production QSO service was changed or restarted. Actual Ubuntu and future systemd execution remain unverified; [operator update instructions](installation.md#updates-and-backups) explicitly keep stop/start and backup actions outside the script.
+A separate actual macOS end-to-end run used a private local Git transport and the real installer: it printed the correct previous/updated hashes, fast-forwarded successfully, provisioned/removed temporary Node and built the frontend with neither Node nor npm on the parent PATH. Configuration, synthetic ADIF, all four SQLite stores and pending delivery/receipt state retained identical bytes, modes and ownership. No operating station or production QSO service was changed or restarted. At that validation run Ubuntu execution was unverified; the operator subsequently reports successful Ubuntu testing. Future systemd execution remains unverified; [operator update instructions](installation.md#updates-and-backups) explicitly keep stop/start and backup actions outside the script.
 
 ## Scope of preparation changes
 
