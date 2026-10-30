@@ -10,6 +10,12 @@ Station shows the focused callsign, available operator information/photo, compac
 
 The callsign and Focus History update immediately after a reported selection change. Enrichment and history arrive independently; a slow lookup for an older station cannot replace your newer focus. Opening several browsers shares the server's focus/history. A reconnect obtains a fresh snapshot.
 
+## Full screen and multiple monitors
+
+Move the browser window onto the monitor you want to use, then click **Full screen** in the toolbar. The browser hides its tabs/address bar; Dashboard hides its title/footer, reduces the outer margins and keeps a compact navigation/status toolbar. Click **Exit full screen** or press **Esc** to return to the normal view.
+
+Open a separate Dashboard window on each monitor as needed. Full screen applies only to that window; focus/history continue to be shared. It does not select another monitor automatically or become a shared workspace setting, and requires a new click after a page reload. If the browser does not support or allow the request, Dashboard shows a message; use the browser's own full-screen command instead.
+
 ## Worked-before information
 
 Two compact indicators show:

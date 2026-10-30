@@ -8,6 +8,7 @@ First proposed public beta; **not tagged or published**. The application was pre
 
 - Live multi-instance WSJT-X focus, shared Focus History and bounded Diagnostics.
 - Responsive Station interface with photos, populated sortable Details, map, contact history and light/dark themes.
+- Per-window Full screen/Exit full screen controls, compact navigation/status toolbar and reduced margins for dedicated station monitors.
 - Source-aware callsign/current-band worked indicators that preserve pending/incomplete/unknown distinctions.
 - Optional pyhamtools/QRZ enrichment and authorized Wavelog API v2 history.
 - Independent ADIF history/logging and optional direct Wavelog submission.

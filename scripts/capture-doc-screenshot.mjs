@@ -1,10 +1,12 @@
-// Screenshot the unchanged built interface using fictional data only.
+// Screenshot the built interface using fictional data only.
 // Serve dist on an isolated loopback port first; never point this at the live server.
 import { chromium } from 'playwright'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 const base = new URL(process.argv[2] || 'http://127.0.0.1:8895/')
 const hero = process.argv.includes('--hero')
+const fullscreen = process.argv.includes('--fullscreen')
+if (hero && fullscreen) throw new Error('Choose either --hero or --fullscreen')
 if (base.hostname !== '127.0.0.1' || base.port === '8787') throw new Error('Use an isolated loopback static server, not port 8787')
 const stamp = Date.UTC(2026, 9, 27, 12, 30), call = 'K1DEMO'
 const fields = { callsign:call, fname:'Example', name:'Operator', addr2:'Sample station', state:'OR', country:'United States', locator:'CN85', latitude:45.5, longitude:-123, adif:291, cqz:3, ituz:6, email:'operator@example.invalid', url:'https://example.invalid', lotw:'Y', eqsl:'N', image:'https://images.example.invalid/antenna.svg', qslmgr:'Direct or bureau' }
@@ -20,15 +22,21 @@ const snapshot={epoch:'documentation-demo',revision:1,sample:false,step:3,call,s
  qsoHistory:{provider:'adif',label:'Local ADIF',result}, historySettings:{limit:200,retention_days:0}}
 const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
 try {
- const page=await browser.newPage({viewport:{width:1560,height:1350},deviceScaleFactor:1})
+ const page=await browser.newPage({viewport:{width:fullscreen?1920:1560,height:fullscreen?1440:1350},deviceScaleFactor:1})
  await page.addInitScript(({snapshot})=>{window.EventSource=class {constructor(){setTimeout(()=>this.onopen?.(),25)}addEventListener(){}close(){}};window.__docFixture=snapshot},{snapshot})
  await page.route('**/api/**',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(route.request().url().includes('/history/')?{...result,records}:snapshot)}))
  await page.route('https://images.example.invalid/**',route=>route.fulfill({contentType:'image/svg+xml',body:readFileSync(new URL('../docs/assets/demo-antenna.svg',import.meta.url))}))
  await page.goto(base.href,{waitUntil:'domcontentloaded'})
  await page.getByTestId('focused-call').waitFor()
  await page.waitForFunction(()=>document.querySelector('[data-testid="focused-call"]')?.textContent==='K1DEMO')
- await page.waitForTimeout(6500)
- const output = fileURLToPath(new URL(`../docs/assets/${hero ? 'dashboard-hero' : 'dashboard'}.png`,import.meta.url))
+ if (fullscreen) {
+  await page.getByRole('button',{name:'Full screen',exact:true}).click()
+  await page.waitForFunction(()=>document.fullscreenElement===document.documentElement)
+ }
+ // Capture only after the online basemap is complete, including fullscreen resizing.
+ await page.locator('.station-map-canvas[data-basemap-state="ready"]').waitFor({timeout:30000})
+ await page.waitForTimeout(1000)
+ const output = fileURLToPath(new URL(`../docs/assets/${hero ? 'dashboard-hero' : fullscreen ? 'dashboard-fullscreen' : 'dashboard'}.png`,import.meta.url))
  if (hero) {
   // Frame the complete station summary and Details cards only.
   // Exclude the shared header, Focus History, map and contact area.
@@ -40,6 +48,8 @@ try {
   const right = Math.ceil(Math.max(summary.x+summary.width,details.x+details.width)+12)
   const bottom = Math.ceil(Math.max(summary.y+summary.height,details.y+details.height)+12)
   await page.screenshot({path:output,clip:{x,y,width:right-x,height:bottom-y}})
- } else await page.screenshot({path:output,fullPage:true})
- console.log(`Captured fictional Station ${hero ? 'hero' : 'screenshot'}; no live API or operator data used.`)
+ // Keep native fullscreen at its real viewport size: a full-page capture resizes
+ // Chrome's render surface during capture and can leave WebGL partially drawn.
+ } else await page.screenshot({path:output,fullPage:!fullscreen})
+ console.log(`Captured fictional Station ${hero ? 'hero' : fullscreen ? 'full-screen screenshot' : 'screenshot'}; no live API or operator data used.`)
 } finally {await browser.close()}
