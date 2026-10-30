@@ -12,9 +12,11 @@
 
 **Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station in WSJT-X immediately brings its callsign into focus; available operator details, photographs, map and worked-before information load automatically.
 
-![WSJT-X Dashboard Station view with fictional station information, worked-before indicators, map and contact history](docs/assets/dashboard.png)
+![WSJT-X Dashboard in full screen with compact controls, fictional station information, worked-before indicators, map and contact history](docs/assets/dashboard-fullscreen.png)
 
-*The actual Station interface with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View the full Dashboard screenshot at full resolution](docs/assets/dashboard.png).*
+*The actual Station interface in full-screen mode, with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View full screen at full resolution](docs/assets/dashboard-fullscreen.png) · [Compare the standard window view](docs/assets/dashboard.png).*
+
+**Give Dashboard a monitor of its own.** Move its browser window onto your chosen monitor and click **Full screen**. Browser tabs/address bar and the Dashboard title/footer disappear, leaving a compact toolbar and more room for station information. Press **Esc** or click **Exit full screen** to return. [Full screen and multiple monitors](docs/using-dashboard.md#full-screen-and-multiple-monitors).
 
 ## Why WSJT-X Dashboard?
 
@@ -36,6 +38,7 @@
 - **Click to focus from WSJT-X.** Click a callsign in WSJT-X to select a different station and see available operator details, QRZ photographs, location and a zoomable map in the Dashboard. The callsign appears first; lookups follow without interrupting you.
 - **Know your history.** Compact callsign and current-band indicators show whether you have worked the station. Browse previous QSOs, bands and modes. Failed or incomplete history never becomes a false “NEW”.
 - **Revisit a contact.** Shared Focus History follows deliberate selections across multiple WSJT-X instances. Browse an older station without changing the radio.
+- **Fill a station monitor.** Full-screen mode trims browser and Dashboard headings while keeping navigation and radio status available. Use a separate window on each monitor as needed.
 - **Improve the record before logging.** Optional pyhamtools and QRZ enrichment fills reliable missing information, including QSL routing, contact details and calculated distance. Original WSJT-X values take priority, reducing later callbook-update work.
 - **Choose your logbook.** Read Wavelog history, submit enriched contacts directly when configured, use a local ADIF file independently, or deliver to both. The Dashboard can replace WaveLogGate's logging role once you choose and validate a single upload path.
 - **Feed other applications.** Configure independent, one-way UDP destinations for original WSJT-X packets or enriched Logged ADIF.

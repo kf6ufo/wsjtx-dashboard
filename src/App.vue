@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { createDashboard, type Dashboard } from './focus'
 import { calls, profiles, rigs, sampleQsos } from './fixtures'
 import type { Qso, Preferences } from './types'
@@ -24,6 +24,24 @@ import SettingsSections, { type SettingsSection } from './components/SettingsSec
 const props = defineProps<{ dashboard?: Dashboard }>()
 const dashboard = props.dashboard ?? createDashboard()
 const { state } = dashboard
+const fullscreen = ref(false), fullscreenBusy = ref(false), fullscreenMessage = ref('')
+function updateFullscreen() { fullscreen.value = document.fullscreenElement === document.documentElement }
+onMounted(() => { updateFullscreen(); document.addEventListener('fullscreenchange', updateFullscreen) })
+onBeforeUnmount(() => document.removeEventListener('fullscreenchange', updateFullscreen))
+async function toggleFullscreen() {
+ fullscreenMessage.value = ''
+ if (!document.fullscreenEnabled || !document.documentElement.requestFullscreen) {
+  fullscreenMessage.value = 'Full screen is unavailable in this browser. Use the browser’s own full-screen command instead.'
+  return
+ }
+ fullscreenBusy.value = true
+ try {
+  if (document.fullscreenElement) await document.exitFullscreen()
+  else await document.documentElement.requestFullscreen()
+ } catch {
+  fullscreenMessage.value = 'The browser could not change full screen. Try again or use the browser’s full-screen command.'
+ } finally { updateFullscreen(); fullscreenBusy.value = false }
+}
 if (!state.call && !state.live) {
  for (const [i, call] of [...calls].reverse().entries()) dashboard.select(call, rigs[i % 3]!.id, { at: Date.now() - (6-i)*94000 })
 }
@@ -144,16 +162,18 @@ function simulate() { if (state.sample) { void dashboard.selectSample(chosenCall
 function interleave() { dashboard.select('DL1DEMO', rigs[0]!.id); dashboard.select('W7DEMO', rigs[1]!.id); dashboard.select('VK3DEMO', rigs[2]!.id); notice.value = 'Three interleaved selections received. Field station is latest.' }
 </script>
 <template>
- <div class="app-shell" :class="[{ 'station-desk-open': deskOpen }, `theme-${theme}`]">
+ <div class="app-shell" :class="[{ 'station-desk-open': deskOpen, 'fullscreen-display': fullscreen }, `theme-${theme}`]">
   <header class="topbar">
    <div class="brand"><span class="brand-icon" aria-hidden="true">⌁</span><h1>WSJT-X <span>Dashboard</span></h1></div>
    <span class="demo-status">{{ state.sample ? `QSO services preview · Sample workspace · ${state.connection}` : state.live ? radioStatus : 'Demo · No live connections' }}</span>
    <nav class="console-controls" aria-label="Workspace views">
     <button v-for="tab in (['station', 'diagnostics', 'settings'] as const)" :key="tab" class="btn console-button" :aria-current="view === tab ? 'page' : undefined" @click="view = tab">{{ tab[0]!.toUpperCase() + tab.slice(1) }}</button>
     <button class="btn console-button" :aria-pressed="theme === 'light'" @click="theme = theme === 'dark' ? 'light' : 'dark'">Theme: {{ theme === 'dark' ? 'Dark' : 'Light' }}</button>
+    <button class="btn console-button" :aria-pressed="fullscreen" :disabled="fullscreenBusy" :title="fullscreen ? 'Exit full screen (Esc)' : 'Fill this monitor · move the window to your preferred monitor first'" @click="toggleFullscreen">{{ fullscreen ? 'Exit full screen' : 'Full screen' }}</button>
     <button v-if="!state.live || state.sample" class="btn console-button" aria-haspopup="dialog" aria-controls="demo-tools" :aria-expanded="demoOpen" @click="demoOpen = true">Demo tools</button>
    </nav>
   </header>
+  <p v-if="fullscreenMessage" class="connection-note" role="status">{{ fullscreenMessage }}</p>
   <section v-show="deskOpen" id="station-desk" class="rig-strip" :aria-label="state.sample ? 'Simulated rig identities' : state.live ? 'WSJT-X rig identities' : 'Simulated rig identities'"><div class="section-eyebrow">STATION DESK <span>{{ state.sample ? 'Simulated radios · no receiver' : state.live ? `${displayRigs.length} WSJT-X network IDs · latest Status` : '3 simulated rigs' }}</span></div><div class="rigs"><div v-for="r in displayRigs" :key="r.id" class="rig-chip" :title="r.id" :style="{ '--rig-color': r.color }"><i></i><strong>{{ r.name }}{{ !state.sample && 'online' in r && !r.online ? ' · Closed' : '' }}</strong><span>{{ r.band ? bandLabel(r.band) : 'Band unknown' }} · {{ r.mode }}</span><code>{{ state.rigSelections[r.id] || 'Idle' }}</code></div></div></section>
   <dialog v-if="!state.live || state.sample" ref="demoDialog" id="demo-tools" class="demo-dialog" @keydown="trapDemoDialog" aria-labelledby="demo-tools-title" aria-describedby="demo-tools-description" @close="demoOpen = false" @click="event => { if (event.target === demoDialog) demoOpen = false }">
    <div class="demo-dialog-heading"><h2 id="demo-tools-title">Demo tools</h2><button class="btn console-button" @click="demoOpen = false" autofocus>Close demo tools</button></div>
