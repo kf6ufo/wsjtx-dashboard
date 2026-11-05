@@ -69,3 +69,10 @@ retention_days = 0
 # Opt-in one-way UDP distribution. Each destination defaults disabled.
 [forwarding]
 destinations = []
+
+# Optional reception dots. One TLS MQTT feed; no XML requests or QSO writes.
+[pskreporter]
+enabled = false
+# Empty = use each selected WSJT-X rig's station callsign. Explicit override otherwise.
+callsign = ""
+window_minutes = 15

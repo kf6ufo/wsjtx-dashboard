@@ -13,13 +13,15 @@
 | [WSJT-X Reporting setup](wsjtx-reporting.md) | Primary UDP Server, multicast group/interface, disabled secondary broadcast and WaveLogGate distinction |
 | [Configuration](configuration.md) | Settings save scopes, providers, Wavelog API v2, ADIF and UDP destinations |
 | [Using the Dashboard](using-dashboard.md) | Station, worked-before status, map, Focus History and Diagnostics |
+| [PSKReporter reception map](pskreporter.md) | Recent stations hearing your callsign on the focus band |
 | [Logging](logging.md) | Enrichment, destinations, replacing an uploader, delivery and recovery |
 | [Troubleshooting](troubleshooting.md) | Reception, lookup, history, logging and forwarding problems |
 | [Architecture](architecture.md) | Data flow, runtime components and storage |
 
 ## Release and technical reference
 
-- [Proposed v0.9.0-beta.1 release notes](releases/v0.9.0-beta.1.md)
+- [Release Candidate 1 notes](releases/v0.9.0-rc.1.md)
+- [Historical beta preparation notes](releases/v0.9.0-beta.1.md)
 - [Changelog](../CHANGELOG.md)
 - [Readiness checklist and validation evidence](release-readiness.md)
 - [Exact QSO field mappings and export audit](qso-field-audit.md)

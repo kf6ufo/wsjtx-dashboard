@@ -1,6 +1,28 @@
 # Changelog
 
-## [Unreleased] — proposed v0.9.0-beta.1
+## [Unreleased] — v0.9.0-rc.1 (RC1)
+
+November 5, 2026: operator-approved Release Candidate 1 for testing from `main`. No release tag or GitHub release has been published.
+
+### Added
+
+- Optional PSKReporter MQTT reception overlay: small amber receiver dots for your transmitted callsign on the focus band, including an inner dot when the focused station reports hearing you.
+- Per-browser 5/15/30/60-minute windows, a saved 15-minute default, automatic per-rig identity and an explicit transmitting-callsign override.
+- One shared TLS MQTT connection, bounded one-hour in-memory reception cache, reconnect/resubscribe and expiry during outages; no XML polling or focus-triggered upstream requests.
+- Offline visual-preview script, focused collector/map tests and operator documentation. Map updates preserve pan/zoom and do not change focus/history or radio operation.
+
+### Changed
+
+- Package and lockfile versions advance from `0.9.0-beta.1` to `0.9.0-rc.1`; current operator documentation identifies RC1.
+
+### Validation and limits
+
+- Offline automated tests and desktop/mobile browser review passed. Actual MQTT connection/subscription succeeded, but no reports arrived in the brief check; ordinary live reception-data acceptance remains pending.
+- Existing installation, logging, platform and external-integration limits remain in the [readiness checklist](docs/release-readiness.md). The operating installation is unchanged by publication.
+
+See [RC1 notes](docs/releases/v0.9.0-rc.1.md) and [reception map setup](docs/pskreporter.md).
+
+## Historical beta preparation — proposed v0.9.0-beta.1
 
 First proposed public beta; **not tagged or published**. The application was previously developed through reviewed milestones rather than public releases.
 

@@ -98,6 +98,7 @@ class WorkspaceState(FoundationState):
         snapshot['historySettings'] = self.history_settings.public()
         if getattr(self, 'observations', None): snapshot['observations'] = self.observations.snapshot()
         if getattr(self, 'forwarding', None): snapshot['forwarding'] = self.forwarding.snapshot()
+        if getattr(self, 'pskreporter', None): snapshot['pskreporter'] = self.pskreporter.snapshot()
         return snapshot
 
     def accept(self, packet, **kwargs):

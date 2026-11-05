@@ -20,6 +20,8 @@ October 27 pre-release preparation was merged into main for testing at `a4d7ceb`
 
 The October 27 final-security request authorizes narrow trusted-host validation and private configuration/state permissions, with isolated validation and merge after passing checks. It explicitly accepts publication of historical callsigns, private LAN addresses, machine paths and QSO-related development examples. The operator subsequently confirmed keeping existing Git attribution, including the personal email; preserve it without rewriting history. Preserve history; do not change visibility, publish a release or modify/restart the operating installation as part of this hardening task. See `docs/security-history-review.md` for actual evidence and remaining limits.
 
+The November 5 operator review accepted the PSKReporter reception overlay and authorizes version `0.9.0-rc.1` (RC1) plus publication to `main` for testing. Preserve the feature history. This request does not tag/publish a GitHub release, change visibility or update/restart the operating installation. PSKReporter defaults off; preserve existing operator settings. Actual TLS connection/subscription is verified, but ordinary live reception-data acceptance remains pending. See `docs/pskreporter.md` and the current checkpoint.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

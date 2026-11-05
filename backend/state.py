@@ -90,7 +90,8 @@ class FocusState:
                 self.selection_sequence += 1
                 entry = dict(call=call, rigId=packet.rig_id, selectedAt=now, band=band,
                              mode=packet.mode, frequency=packet.frequency, recency=self.selection_sequence,
-                             dxGrid=packet.fields.get('dxGrid', ''), deGrid=packet.fields.get('deGrid', ''))
+                             dxGrid=packet.fields.get('dxGrid', ''), deGrid=packet.fields.get('deGrid', ''),
+                             stationCall=packet.fields.get('deCall', ''))
                 self.history = [entry] + [e for e in self.history if e['call'] != call]
                 del self.history[self.history_limit:]
                 self.call, self.source = call, 'radio'

@@ -1,18 +1,18 @@
 export interface Rig { id: string; name: string; band: string; mode: string; color: string }
 export interface Profile { name: string; location: string; country: string; grid: string; initials: string; color: string; bio: string }
 export interface Qso { verifiedHistory?: boolean; observed?: boolean; observationStatus?: string; observedRig?: string; call?: string; stationId?: number; stationName?: string; confirmations?: { type: string; date: string }[]; details?: Record<string, string>; id: string; date: string; band: string; mode: string; sent: string; received: string; station: string; grid: string; confirmed: boolean | null }
-export interface Entry { call: string; rigId: string; selectedAt: number; band: string | null; mode?: string; frequency?: number; dxGrid?: string; deGrid?: string; browsedAt?: number; recency: number }
+export interface Entry { stationCall?: string; call: string; rigId: string; selectedAt: number; band: string | null; mode?: string; frequency?: number; dxGrid?: string; deGrid?: string; browsedAt?: number; recency: number }
 export type Lookup<T> = { status: 'pending' } | { status: 'loaded'; data: T; complete?: boolean; message?: string } | { status: 'empty' } | { status: 'error'; message: string }
 export interface QsoHistory { records: Qso[]; complete: boolean }
 export interface Providers { profile(call: string, delay?: number): Promise<Profile | null>; qsos(call: string, delay?: number): Promise<QsoHistory> }
-export interface LiveRig { id: string; name: string; band: string | null; mode: string; color: string; call: string; frequency: number; source?: string; lastSeen: number; online: boolean }
+export interface LiveRig { stationCall?: string; id: string; name: string; band: string | null; mode: string; color: string; call: string; frequency: number; source?: string; lastSeen: number; online: boolean }
 export interface Preferences { title: string; appearance: 'dark' | 'light'; radioStrip: boolean }
 export interface ReceiverConfig { enabled: boolean; listen: string; port: number; group: string; interface: string; retention: number }
 export interface ReceiverState extends Partial<ReceiverConfig> { status: 'disabled' | 'listening' | 'error'; error: string | null; lastPacketAt?: number }
 export interface DiagnosticRow { preview?: Record<string, string | number | boolean>; id: number; at: number; source: string; instance: string | null; kind: number | null; name: string; schema: number | null; size: number; error: string | null }
 export interface DiagnosticDetail extends DiagnosticRow { fields: Record<string, unknown>; rawBase64: string }
 export interface DiagnosticPage { generation: number; latest: number; limit: number; rows: DiagnosticRow[] }
-export interface Snapshot { observations?: ObservationState; historySettings?: HistorySettings; forwarding?: ForwardingState;  qso?: QsoServiceState; qsoHistory?: HistorySelectionState; wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
+export interface Snapshot { pskreporter?: PskReporterState; observations?: ObservationState; historySettings?: HistorySettings; forwarding?: ForwardingState;  qso?: QsoServiceState; qsoHistory?: HistorySelectionState; wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
 
 export interface EnrichmentConfig {
  enabled: boolean; source: 'countryfile' | 'clublogxml' | 'clublogapi' | 'qrz'; filename: string;
@@ -41,3 +41,6 @@ export interface HistorySummary { count?: number; complete?: boolean; source?: s
 export interface ObservationState { pending: number; capacity: number; error: string; summaries: Record<string, HistorySummary>; result: (WavelogResult & { pendingObserved?: number; historicalCount?: number; source?: string }) | null }
 export interface ForwardDestination { id: string; name: string; enabled: boolean; host: string; port: number; rigs: string[]; packets: number[]; format: 'raw' | 'enriched-adif' }
 export interface ForwardingState { config: { destinations: ForwardDestination[] }; error: string; loopDrops: number; completedQueued: number; destinations: { id: string; enabled: boolean; dispatched: number; filtered: number; dropped: number; lastSentAt: number | null; lastError: string; status: string; queued: number }[] }
+
+export interface ReceptionSpot { sender: string; receiver: string; grid: string; band: string; heardAt: number; frequency: number; mode: string; snr: number | null }
+export interface PskReporterState { config: { enabled: boolean; callsign: string; window_minutes: number }; status: string; error: string; callsigns: string[]; connectedAt: number | null; evicted: number; spots: ReceptionSpot[] }
