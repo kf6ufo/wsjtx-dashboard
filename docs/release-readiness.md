@@ -45,6 +45,25 @@ Same-call repeat clicks may not produce Status changes. Current-band counts incl
 
 Historical field-coverage validation at application `b2338e6` passed **179 backend tests**, **35 frontend tests**, type checking/build and **five affected browser workflows**. Those results precede this documentation branch. A Starlette/httpx deprecation and a separately loaded map-renderer size advisory remain.
 
+## RC1 validation — November 5
+
+The operator accepted the visual PSKReporter preview and authorized `0.9.0-rc.1` for testing on main through [PR #17](https://github.com/kf6ufo/wsjtx-dashboard/pull/17). Application source **`04c6644`** passed a fresh remote-clone installation on macOS arm64 / Python 3.13.1 / Node 24.21.0. The normal installer installed pinned Python dependencies (including Paho MQTT 2.1.0), ran `npm ci` and built the production frontend. Package and lockfile versions match RC1; frontend dependency versions are unchanged.
+
+| Check | Result |
+| --- | --- |
+| Backend suite, including installed shutdown | **252 passed** |
+| Frontend unit suite | **38 passed** |
+| Type checking / production build | Passed |
+| Chrome browser workflows | **8 passed**: 6 demo/fullscreen/reception, 1 installed shared workspace, 1 loopback receiver |
+| Local Markdown file/image/anchor links | Passed |
+| Real repeat install with legacy config | Preserved configuration, synthetic ADIF and all four SQLite stores byte-for-byte, including modes/ownership, enabled logging flags, one pending delivery and one synthetic receipt |
+| Legacy `[pskreporter]` omission | Valid; reception overlay remains disabled without changing saved configuration |
+| SQLite integrity after repeat install | All four stores returned `ok` |
+
+`npm audit` reported **seven moderately affected development-tooling packages**, through the existing glob/minimatch chains in vue-tsc and Vue test tools. `npm audit --omit=dev` reported **zero** affected runtime packages. The source lock was not changed to perform unrelated dependency upgrades. This evidence does not establish a comprehensive security audit. Existing bundle-size, Starlette/httpx deprecation and optional fsevents advisories remain.
+
+The earlier feature preview established actual TLS MQTT connection/subscription but received **zero reports in 45 seconds**. The offline fixture results do not establish ordinary live report ingestion. Ubuntu and other-browser acceptance of this feature remain unverified. No operating installation/configuration, station services, production logs or pending work were touched. No release tag, GitHub release or visibility change is included.
+
 ## Historical beta preparation validation — October 27
 
 On October 27, the documented installer was run from a **clean clone at `69e48aa`**, with a newly created virtual environment and `npm ci`, on actual macOS 26.6.1 arm64 / Python 3.13.1 / Node 24.21.0 / Chrome. Dependencies used the normal package caches where available; this is a clean installation, not an empty-cache download benchmark. Installation, type checking and production build passed. The built server served HTTP 200 on an isolated loopback port with receiver/providers/logging/forwarding disabled, and shut down gracefully. The live station on port 8787 was untouched.
