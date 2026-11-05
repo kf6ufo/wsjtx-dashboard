@@ -3,8 +3,8 @@
 *See who you're working. Know who you've worked. Log the contact automatically.*
 
 > [!WARNING]
-> **Beta software — `v0.9.0-beta.1`**
-> This beta is intended for testing and may contain bugs, incomplete behavior or unverified integrations. Back up your configuration and QSO data, and verify logging results before relying on it. See [known limitations and release readiness](docs/release-readiness.md).
+> **Release Candidate 1 (RC1) — `v0.9.0-rc.1`**
+> This release candidate is intended for testing and may contain bugs, incomplete behavior or unverified integrations. Back up your configuration and QSO data, and verify logging results before relying on it. See [known limitations and release readiness](docs/release-readiness.md).
 
 [![WSJT-X Dashboard showing a fictional selected station, profile illustration, worked-before indicators and station details](docs/assets/dashboard-hero.png)](docs/assets/dashboard-hero.png)
 
@@ -31,12 +31,13 @@
 
 **Use one uploader per contact.** Disable competing WaveLogGate or downstream upload routes before enabling Dashboard's Wavelog logging to avoid duplicate QSOs. Dashboard does not disable other applications for you. [Logging setup and recovery](docs/logging.md).
 
-**Proposed first pre-release: v0.9.0-beta.1.** The core application is implemented; beta preparation focuses on documentation and verification. macOS has been exercised on real station hardware; the operator also reports successful Ubuntu testing. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
+**Release Candidate 1: v0.9.0-rc.1.** Approved for testing from `main`, including the PSKReporter reception overlay. A GitHub release/tag has not been published. macOS has been exercised on real station hardware; the operator also reports successful Ubuntu testing. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
 
 ## At the operating desk
 
 - **Click to focus from WSJT-X.** Click a callsign in WSJT-X to select a different station and see available operator details, QRZ photographs, location and a zoomable map in the Dashboard. The callsign appears first; lookups follow without interrupting you.
 - **Know your history.** Compact callsign and current-band indicators show whether you have worked the station. Browse previous QSOs, bands and modes. Failed or incomplete history never becomes a false “NEW”.
+- **See who hears you.** Optional PSKReporter MQTT dots show recent receivers of your transmitted callsign on the focus band. An inner amber dot marks reception by the focused station; choose a 5–60 minute window. [Reception map setup](docs/pskreporter.md).
 - **Revisit a contact.** Shared Focus History follows deliberate selections across multiple WSJT-X instances. Browse an older station without changing the radio.
 - **Fill a station monitor.** Full-screen mode trims browser and Dashboard headings while keeping navigation and radio status available. Use a separate window on each monitor as needed.
 - **Improve the record before logging.** Optional pyhamtools and QRZ enrichment fills reliable missing information, including QSL routing, contact details and calculated distance. Original WSJT-X values take priority, reducing later callbook-update work.
@@ -64,7 +65,7 @@ After installation succeeds, start Dashboard:
 .venv/bin/python -m backend.server
 ```
 
-Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the proposed beta tag does **not** exist yet. Repository access is required while the project remains private.
+Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the RC1 tag does **not** exist yet. Repository access is required while the project remains private.
 
 Next, configure [WSJT-X → Settings → Reporting → UDP Server (primary)](docs/wsjtx-reporting.md), then match that destination in **Dashboard → Settings → Radio receiver** and enable reception. The deprecated secondary UDP server is not required. For multicast, select the Dashboard computer's receiving interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
 
@@ -102,9 +103,9 @@ Start with reception and history. When enabling logging, ensure another uploader
 
 [Documentation home](docs/README.md) · [Installation & updates](docs/installation.md) · [Quick start](docs/quick-start.md) · [Configuration](docs/configuration.md) · [Using the Dashboard](docs/using-dashboard.md) · [Logging & recovery](docs/logging.md) · [Troubleshooting](docs/troubleshooting.md) · [Architecture](docs/architecture.md)
 
-[Changelog](CHANGELOG.md) · [Draft beta release notes](docs/releases/v0.9.0-beta.1.md) · [Readiness checklist](docs/release-readiness.md) · [QSO field audit](docs/qso-field-audit.md) · [Development checks](docs/development.md)
+[Changelog](CHANGELOG.md) · [RC1 notes](docs/releases/v0.9.0-rc.1.md) · [Readiness checklist](docs/release-readiness.md) · [QSO field audit](docs/qso-field-audit.md) · [Development checks](docs/development.md)
 
-## Beta status
+## Release candidate status
 
 The Dashboard has been tested on **macOS and Ubuntu**, including successful Ubuntu testing reported by the operator. Detailed macOS evidence includes multiple WSJT-X radios, QRZ/Wavelog reads and GridTracker2 reception. Enriched logging, recovery and field selection have extensive isolated automated coverage, but full isolated Wavelog write/outage acceptance and the new optional-field live export check remain outstanding. Windows, Docker, MacLoggerDX integration and inline biography retrieval remain unverified or deferred. [Evidence and limits](docs/release-readiness.md).
 

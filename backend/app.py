@@ -27,6 +27,9 @@ from .history_config import HistorySettings
 from .forwarding_config import ForwardingSettings
 from .forwarding import ForwardingService
 from .observations import ObservationService
+from .pskreporter import PskReporterService
+from .pskreporter_config import PskReporterSettings
+from .config import save_pskreporter_config
 from .config import save_history_config, save_forwarding_config
 
 
@@ -41,7 +44,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
     enrich = None
     wavelog = None
     qso_history = delivery = None
-    observations = forwarding = None
+    observations = forwarding = pskreporter = None
     config_lock = asyncio.Lock()
     if runtime and config_path:
         enrichment_settings = enrichment_settings or load_config(config_path).enrichment
@@ -60,6 +63,8 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         state.observations = observations
         forwarding = ForwardingService(state, load_config(config_path).forwarding, enrich, lambda: delivery.settings, config_path.parent / 'data' / 'forwarding.sqlite3')
         state.forwarding = forwarding
+        pskreporter = PskReporterService(state, load_config(config_path).pskreporter)
+        state.pskreporter = pskreporter
 
     async def maintenance():
         ticks = 0
@@ -84,6 +89,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
             if delivery: await delivery.start()
             if observations: await observations.start()
             if forwarding: await forwarding.start()
+            if pskreporter: await pskreporter.start()
             maintenance_task = asyncio.create_task(maintenance())
         elif settings.enabled:
             try:
@@ -100,6 +106,7 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
                 maintenance_task.cancel()
                 with suppress(asyncio.CancelledError): await maintenance_task
             if runtime: await runtime.stop()
+            if pskreporter: await pskreporter.stop()
             if forwarding: await forwarding.stop()
             if observations: await observations.stop()
             if delivery: await delivery.stop()
@@ -293,6 +300,20 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
 
         @app.get('/api/forwarding')
         async def forwarding_status(): return forwarding.snapshot()
+
+    if pskreporter:
+        @app.put('/api/pskreporter')
+        async def pskreporter_settings(request: Request):
+            try:
+                body = await request.json()
+                if not isinstance(body, dict): raise ValueError()
+                new = PskReporterSettings(**body)
+                async with config_lock:
+                    save_pskreporter_config(config_path, new)
+                    await pskreporter.configure(new)
+            except (ValueError, TypeError, OSError):
+                raise HTTPException(422, 'PSKReporter settings could not be saved. Use a valid uppercase callsign and 5, 15, 30 or 60 minutes.')
+            return state.snapshot()
 
     if runtime:
         class ReceiverRequest(BaseModel):

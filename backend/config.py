@@ -9,6 +9,7 @@ from .wavelog_config import WavelogSettings
 from .qso_config import QsoSettings
 from .history_config import HistorySettings
 from .forwarding_config import ForwardingSettings
+from .pskreporter_config import PskReporterSettings
 
 
 @dataclass(frozen=True)
@@ -21,13 +22,14 @@ class ServerConfig:
     qso: QsoSettings = field(default_factory=QsoSettings)
     history: HistorySettings = field(default_factory=HistorySettings)
     forwarding: ForwardingSettings = field(default_factory=ForwardingSettings)
+    pskreporter: PskReporterSettings = field(default_factory=PskReporterSettings)
 
 
 def load_config(path: Path) -> ServerConfig:
     try:
         with path.open('rb') as source:
             data = tomllib.load(source)
-        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment', 'wavelog', 'qso', 'history', 'forwarding'}:
+        if not {'http', 'wsjtx'} <= set(data) or set(data) - {'http', 'wsjtx', 'enrichment', 'wavelog', 'qso', 'history', 'forwarding', 'pskreporter'}:
             raise ValueError('Expected [http], [wsjtx], optional [enrichment] and [wavelog] sections')
         http, radio = data['http'], data['wsjtx']
         if set(http) != {'host', 'port'} or not {'enabled', 'group', 'port', 'interface'} <= set(radio) or set(radio) - {'enabled', 'group', 'port', 'interface', 'listen', 'retention'}:
@@ -46,7 +48,7 @@ def load_config(path: Path) -> ServerConfig:
         if not any(address in ipaddress.IPv4Network(network) for network in private_networks):
             raise ValueError('http.host must be a specific private LAN or loopback IPv4 address')
         receiver = Settings(**radio)
-        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})), WavelogSettings(**data.get('wavelog', {})), QsoSettings(**data.get('qso', {})), HistorySettings(**data.get('history', {})), ForwardingSettings(**data.get('forwarding', {})))
+        return ServerConfig(http['host'], http['port'], receiver, EnrichmentSettings(**data.get('enrichment', {})), WavelogSettings(**data.get('wavelog', {})), QsoSettings(**data.get('qso', {})), HistorySettings(**data.get('history', {})), ForwardingSettings(**data.get('forwarding', {})), PskReporterSettings(**data.get('pskreporter', {})))
     except (OSError, ValueError, TypeError, KeyError) as exc:
         raise ValueError(f'Configuration error in {path}: {exc}') from exc
 
@@ -82,6 +84,11 @@ def save_history_config(path: Path, settings: HistorySettings):
 def save_forwarding_config(path: Path, settings: ForwardingSettings):
     from dataclasses import asdict
     _save_section(path, 'forwarding', asdict(settings))
+
+
+def save_pskreporter_config(path: Path, settings: PskReporterSettings):
+    from dataclasses import asdict
+    _save_section(path, 'pskreporter', asdict(settings))
 
 
 def _save_section(path: Path, section_name: str, values: dict):

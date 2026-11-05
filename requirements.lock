@@ -28,3 +28,6 @@ urllib3==2.8.0
 
 # Strict record framing/completeness wraps the maintained ADIF field parser.
 adif-io==0.6.1
+
+# Receive-only PSKReporter MQTT client (no transitive dependencies).
+paho-mqtt==2.1.0

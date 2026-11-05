@@ -94,3 +94,7 @@ Up to 16 named destinations each have enablement, host, port, exact instance fil
 Use a unicast destination and available port. Empty instance filters include all heard instances. Targets feeding Dashboard's own receiver are rejected. Dispatch counts mean network sends, not remote acknowledgement/storage. Forwarding is independent of logging; prevent downstream applications from uploading a second copy. [Compatibility limits](release-readiness.md).
 
 [config.example.toml](../config.example.toml) lists complete defaults. Do not overwrite an existing configuration with defaults during upgrade.
+
+## PSKReporter reception map
+
+The optional **PSKReporter** section enables recent “heard me” dots for your transmitting callsign on the focused station's band. It uses one shared MQTT connection, without XML polling. The default is off; choose 5, 15, 30 or 60 minutes. Leave the callsign override blank for WSJT-X identity. [Behavior, isolated visual preview and acceptance limits](pskreporter.md).

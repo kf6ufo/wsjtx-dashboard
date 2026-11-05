@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { nextTick } from 'vue'
-export type SettingsSection = 'workspace' | 'receiver' | 'enrichment' | 'wavelog' | 'qso' | 'history' | 'forwarding' | 'installation'
+export type SettingsSection = 'workspace' | 'receiver' | 'enrichment' | 'wavelog' | 'qso' | 'history' | 'forwarding' | 'pskreporter' | 'installation'
 const section = defineModel<SettingsSection>({ default: 'workspace' })
 const sections: { id: SettingsSection; label: string }[] = [
  { id: 'workspace', label: 'Workspace' }, { id: 'receiver', label: 'Radio receiver' },
  { id: 'enrichment', label: 'Callbook & enrichment' }, { id: 'wavelog', label: 'Wavelog connection' },
  { id: 'qso', label: 'QSO history & logging' }, { id: 'history', label: 'Focus History' },
+ { id: 'pskreporter', label: 'PSKReporter' },
  { id: 'forwarding', label: 'UDP forwarding' }, { id: 'installation', label: 'Installation' },
 ]
 async function navigate(event: KeyboardEvent, index: number) {

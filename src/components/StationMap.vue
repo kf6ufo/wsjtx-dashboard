@@ -1,21 +1,54 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Map as LeafletMap, LayerGroup } from 'leaflet'
-import type { EnrichmentState, Entry } from '../types'
-import { stationMapLocation } from '../stationMap'
+import type { EnrichmentState, Entry, PskReporterState } from '../types'
+import { gridLocation, stationMapLocation } from '../stationMap'
+import { receptionLabel, receptionSpots } from '../pskreporter'
 import { englishMapStyle, MAP_ATTRIBUTION, MAP_STYLE_URL } from '../mapStyle'
 import 'leaflet/dist/leaflet.css'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 
-const props = defineProps<{ call: string; entry?: Entry; enrichment?: EnrichmentState }>()
+const props = defineProps<{ call: string; entry?: Entry; enrichment?: EnrichmentState; receptions?: PskReporterState; sender?: string; connected?: boolean }>()
 const location = computed(() => stationMapLocation(props.call, props.entry, props.enrichment))
+const minutes = ref(props.receptions?.config.window_minutes ?? 15), now = ref(Date.now())
+const spots = computed(() => receptionSpots(props.receptions, props.sender ?? '', props.entry?.band, minutes.value, now.value))
+const focusSpot = computed(() => spots.value.find(spot => spot.receiver === props.call))
+const receptionStatus = computed(() => {
+ const feed = props.receptions
+ if (!feed?.config.enabled) return 'Reception overlay off · enable PSKReporter in Settings.'
+ if (!props.connected) return 'Dashboard disconnected · reports may be incomplete; recent dots continue to expire.'
+ if (!props.sender) return 'Waiting for the selected radio’s station callsign. Set a callsign override in PSKReporter Settings if needed.'
+ if (!props.entry?.band) return 'Focus band unknown · no reception dots shown.'
+ if (feed.status !== 'connected') return `PSKReporter ${feed.status} · ${feed.error || 'Waiting for the live feed.'} Recent dots continue to expire.`
+ return `${spots.value.length} ${spots.value.length === 1 ? 'station' : 'stations'} reported hearing ${props.sender} on ${props.entry.band} · last ${minutes.value} min · collecting while Dashboard runs`
+})
 const host = ref<HTMLDivElement>(), tilesFailed = ref(false), mapFailed = ref(false), zoom = ref(4), ready = ref(false)
 const basemapReady = ref(false)
-let map: LeafletMap | undefined, markers: LayerGroup | undefined, observer: ResizeObserver | undefined
+let map: LeafletMap | undefined, markers: LayerGroup | undefined, receptionMarkers: LayerGroup | undefined, observer: ResizeObserver | undefined
+let ageTimer: number | undefined
 let basemapRequest: AbortController | undefined
 let mounted = false, generation = 0
-function destroy() { ready.value = false; basemapReady.value = false; basemapRequest?.abort(); observer?.disconnect(); observer = undefined; map?.remove(); map = undefined; markers = undefined }
+function destroy() { ready.value = false; basemapReady.value = false; basemapRequest?.abort(); observer?.disconnect(); observer = undefined; map?.remove(); map = undefined; markers = undefined; receptionMarkers = undefined }
+async function updateReceptions() {
+ const target = map
+ if (!target || !receptionMarkers) return
+ const L = await import('leaflet')
+ if (map !== target || !receptionMarkers) return
+ receptionMarkers.clearLayers()
+ for (const spot of spots.value) {
+  const point = spot.receiver === props.call ? location.value : gridLocation(spot.grid)
+  if (!point) continue
+  const text = document.createElement('span'); text.textContent = receptionLabel(spot, now.value)
+  // Plot nearby receivers across the date line in the focus station's world.
+  const lng = point.lng + 360 * Math.round(((location.value?.lng ?? point.lng) - point.lng) / 360)
+  const marker = L.marker([point.lat, lng], {
+   icon: L.divIcon({ className: 'station-map-reception', html: '<span aria-hidden="true"></span>', iconSize: [10, 10], iconAnchor: [5, 5] }),
+   title: text.textContent, keyboard: true, zIndexOffset: spot.receiver === props.call ? 1100 : 1000,
+  }).bindTooltip(text, { direction: 'top' }).addTo(receptionMarkers)
+  marker.getElement()?.setAttribute('aria-label', text.textContent)
+ }
+}
 async function loadBasemap(target: LeafletMap) {
  const controller = basemapRequest = new AbortController()
  const timeout = window.setTimeout(() => controller.abort(), 10000)
@@ -59,6 +92,7 @@ async function update() {
    map.attributionControl.addAttribution(MAP_ATTRIBUTION)
    L.control.scale({ imperial: false }).addTo(map)
    markers = L.layerGroup().addTo(map)
+   receptionMarkers = L.layerGroup().addTo(map)
    map.on('zoomend', () => { zoom.value = map!.getZoom() })
    // v-show navigation and column resizing must not leave a half-rendered map.
    observer = new ResizeObserver(() => { if (host.value?.clientWidth) map?.invalidateSize({ pan: false }) })
@@ -76,16 +110,25 @@ async function update() {
   if (!basemapRequest || basemapRequest.signal.aborted) void loadBasemap(map)
   marker.getElement()?.setAttribute('aria-label', `Station location for ${props.call}`)
   ready.value = true
+  void updateReceptions()
  } catch { if (request === generation) { destroy(); mapFailed.value = true } }
 }
 watch(() => JSON.stringify([props.call, location.value]), update)
-onMounted(() => { mounted = true; update() })
-onBeforeUnmount(() => { mounted = false; generation++; destroy() })
+watch(() => props.receptions?.config.window_minutes, value => { if (value) minutes.value = value })
+watch(() => JSON.stringify([spots.value, props.call, Math.floor(now.value / 60000)]), updateReceptions)
+onMounted(() => { mounted = true; update(); ageTimer = window.setInterval(() => { now.value = Date.now() }, 10000) })
+onBeforeUnmount(() => { mounted = false; generation++; window.clearInterval(ageTimer); destroy() })
 </script>
 <template>
  <section class="station-map" aria-labelledby="station-map-title">
   <div class="station-map-heading"><div><h3 id="station-map-title">Station map</h3><p v-if="location">{{ call }} · {{ location.label }} · {{ location.detail }}</p></div><div v-if="location" class="station-map-controls" aria-label="Map controls"><button class="btn console-button" :disabled="zoom >= 19 || !ready" aria-label="Zoom in station map" @click="map?.zoomIn()">+</button><button class="btn console-button" :disabled="zoom <= 2 || !ready" aria-label="Zoom out station map" @click="map?.zoomOut()">−</button><button class="btn console-button" :disabled="!ready" @click="center">Center station</button></div></div>
+  <div v-if="receptions?.config.enabled" class="station-map-reception-bar">
+   <span><i class="reception-legend-dot" aria-hidden="true"></i> Heard {{ sender || 'me' }}<span v-if="entry?.band"> · {{ entry.band }}</span></span>
+   <label>Show <select v-model.number="minutes" aria-label="Reception time window"><option v-for="n in [5,15,30,60]" :key="n" :value="n">Last {{ n }} min</option></select></label>
+  </div>
+  <p v-if="receptions" class="station-map-note" role="status">{{ receptionStatus }}<span v-if="focusSpot"> · {{ call }} heard you {{ Math.max(0, Math.floor((now - focusSpot.heardAt) / 60000)) }} min ago (inner amber dot).</span><span v-if="receptions.evicted"> · Reception cache reached capacity; some reports were dropped.</span></p>
   <p v-if="!location" class="station-map-empty" role="status">{{ enrichment?.result.call === call && enrichment.result.status === 'pending' ? `Locating ${call}…` : 'Station location unavailable. A reported grid or callbook location is needed.' }}</p>
   <template v-else><div ref="host" class="station-map-canvas" role="region" :aria-label="`Map showing ${call}`" :data-lat="location.lat" :data-lng="location.lng" :data-zoom="zoom" :data-basemap-state="tilesFailed ? 'unavailable' : basemapReady ? 'ready' : 'loading'" @wheel.capture="modifierZoom"></div><p v-if="mapFailed" class="station-map-note error-text" role="status">Map could not load. Refresh the page to try again.</p><p v-else-if="tilesFailed" class="station-map-note" role="status">Base map unavailable. The station marker is still shown; map tiles need an internet connection and a browser with WebGL support.</p></template>
+  <p v-if="receptions?.config.enabled" class="station-map-note reception-footnote">PSKReporter · reports may be delayed; no dot means no recent report. Dots use approximate receiver grids. Focus reception stays centered inside its marker. <a href="https://www.mqtt.pskreporter.info/" target="_blank" rel="noopener noreferrer">Feed by M0LTE, data by PSKReporter ↗</a></p>
  </section>
 </template>
