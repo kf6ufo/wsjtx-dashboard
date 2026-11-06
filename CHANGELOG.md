@@ -6,6 +6,9 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Added
 
+- November 6 testing update: executable `run.sh` starts the installed server without virtual-environment activation and forwards `--config` arguments. Installer/updater output and current startup instructions point to the launcher.
+- Refreshed standard/full-screen documentation imagery and a reception-map close-up show nine fictional PSKReporter dots, including the focus station’s inner dot, with retained map attribution.
+
 - November 6 testing update: separate UDP and PSKReporter MQTT Diagnostics tabs, broker acknowledgement and message/filter counters, bounded report/rejection/connection activity, and scoped pause/clear controls. Version remains `0.9.0-rc.1`.
 
 - Optional PSKReporter MQTT reception overlay: small amber receiver dots for your transmitted callsign on the focus band, including an inner dot when the focused station reports hearing you.

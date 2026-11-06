@@ -4,7 +4,6 @@ import os
 import signal
 import socket
 import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -18,15 +17,17 @@ def test_installed_server_stops_with_open_browser_stream(tmp_path):
     with socket.socket() as reserve:
         reserve.bind(('127.0.0.1', 0))
         port = reserve.getsockname()[1]
-    config = tmp_path / 'config.toml'
+    config = tmp_path / 'custom config.toml'
     config.write_text((ROOT / 'config.example.toml').read_text().replace('8787', str(port)))
     before = config.read_bytes()
     # Reuse the same configuration and databases across a real process restart.
     for _ in range(2):
         # Retired environment settings must not override or break the TOML install.
-        environment = dict(os.environ, WSJTX_RECEIVER='retired-value', WSJTX_PORT='invalid')
-        child = subprocess.Popen([sys.executable, '-m', 'backend.server', '--config', str(config)],
-                                 cwd=ROOT, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        environment = dict(os.environ, WSJTX_RECEIVER='retired-value', WSJTX_PORT='invalid', VIRTUAL_ENV='/unrelated/environment')
+        # Launch outside the checkout, with spaces in the config path and an
+        # unrelated active environment. Signals must reach the server directly.
+        child = subprocess.Popen([str(ROOT / 'run.sh'), '--config', str(config)],
+                                 cwd=tmp_path, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stream = None
         try:
             deadline = time.monotonic() + 10

@@ -56,7 +56,7 @@
     phase='installation'
     if ./install.sh; then
         printf 'Update successful.\nPrevious commit: %s\nUpdated commit: %s\n' "$previous" "$updated"
-        printf 'Restart Dashboard manually with your usual configuration or service only after success.\n'
+        printf 'Restart Dashboard manually with ./run.sh and your usual configuration arguments, or use your existing service, only after success.\n'
     else
         code=$?
         fail "Installer failed (exit $code). Source remains at $updated; no rollback was attempted. Fix the error and rerun ./update.sh before restarting Dashboard."

@@ -7,9 +7,10 @@
 | Task | Command | When to run it |
 | --- | --- | --- |
 | First installation | `./install.sh` | After cloning the repository; then start Dashboard |
+| Start or restart Dashboard | `./run.sh` | After installation/update succeeds; Ctrl+C stops it |
 | Update an existing installation | `./update.sh` | After stopping Dashboard and backing up its files; restart only after success |
 
-Run both as your normal user, without sudo. The updater calls the installer automatically, including temporary Node setup. Follow the detailed [first-install steps](#install-from-source) or [update/backup steps](#updates-and-backups) below.
+Run these commands as your normal user, without sudo. The updater calls the installer automatically, including temporary Node setup. Follow the detailed [first-install steps](#install-from-source) or [update/backup steps](#updates-and-backups) below.
 
 ## Platforms and requirements
 
@@ -64,7 +65,7 @@ git rev-parse HEAD
 After installation reports success, start the server:
 
 ```sh
-.venv/bin/python -m backend.server
+./run.sh
 ```
 
 If `python3` selects an unsupported version, for example use `PYTHON=python3.13 ./install.sh`. Run one command at a time and stop on failure. The proposed beta tag is not published: these commands use `main`. Once a release is approved, select the actual published revision rather than assuming a proposed tag exists.
@@ -76,7 +77,7 @@ The installer creates `.venv`, installs pinned Python dependencies, runs `npm ci
 From the installation directory:
 
 ```sh
-.venv/bin/python -m backend.server
+./run.sh
 ```
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open. Ctrl+C stops the server; allow time for open browser streams and in-flight requests to settle. Rerun the same command to restart. Logs appear in the terminal.
@@ -84,8 +85,10 @@ Open **http://127.0.0.1:8787/**. Keep the terminal open. Ctrl+C stops the server
 An alternative configuration location is supported:
 
 ```sh
-.venv/bin/python -m backend.server --config /absolute/path/to/config.toml
+./run.sh --config /absolute/path/to/config.toml
 ```
+
+`run.sh` uses the Python environment beside the script, so you do not need to activate a virtual environment. You can also launch it by its absolute path from another directory. All arguments are forwarded to the existing server entry point; relative `--config` paths are resolved from the installation directory. If the environment is missing, the launcher asks you to run `./install.sh`. It does not install dependencies, start background services or modify saved settings. The direct `.venv/bin/python -m backend.server` command remains supported.
 
 The `data/` directory lives beside that configuration file; built frontend assets come from the source checkout. Start the intended checkout/configuration combination. HTTP host/port changes require restart; most Settings changes apply immediately.
 
@@ -125,7 +128,7 @@ The updater verifies its Git root, expected project files, GitHub `origin` ident
 **Only after an explicit “Update successful” message**, restart the foreground server using the same configuration as before:
 
 ```sh
-.venv/bin/python -m backend.server
+./run.sh
 ```
 
 If you use `--config /absolute/path/to/config.toml`, retain that argument when restarting and back up that configuration's adjacent `data/` directory as well. The installer validates the checkout's configuration; it does not reset either configuration or relocate queued targets.

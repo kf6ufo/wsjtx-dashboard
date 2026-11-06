@@ -2,6 +2,10 @@
 
 Introduced in `v0.9.0-rc.1` (RC1). The operator accepted the visual preview on November 5, 2026 and approved publication to `main` for testing. Publication does not update or restart an operating installation.
 
+![Station map with fictional PSKReporter receivers on 20m, including an inner amber dot in the focus marker](assets/pskreporter-map.png)
+
+*Fictional reception reports in the actual interface: smaller amber dots show nearby receivers; the inner dot shows that the focused station heard the transmitting callsign. [Screenshot provenance](assets/README.md).*
+
 Enable **Settings → PSKReporter → Show recent reception reports**, choose a default window and save. Leave the transmitting callsign override blank to use the selected WSJT-X rig's station callsign. An explicit override supports installations without a reported identity. Existing configuration remains valid and the overlay defaults off.
 
 The Station map shows small amber receiver dots for reports that match **your transmitting callsign and the focus entry's band**. All modes on that band count. The selected station keeps its larger teal marker; an amber dot inside it means that exact receiver callsign reported hearing you. That inner dot is placed at the existing focus marker even if the receiver reported a coarser/different grid. Other receivers use their reported Maidenhead grid centers. Locations are approximate. Hover or keyboard-focus a dot for receiver, sender, band, mode, SNR and report age.

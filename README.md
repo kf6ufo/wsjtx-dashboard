@@ -12,9 +12,9 @@
 
 **Click a callsign in WSJT-X to focus the Dashboard on that station.** With UDP reporting connected, selecting a different station in WSJT-X immediately brings its callsign into focus; available operator details, photographs, map and worked-before information load automatically.
 
-![WSJT-X Dashboard in full screen with compact controls, fictional station information, worked-before indicators, map and contact history](docs/assets/dashboard-fullscreen.png)
+![WSJT-X Dashboard in full screen with compact controls, fictional station information, worked-before indicators, map with PSKReporter reception dots and contact history](docs/assets/dashboard-fullscreen.png)
 
-*The actual Station interface in full-screen mode, with fictional demonstration records and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View full screen at full resolution](docs/assets/dashboard-fullscreen.png) · [Compare the standard window view](docs/assets/dashboard.png).*
+*The actual Station interface in full-screen mode, with fictional demonstration records, PSKReporter reception dots and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View full screen at full resolution](docs/assets/dashboard-fullscreen.png) · [Compare the standard window view](docs/assets/dashboard.png) · [Reception-map close-up](docs/assets/pskreporter-map.png).*
 
 **Give Dashboard a monitor of its own.** Move its browser window onto your chosen monitor and click **Full screen**. Browser tabs/address bar and the Dashboard title/footer disappear, leaving a compact toolbar and more room for station information. Press **Esc** or click **Exit full screen** to return. [Full screen and multiple monitors](docs/using-dashboard.md#full-screen-and-multiple-monitors).
 
@@ -59,10 +59,10 @@ cd wsjtx-dashboard
 ./install.sh
 ```
 
-After installation succeeds, start Dashboard:
+After installation succeeds, start Dashboard (no virtual-environment activation needed):
 
 ```sh
-.venv/bin/python -m backend.server
+./run.sh
 ```
 
 Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the RC1 tag does **not** exist yet. Repository access is required while the project remains private.
@@ -81,7 +81,7 @@ Next, configure [WSJT-X → Settings → Reporting → UDP Server (primary)](doc
 3. Only after **Update successful**, restart with the same configuration as before:
 
    ```sh
-   .venv/bin/python -m backend.server
+   ./run.sh
    ```
 
 The updater checks the repository/branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. It never manages services. Retain any custom `--config` argument; see the [full update and service instructions](docs/installation.md#updates-and-backups).

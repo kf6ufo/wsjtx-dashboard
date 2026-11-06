@@ -108,7 +108,7 @@ def main():
                 print('Running:', ' '.join(command), flush=True)
                 subprocess.run(command, cwd=ROOT, check=True, env=environment)
         print(f'Installation complete. Configuration preserved: {config}')
-        print('Start: .venv/bin/python -m backend.server')
+        print('Start: ./run.sh')
         print(f'Browser: http://{settings.host}:{settings.port}/')
         return 0
     except (ValueError, OSError, tarfile.TarError, subprocess.SubprocessError) as exc:

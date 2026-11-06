@@ -1,0 +1,9 @@
+#!/bin/sh
+# Foreground launcher: use this installation's Python without activating a venv.
+set -eu
+cd "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ ! -x .venv/bin/python ]; then
+    printf 'Dashboard Python environment is missing. Run ./install.sh successfully before ./run.sh.\n' >&2
+    exit 1
+fi
+exec .venv/bin/python -m backend.server "$@"
