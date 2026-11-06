@@ -34,6 +34,10 @@ If packets arrive but focus does not change, check the heard-instance filter and
 | Old data during an outage | Previously loaded results can remain stale/incomplete; source and completeness indicate the limit |
 | Observed locally / awaiting reconciliation | The completion was heard; it is not yet matched to confirmed source history. Check actual logging/destination status separately |
 
+## PSKReporter reception dots
+
+Open **Diagnostics → PSKReporter MQTT** after updating to the diagnostics follow-up on `main`. If it says disabled, enable **Settings → PSKReporter** and save; an update preserves the previous disabled flag. Check the transmitting callsign, broker acknowledgement, incoming message count and last-message time. If reports arrive but dots are absent, compare rejected-report reasons and cached bands with the focus band and saved window. A radio operating on another band does not contribute dots to the current focus. Collection has no historical backfill. [Step-by-step MQTT diagnosis](pskreporter.md#diagnostics).
+
 ## Logging and forwarding
 
 No queued QSO? Confirm **Logged ADIF type 12**, logging enablement, destination and captured identity. A packet can be received without being eligible for logging. UDP can be lost before it reaches Dashboard; there is no automatic import from WSJT-X's log to recover missed events.

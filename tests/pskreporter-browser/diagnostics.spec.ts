@@ -1,0 +1,54 @@
+import { test, expect } from '@playwright/test'
+import { mockMapTiles } from '../mapTiles'
+
+test('UDP and MQTT diagnostics distinguish wire traffic, filtering and map matches without changing collection', async ({ browser,request,baseURL }) => {
+ const first=await browser.newPage(), second=await browser.newPage(), errors:string[]=[]
+ for (const page of [first,second]) { await mockMapTiles(page); page.on('pageerror',error=>errors.push(error.message)); await page.goto(baseURL!) }
+ await expect(second.locator('.station-map-reception')).toHaveCount(5)
+ const original=(await(await request.get('/api/snapshot')).json()).history
+ await first.getByRole('button',{name:'Diagnostics',exact:true}).click()
+ await expect(first.getByRole('tab',{name:'UDP',exact:true})).toHaveAttribute('aria-selected','true')
+ await first.getByLabel('Radio activity').selectOption('signals')
+ await first.getByRole('tab',{name:'PSKReporter MQTT',exact:true}).click()
+ const panel=first.getByRole('region',{name:'PSKReporter MQTT diagnostics',exact:true})
+ await expect(panel.locator('.psk-subscriptions')).toContainText('acknowledged')
+ await expect(panel.locator('.psk-subscriptions')).toContainText('pskr/filter/v2/+/+/N0CALL/#')
+ await expect(panel.locator('.psk-context')).toContainText('20m · saved window 15 min')
+ const stats=panel.locator('.psk-stats article strong')
+ await expect(stats).toHaveText(['11','7','3','1','7','5'])
+ await expect(panel.locator('.psk-band-list')).toContainText('N0CALL · 15m · 1')
+ await expect(panel.locator('.psk-band-list')).toContainText('N0CALL · 20m · 6')
+ await panel.getByLabel('Reception outcome').selectOption('rejected')
+ await expect(panel.locator('.psk-report-table tbody tr')).toHaveCount(3)
+ await expect(panel.locator('.psk-report-table')).toContainText('Missing or invalid receiver grid')
+ await expect(panel.locator('.psk-report-table')).toContainText('Report older than one hour')
+ await expect(panel.locator('.psk-report-table')).toContainText('Invalid JSON')
+ await panel.screenshot({path:'test-results/psk-diagnostics-dark.png'})
+ // Tab changes preserve UDP filters, and keyboard navigation follows tab semantics.
+ await first.getByRole('tab',{name:'UDP',exact:true}).click()
+ await expect(first.getByLabel('Radio activity')).toHaveValue('signals')
+ await first.getByRole('tab',{name:'UDP',exact:true}).press('ArrowRight')
+ await expect(first.getByRole('tab',{name:'PSKReporter MQTT',exact:true})).toBeFocused()
+ await panel.getByRole('button',{name:'Pause MQTT display',exact:true}).click()
+ await panel.getByRole('button',{name:'Clear MQTT diagnostic rows',exact:true}).click()
+ await expect(panel.locator('.psk-report-table')).toContainText('No retained messages')
+ await expect(stats).toHaveText(['11','7','3','1','7','5'])
+ await expect(second.locator('.station-map-reception')).toHaveCount(5)
+ expect((await(await request.get('/api/snapshot')).json()).history).toEqual(original)
+ // Failure keeps the last response clearly stale, rather than replacing it with zeroes.
+ await first.route('**/api/pskreporter/diagnostics',route=>route.fulfill({status:503,body:'Unavailable'}))
+ await panel.getByRole('button',{name:'Resume MQTT display',exact:true}).click()
+ await expect(panel.getByRole('alert')).toContainText('Last successful diagnostic response')
+ await expect(stats).toHaveText(['11','7','3','1','7','5'])
+ await first.unroute('**/api/pskreporter/diagnostics')
+ await expect(panel.getByRole('alert')).toHaveCount(0)
+ await first.setViewportSize({width:390,height:844})
+ expect(await first.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ await panel.screenshot({path:'test-results/psk-diagnostics-mobile.png'})
+ // A disabled installation explicitly explains the absence of reports.
+ await request.put('/api/pskreporter',{data:{enabled:false,callsign:'N0CALL',window_minutes:15}})
+ await expect(panel.getByRole('status')).toContainText('PSKReporter is disabled')
+ await expect(panel.locator('.psk-subscriptions')).toContainText('No subscriptions: PSKReporter is disabled.')
+ expect(errors).toEqual([])
+ await first.close();await second.close()
+})

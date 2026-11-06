@@ -16,6 +16,23 @@ The volatile cache keeps the latest report per sender/band/receiver for one hour
 
 The implementation follows the [feed operator's endpoints, topic layout and JSON schema](https://www.mqtt.pskreporter.info/) and [timestamp guidance](https://www.mqtt.pskreporter.info/timing.html): frequency determines band, `t_tx` takes precedence over `t`, and old, malformed, wrong-sender or invalid-grid reports are rejected. TLS certificate verification stays enabled on `mqtt.pskreporter.info:1884`. Paho MQTT 2.1.0 is pinned in `requirements.lock`; [Paho's client documentation](https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html) describes connection/reconnect behavior. Only subscribe/unsubscribe and connection-control traffic is sent; no spots are published.
 
+## Diagnostics
+
+Open **Diagnostics → UDP / PSKReporter MQTT**. The operator approved this follow-up for publication to `main` on November 6, 2026; the version remains `0.9.0-rc.1`. Update and restart your installation through the normal workflow to get the new tabs. Publication itself does not change an operating installation or enable PSKReporter.
+
+The MQTT tab explains whether the overlay is disabled, waiting for a transmitting callsign, connecting, subscribed without traffic, rejecting reports, or holding reports that do not match the focus band/window. Start here when reception dots are missing:
+
+1. If **disabled**, enable the overlay in **Settings → PSKReporter** and save. Automatic mode waits for WSJT-X Status to report your station callsign.
+2. Check the monitored transmitting callsign and the broker's subscription **acknowledgement**. A TCP/MQTT connection alone does not establish that a subscription was accepted.
+3. Compare **MQTT messages**, **accepted reports**, rejections/duplicates and the last-message timestamp. Read the recent report results and connection events for reasons.
+4. Compare **cached receivers by band** with the **focus band's** transmitting identity and saved time window. Different rigs can be operating on different bands; a 10m report does not appear for a 12m focus. The Station map's per-browser window can differ from the saved default shown in Diagnostics.
+
+Counters cover the current server session; queued messages may not yet be processed. Accepted reports count new/latest receiver updates; cached totals count distinct sender/band/receiver combinations within the last hour. Duplicate/older reports do not replace a newer cached report. Oversized payloads and queue overflow are counted even when no message row can be retained.
+
+The tab keeps 100 allowlisted report summaries and 50 connection events in server memory. It records public radio fields and rejection reasons without saving raw MQTT payloads or arbitrary JSON fields. **Clear MQTT diagnostic rows** removes these lists only; counters, cache, focus/history, contact data and delivery work remain intact. **Pause MQTT display** freezes this browser's diagnostic response while collection continues. Only the visible tab polls local Dashboard endpoints; these polls do not make upstream PSKReporter queries. Failed diagnostic requests show the last successful response as stale rather than replacing its counters with zero.
+
+Read-only interfaces are `GET /api/pskreporter/diagnostics` and `GET /api/diagnostics` (UDP). Their corresponding DELETE actions clear only the selected interface's diagnostic rows and retain the existing same-origin restriction. MQTT diagnostics are separate from browser SSE snapshots so recent diagnostic lists do not enlarge ordinary map/telemetry updates.
+
 ## Isolated visual preview
 
 With dependencies installed and the frontend built, run:
