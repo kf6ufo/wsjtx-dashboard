@@ -16,7 +16,7 @@
 
 *The actual Station interface in full-screen mode, with fictional demonstration records, PSKReporter reception dots and an illustrative antenna image. No operator credentials, personal photographs or live QSO records are shown. [View full screen at full resolution](docs/assets/dashboard-fullscreen.png) · [Compare the standard window view](docs/assets/dashboard.png) · [Reception-map close-up](docs/assets/pskreporter-map.png).*
 
-**Give Dashboard a monitor of its own.** Move its browser window onto your chosen monitor and click **Full screen**. Browser tabs/address bar and the Dashboard title/footer disappear, leaving a compact toolbar and more room for station information. Press **Esc** or click **Exit full screen** to return. [Full screen and multiple monitors](docs/using-dashboard.md#full-screen-and-multiple-monitors).
+**Give Dashboard a monitor of its own.** Move its browser window onto your chosen monitor and click **Full screen**. Browser tabs/address bar and the Dashboard title/footer disappear, leaving a compact toolbar. The Station map grows to fill the remaining screen height; scroll down for previous contacts. Press **Esc** or click **Exit full screen** to return. [Full screen and multiple monitors](docs/using-dashboard.md#full-screen-and-multiple-monitors).
 
 ## Why WSJT-X Dashboard?
 
