@@ -45,6 +45,14 @@ Same-call repeat clicks may not produce Status changes. Current-band counts incl
 
 Historical field-coverage validation at application `b2338e6` passed **179 backend tests**, **35 frontend tests**, type checking/build and **five affected browser workflows**. Those results precede this documentation branch. A Starlette/httpx deprecation and a separately loaded map-renderer size advisory remain.
 
+## Diagnostics follow-up — November 6
+
+The operator approved main publication of the UDP / PSKReporter MQTT Diagnostics tabs through [PR #18](https://github.com/kf6ufo/wsjtx-dashboard/pull/18). Application source **`2f8762f`** matches the validated preview byte-for-byte. **262 backend tests**, **38 frontend tests**, type checking/production build and the production-build MQTT Diagnostics and existing loopback UDP Chrome workflows passed. Desktop dark and narrow light layouts were visually inspected; local Markdown links passed.
+
+A fresh source export at that commit passed the real native installer with a new Python environment on macOS arm64 / Python 3.13.1 / Node 24.21.0. A separate installed-server smoke check served the built frontend and both Diagnostics endpoints on an isolated loopback port, preserved configuration bytes and shut down gracefully. All integrations/logging were disabled in the smoke fixture. The installer reproduced the existing seven moderate npm development-tooling advisories; locked dependency versions remain unchanged.
+
+Version remains `0.9.0-rc.1`. Publication updates source only: operating services/settings/data and the disabled PSKReporter flag found in the earlier read-only check are unchanged. Broker acknowledgement tracking was verified with a real receive-only TLS subscription, but zero reports arrived during that check. Ordinary live report ingestion, new-diagnostics execution on Ubuntu and other browsers remain unverified. [Operator Diagnostics guide](pskreporter.md#diagnostics).
+
 ## RC1 validation — November 5
 
 The operator accepted the visual PSKReporter preview and authorized `0.9.0-rc.1` for testing on main through [PR #17](https://github.com/kf6ufo/wsjtx-dashboard/pull/17). Application source **`04c6644`** passed a fresh remote-clone installation on macOS arm64 / Python 3.13.1 / Node 24.21.0. The normal installer installed pinned Python dependencies (including Paho MQTT 2.1.0), ran `npm ci` and built the production frontend. Package and lockfile versions match RC1; frontend dependency versions are unchanged.
