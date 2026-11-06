@@ -24,6 +24,8 @@ The November 5 operator review accepted the PSKReporter reception overlay and au
 
 The November 6 operator request authorizes publishing the reviewed UDP / PSKReporter MQTT Diagnostics tabs to `main` for testing, preserving feature history. Keep version `0.9.0-rc.1`, existing saved settings and all operating station services unchanged. This is source publication only; do not update/restart the operating installation, enable integrations, create a release/tag or change visibility. See `docs/current-checkpoint.md` and `docs/pskreporter.md#diagnostics`.
 
+The November 6 operator request authorizes an executable foreground `run.sh` launcher, updated installation/startup guidance and documentation screenshots illustrating PSKReporter dots, plus publication to `main` after validation. Screenshots must use fictional reports and preserve attribution. Keep version `0.9.0-rc.1`; do not change/restart the operating installation, saved settings, radio services or logging as part of this source/documentation publication.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

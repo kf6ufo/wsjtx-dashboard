@@ -5,7 +5,7 @@ Current operator documentation starts at [docs/README.md](README.md). Release pr
 The installed production path is [native macOS](install-macos.md) / [Ubuntu](install-ubuntu.md). For development, first run `./install.sh`. The backend still owns workspace state:
 
 ```sh
-.venv/bin/python -m backend.server
+./run.sh
 ```
 
 The installer's temporary Node toolchain is removed after building. For development/test commands that invoke npm directly, keep compatible Node 24 (24.15+ within 24.x) and npm on PATH.

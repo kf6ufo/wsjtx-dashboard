@@ -6,7 +6,7 @@
 
 ## 1. Start locally
 
-Install/run the server and open **http://127.0.0.1:8787/**. A new installation can show labeled sample data. It is not your logbook. Reception, online providers, logging and forwarding default off.
+After `./install.sh` or `./update.sh` succeeds, start the server with `./run.sh` and open **http://127.0.0.1:8787/**. A new installation can show labeled sample data. It is not your logbook. Reception, online providers, logging and forwarding default off.
 
 ## 2. Connect WSJT-X reporting
 
