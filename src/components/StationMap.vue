@@ -23,6 +23,12 @@ const receptionStatus = computed(() => {
  if (feed.status !== 'connected') return `PSKReporter ${feed.status} · ${feed.error || 'Waiting for the live feed.'} Recent dots continue to expire.`
  return `${spots.value.length} ${spots.value.length === 1 ? 'station' : 'stations'} reported hearing ${props.sender} on ${props.entry.band} · last ${minutes.value} min · collecting while Dashboard runs`
 })
+const receptionNeedsAttention = computed(() => props.receptions?.config.enabled && (!props.connected || !props.sender || !props.entry?.band || props.receptions.status !== 'connected'))
+const receptionSummary = computed(() => {
+ if (!props.receptions?.config.enabled) return 'PSKReporter off'
+ if (receptionNeedsAttention.value) return 'PSKReporter · check status'
+ return `${spots.value.length} heard ${props.sender} · ${props.entry?.band}`
+})
 const host = ref<HTMLDivElement>(), tilesFailed = ref(false), mapFailed = ref(false), zoom = ref(4), ready = ref(false)
 const basemapReady = ref(false)
 let map: LeafletMap | undefined, markers: LayerGroup | undefined, receptionMarkers: LayerGroup | undefined, observer: ResizeObserver | undefined
@@ -121,12 +127,13 @@ onBeforeUnmount(() => { mounted = false; generation++; window.clearInterval(ageT
 </script>
 <template>
  <section class="station-map" aria-labelledby="station-map-title">
-  <div class="station-map-heading"><div><h3 id="station-map-title">Station map</h3><p v-if="location">{{ call }} · {{ location.label }} · {{ location.detail }}</p></div><div v-if="location" class="station-map-controls" aria-label="Map controls"><button class="btn console-button" :disabled="zoom >= 19 || !ready" aria-label="Zoom in station map" @click="map?.zoomIn()">+</button><button class="btn console-button" :disabled="zoom <= 2 || !ready" aria-label="Zoom out station map" @click="map?.zoomOut()">−</button><button class="btn console-button" :disabled="!ready" @click="center">Center station</button></div></div>
-  <div v-if="receptions?.config.enabled" class="station-map-reception-bar">
-   <span><i class="reception-legend-dot" aria-hidden="true"></i> Heard {{ sender || 'me' }}<span v-if="entry?.band"> · {{ entry.band }}</span></span>
-   <label>Show <select v-model.number="minutes" aria-label="Reception time window"><option v-for="n in [5,15,30,60]" :key="n" :value="n">Last {{ n }} min</option></select></label>
+  <div class="station-map-heading">
+   <div class="station-map-identity"><h3 id="station-map-title">Station map</h3><span v-if="location" class="station-map-location" :title="`${call} · ${location.label} · ${location.detail}`">{{ call }} · {{ location.label }}<span class="visually-hidden"> · {{ location.detail }}</span></span></div>
+   <div v-if="receptions" class="station-map-summary" :title="receptionStatus" role="status"><span class="station-map-heard"><i v-if="receptions.config.enabled" class="reception-legend-dot" aria-hidden="true"></i>{{ receptionSummary }}</span><span v-if="focusSpot" class="station-map-focus-heard">{{ call }} heard you {{ Math.max(0, Math.floor((now - focusSpot.heardAt) / 60000)) }} min ago</span></div>
+   <label v-if="receptions?.config.enabled" class="station-map-window"><span class="visually-hidden">Reception time window</span><select v-model.number="minutes" aria-label="Reception time window"><option v-for="n in [5,15,30,60]" :key="n" :value="n">Last {{ n }} min</option></select></label>
+   <div v-if="location" class="station-map-controls" aria-label="Map controls"><button class="btn console-button" :disabled="zoom >= 19 || !ready" aria-label="Zoom in station map" @click="map?.zoomIn()">+</button><button class="btn console-button" :disabled="zoom <= 2 || !ready" aria-label="Zoom out station map" @click="map?.zoomOut()">−</button><button class="btn console-button" :disabled="!ready" aria-label="Center station" @click="center">Center</button></div>
   </div>
-  <p v-if="receptions" class="station-map-note" role="status">{{ receptionStatus }}<span v-if="focusSpot"> · {{ call }} heard you {{ Math.max(0, Math.floor((now - focusSpot.heardAt) / 60000)) }} min ago (inner amber dot).</span><span v-if="receptions.evicted"> · Reception cache reached capacity; some reports were dropped.</span></p>
+  <p v-if="receptionNeedsAttention || receptions?.evicted" class="station-map-note" role="status"><span v-if="receptionNeedsAttention">{{ receptionStatus }}</span><span v-if="receptions?.evicted"> Reception cache reached capacity; some reports were dropped.</span></p>
   <p v-if="!location" class="station-map-empty" role="status">{{ enrichment?.result.call === call && enrichment.result.status === 'pending' ? `Locating ${call}…` : 'Station location unavailable. A reported grid or callbook location is needed.' }}</p>
   <template v-else><div ref="host" class="station-map-canvas" role="region" :aria-label="`Map showing ${call}`" :data-lat="location.lat" :data-lng="location.lng" :data-zoom="zoom" :data-basemap-state="tilesFailed ? 'unavailable' : basemapReady ? 'ready' : 'loading'" @wheel.capture="modifierZoom"></div><p v-if="mapFailed" class="station-map-note error-text" role="status">Map could not load. Refresh the page to try again.</p><p v-else-if="tilesFailed" class="station-map-note" role="status">Base map unavailable. The station marker is still shown; map tiles need an internet connection and a browser with WebGL support.</p></template>
   <p v-if="receptions?.config.enabled" class="station-map-note reception-footnote">PSKReporter · reports may be delayed; no dot means no recent report. Dots use approximate receiver grids. Focus reception stays centered inside its marker. <a href="https://www.mqtt.pskreporter.info/" target="_blank" rel="noopener noreferrer">Feed by M0LTE, data by PSKReporter ↗</a></p>

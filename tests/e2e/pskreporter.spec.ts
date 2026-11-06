@@ -28,6 +28,12 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  await page.goto('/')
  await expect(page.locator('.station-map-canvas')).toHaveAttribute('data-basemap-state','ready')
  await expect(page.locator('.station-map-reception')).toHaveCount(2)
+ const header=await page.locator('.station-map-heading').boundingBox()
+ const mapCanvas=await page.locator('.station-map-canvas').boundingBox()
+ expect(header!.height).toBeLessThanOrEqual(44)
+ expect(mapCanvas!.height).toBe(280)
+ await expect(page.getByRole('button',{name:'Center station',exact:true})).toBeVisible()
+ await expect(page.getByLabel('Reception time window')).toBeVisible()
  await expect(page.locator('.station-map')).toContainText('K1FOCUS heard you 1 min ago')
  const focus=page.locator('.station-map-pin'), heard=page.locator('.station-map-reception[aria-label^="K1FOCUS heard"]')
  const a=await focus.boundingBox(), b=await heard.boundingBox()
@@ -56,13 +62,24 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  snapshot.revision++;snapshot.history[0]!.band='15m'
  await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
  await expect(page.locator('.station-map-reception')).toHaveCount(1)
- await expect(page.locator('.station-map')).not.toContainText('inner amber dot')
+ await expect(page.locator('.station-map-focus-heard')).toHaveCount(0)
  snapshot.revision++;snapshot.history[0]!.band='20m';snapshot.history[0]!.stationCall='K5OTHER'
  snapshot.preferences.appearance='light'
  await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
  await expect(page.locator('.station-map-reception')).toHaveCount(1)
  await expect(page.locator('.station-map-reception')).toHaveAttribute('aria-label',/^K6IDENTITY heard K5OTHER/)
+ // A feed outage must retain its visible explanation rather than read as zero reception.
+ snapshot.revision++;snapshot.pskreporter.status='reconnecting';snapshot.pskreporter.error='Fixture upstream outage'
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ await expect(page.locator('.station-map-note[role="status"]')).toContainText('Fixture upstream outage')
+ snapshot.revision++;snapshot.pskreporter.status='connected';snapshot.pskreporter.error=''
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ await expect(page.locator('.station-map-note[role="status"]')).toHaveCount(0)
+ snapshot.revision++;snapshot.history[0]!.stationCall='N0CALL'
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
  await page.setViewportSize({width:390,height:844})
+ await expect(page.locator('.station-map-focus-heard')).toBeVisible()
+ expect((await page.locator('.station-map-heading').boundingBox())!.height).toBeLessThanOrEqual(84)
  await page.getByRole('button',{name:'Center station',exact:true}).click()
  await page.locator('.station-map').screenshot({path:'test-results/pskreporter-map-light-mobile.png'})
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)

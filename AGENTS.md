@@ -26,6 +26,8 @@ The November 6 operator request authorizes publishing the reviewed UDP / PSKRepo
 
 The November 6 operator request authorizes an executable foreground `run.sh` launcher, updated installation/startup guidance and documentation screenshots illustrating PSKReporter dots, plus publication to `main` after validation. Screenshots must use fictional reports and preserve attribution. Keep version `0.9.0-rc.1`; do not change/restart the operating installation, saved settings, radio services or logging as part of this source/documentation publication.
 
+The November 6 operator request authorizes compacting the Station map header and publishing the change to `main` after validation. Preserve map controls, reception/error distinctions and the operating installation. This is a presentation-only update; keep `0.9.0-rc.1`, saved settings and integration/logging behavior unchanged.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).
