@@ -18,6 +18,8 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Changed
 
+- Compact Station map toolbar combines location, reception summary, window and zoom/center controls; the normal desktop header is about 73% shorter. Detailed error states remain visible when needed.
+
 - Package and lockfile versions advance from `0.9.0-beta.1` to `0.9.0-rc.1`; current operator documentation identifies RC1.
 
 ### Validation and limits

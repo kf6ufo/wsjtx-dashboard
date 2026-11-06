@@ -6,7 +6,7 @@
 
 `dashboard-fullscreen.png` captures the same built interface after clicking its native **Full screen** control, at a 1920 × 1440 viewport. It shows the compact toolbar and reduced margins with the Dashboard title/footer hidden. This capture keeps the real viewport size; Chrome's full-page capture can partially redraw WebGL when resizing a native fullscreen surface. The standard view is a full-page capture. The script waits for the basemap to load, and both images retain map attribution. The README displays full screen and links the refreshed standard view for comparison. The hero crop remains a station-summary image; the refreshed standard and full-screen captures show the PSKReporter overlay.
 
-`pskreporter-map.png` is a close-up of the same Station map, used in the PSKReporter guide and linked from the README. It preserves the map controls, time-window label, focus dot and basemap attribution. All reception reports are fictional; this is not evidence of live PSKReporter acceptance.
+`pskreporter-map.png` is a close-up of the same Station map, used in the PSKReporter guide and linked from the README. It preserves the map controls, time-window label, focus dot and basemap attribution. The captures now show the compact Station map toolbar, bringing the canvas higher on the page. All reception reports are fictional; this is not evidence of live PSKReporter acceptance.
 
 Reproduce from an installed development checkout:
 
