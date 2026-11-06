@@ -44,3 +44,15 @@ export interface ForwardingState { config: { destinations: ForwardDestination[] 
 
 export interface ReceptionSpot { sender: string; receiver: string; grid: string; band: string; heardAt: number; frequency: number; mode: string; snr: number | null }
 export interface PskReporterState { config: { enabled: boolean; callsign: string; window_minutes: number }; status: string; error: string; callsigns: string[]; connectedAt: number | null; evicted: number; spots: ReceptionSpot[] }
+
+export interface PskReporterDiagnostics {
+ status: string; error: string; explanation: string; startedAt: number; generatedAt: number; broker: string; port: number; tls: boolean; workerRunning: boolean
+ connectedAt: number | null; lastDisconnectedAt: number | null; lastAcceptedAt: number | null; config: PskReporterState['config']
+ counts: Record<'received' | 'bytes' | 'oversized' | 'queueDropped' | 'controlDropped' | 'accepted' | 'rejected' | 'duplicates' | 'expired' | 'connections' | 'connectionFailures' | 'disconnects' | 'subscriptionRequests' | 'subscriptionAcks' | 'subscriptionErrors' | 'cached' | 'focusBand' | 'matchingWindow' | 'evicted' | 'queued', number> & { lastMessageAt: number | null }
+ rejectionReasons: Record<string, number>
+ focus: { call: string; sender: string; band: string | null; windowMinutes: number; focusHeard: boolean }
+ subscriptions: { callsign: string; topic: string; status: string }[]; bands: { sender: string; band: string; count: number }[]
+ limits: { events: number; reports: number; queue: number; cache: number }
+ events: { id: number; at: number; kind: string; message: string }[]
+ reports: { id: number; at: number; outcome: string; reason: string; topic: string; size: number; preview: Record<string, string | number>; band: string | null }[]
+}

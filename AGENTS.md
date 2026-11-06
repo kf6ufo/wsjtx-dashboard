@@ -22,6 +22,8 @@ The October 27 final-security request authorizes narrow trusted-host validation 
 
 The November 5 operator review accepted the PSKReporter reception overlay and authorizes version `0.9.0-rc.1` (RC1) plus publication to `main` for testing. Preserve the feature history. This request does not tag/publish a GitHub release, change visibility or update/restart the operating installation. PSKReporter defaults off; preserve existing operator settings. Actual TLS connection/subscription is verified, but ordinary live reception-data acceptance remains pending. See `docs/pskreporter.md` and the current checkpoint.
 
+The November 6 operator request authorizes publishing the reviewed UDP / PSKReporter MQTT Diagnostics tabs to `main` for testing, preserving feature history. Keep version `0.9.0-rc.1`, existing saved settings and all operating station services unchanged. This is source publication only; do not update/restart the operating installation, enable integrations, create a release/tag or change visibility. See `docs/current-checkpoint.md` and `docs/pskreporter.md#diagnostics`.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

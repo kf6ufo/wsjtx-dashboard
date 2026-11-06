@@ -16,7 +16,8 @@
     "test:e2e:wavelog": "playwright test --config playwright.wavelog.config.ts",
     "test:e2e:qso": "playwright test --config playwright.qso.config.ts",
     "test:e2e:mapping": "playwright test --config playwright.mapping.config.ts",
-    "test:e2e:steps57": "playwright test --config playwright.steps57.config.ts"
+    "test:e2e:steps57": "playwright test --config playwright.steps57.config.ts",
+    "test:e2e:pskreporter": "playwright test --config playwright.pskreporter.config.ts"
   },
   "dependencies": {
     "@maplibre/maplibre-gl-leaflet": "0.1.4",

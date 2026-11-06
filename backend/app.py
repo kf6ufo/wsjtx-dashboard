@@ -302,6 +302,15 @@ def create_app(settings: Settings | None = None, state: FocusState | None = None
         async def forwarding_status(): return forwarding.snapshot()
 
     if pskreporter:
+        @app.get('/api/pskreporter/diagnostics')
+        async def pskreporter_diagnostics():
+            return pskreporter.diagnostics()
+
+        @app.delete('/api/pskreporter/diagnostics')
+        async def clear_pskreporter_diagnostics():
+            pskreporter.clear_diagnostics()
+            return pskreporter.diagnostics()
+
         @app.put('/api/pskreporter')
         async def pskreporter_settings(request: Request):
             try:

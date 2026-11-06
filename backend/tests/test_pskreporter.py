@@ -10,7 +10,7 @@ from backend.config import load_config
 from backend.protocol import parse_packet
 from backend.state import FocusState
 from backend.tests.fixtures import status
-from backend.pskreporter import PskReporterService, parse_spot, topic_for
+from backend.pskreporter import MqttInbox, PskReporterService, inspect_spot, parse_spot, topic_for
 from backend.pskreporter_config import PskReporterSettings
 from backend.workspace import WorkspaceState
 
@@ -147,3 +147,83 @@ def test_config_api_defaults_validation_and_other_settings_preserved(tmp_path):
         assert replace(load_config(config), pskreporter=before.pskreporter) == before
         assert api.put('/api/pskreporter', json=body | {'enabled':False}).status_code == 200
         assert api.get('/api/snapshot').json()['pskreporter']['spots'] == []
+
+
+@pytest.mark.parametrize(('payload','reason'), [(b'bad JSON','malformed_json'), (spot(sc='K2OTHER'),'wrong_sender'),
+    (spot(rl=''),'invalid_grid'), (spot(t=NOW-4000),'too_old'), (spot(t=NOW+90),'future_timestamp'),
+    (spot(f=123),'unsupported_frequency'), (spot(t=None),'invalid_timestamp')])
+def test_diagnostic_rejection_reasons(payload, reason):
+    result, actual, preview = inspect_spot(payload, {'N0CALL'}, NOW)
+    assert result is None and actual == reason
+    assert not set(preview) - {'sc','rc','rl','f','md','rp','t','t_tx'}
+
+
+def test_wire_counters_capture_overflow_and_oversized_messages_without_unbounded_retention():
+    import queue
+    inbox = MqttInbox(lambda: NOW)
+    for _ in range(512): inbox.put_nowait(('spot',spot()))
+    with pytest.raises(queue.Full): inbox.put_nowait(('spot',spot()))
+    with pytest.raises(queue.Full): inbox.put_nowait(('disconnected','fixture disconnect'))
+    inbox.put_nowait(('spot',b'x'*4097))
+    metrics = inbox.metrics()
+    assert inbox.qsize() == 512
+    assert metrics['received'] == 514 and metrics['queueDropped'] == 1 and metrics['controlDropped'] == 1
+    assert metrics['oversized'] == 1 and metrics['lastMessageAt'] == NOW*1000
+
+
+def test_diagnostics_show_acknowledgements_filtering_cache_and_clear_independence(tmp_path):
+    async def scenario():
+        state = WorkspaceState(tmp_path/'workspace.sqlite3'); state.enter_radio_workspace()
+        state.call = 'K1FOCUS'
+        state.history = [dict(call='K1FOCUS',rigId='A',stationCall='N0CALL',band='12m',selectedAt=NOW*1000,recency=1)]
+        service = PskReporterService(state, PskReporterSettings(True,'N0CALL'),client_factory=FakeClient,clock=lambda:NOW)
+        await service.start(); service.client.connect(); await service.tick()
+        assert service.diagnostics()['subscriptions'][0]['status'] == 'pending'
+        service.inbox.put_nowait(('subscribed',dict(mid=1,reason='Granted QoS 0')))
+        for payload in (spot(extra_private_field='never retain this'),spot(),spot(rl='ZZ99'),spot(t=NOW-4000)):
+            service.inbox.put_nowait(('spot',dict(payload=payload,topic=topic_for('N0CALL'))))
+        before_history = deepcopy(state.history)
+        await service.tick()
+        d = service.diagnostics()
+        assert d['subscriptions'][0]['status'] == 'acknowledged'
+        assert d['counts']['received'] == 4 and d['counts']['accepted'] == 1 and d['counts']['duplicates'] == 1
+        assert d['counts']['rejected'] == 2 and d['rejectionReasons'] == {'invalid_grid':1,'too_old':1}
+        assert d['counts']['cached'] == 1 and d['counts']['matchingWindow'] == 0
+        assert d['bands'] == [dict(sender='N0CALL',band='20m',count=1)]
+        assert 'cached, but none match' in d['explanation']
+        assert 'never retain this' not in json.dumps(d)
+        state.history[0]['band'] = '20m'
+        assert service.diagnostics()['focus']['focusHeard']
+        state.history = before_history
+        counts = deepcopy(d['counts'])
+        service.clear_diagnostics()
+        d = service.diagnostics()
+        assert not d['events'] and not d['reports'] and d['counts'] == counts
+        assert len(service.cache) == 1 and state.history == before_history
+        for _ in range(150): service.ingest(spot())
+        for _ in range(75): service.event('fixture','bounded event')
+        d = service.diagnostics(); assert len(d['reports']) == 100 and len(d['events']) == 50
+        d['reports'][0]['preview']['sc'] = 'MUTATED'
+        assert service.diagnostics()['reports'][0]['preview']['sc'] == 'N0CALL'
+        service.inbox.put_nowait(('disconnected','Fixture network outage')); service.client.connected = False
+        await service.tick()
+        assert service.diagnostics()['counts']['disconnects'] == 1
+        assert service.diagnostics()['subscriptions'][0]['status'] == 'waiting'
+        assert service.diagnostics()['lastDisconnectedAt'] == NOW*1000
+        await service.stop(); state.close()
+    asyncio.run(scenario())
+
+
+def test_diagnostics_api_disabled_state_and_same_origin_clear(tmp_path):
+    config = tmp_path/'config.toml'; config.write_text(Path('config.example.toml').read_text())
+    state = WorkspaceState(tmp_path/'workspace.sqlite3')
+    with TestClient(create_app(state=state,config_path=config,serve_frontend=False),base_url='http://127.0.0.1') as api:
+        data = api.get('/api/pskreporter/diagnostics').json()
+        assert data['status'] == 'disabled' and 'disabled' in data['explanation']
+        assert data['subscriptions'] == [] and data['counts']['received'] == 0
+        state.pskreporter.event('fixture','clear just this event')
+        before = config.read_bytes(); history = deepcopy(state.history)
+        assert api.delete('/api/pskreporter/diagnostics',headers={'Origin':'https://other.invalid'}).status_code == 403
+        assert api.get('/api/pskreporter/diagnostics').json()['events']
+        assert not api.delete('/api/pskreporter/diagnostics').json()['events']
+        assert state.history == history and config.read_bytes() == before

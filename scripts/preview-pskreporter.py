@@ -38,6 +38,12 @@ class FixtureFeed:
                 ('K7BAND','FN20',30,21074000)]:
             payload = dict(sc='N0CALL',rc=call,rl=grid,f=frequency,md='FT8',rp=-12,t=now-age)
             self.inbox.put_nowait(('spot', json.dumps(payload).encode()))
+        # Diagnostic fixtures: duplicate, stale, invalid-grid and malformed data.
+        base = dict(sc='N0CALL',rc='K1FOCUS',rl='FN31',f=14074000,md='FT8',rp=-12,t=now-60)
+        for payload in (json.dumps(base).encode(),json.dumps(base|{'t':now-7200}).encode(),
+                        json.dumps(base|{'rl':'ZZ99'}).encode(),b'not JSON'):
+            self.inbox.put_nowait(('spot',payload))
+        self.inbox.put_nowait(('subscribed', dict(mid=1, reason='Fixture QoS 0')))
         return 0, 1
 
 

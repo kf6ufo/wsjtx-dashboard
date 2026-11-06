@@ -6,6 +6,8 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Added
 
+- November 6 testing update: separate UDP and PSKReporter MQTT Diagnostics tabs, broker acknowledgement and message/filter counters, bounded report/rejection/connection activity, and scoped pause/clear controls. Version remains `0.9.0-rc.1`.
+
 - Optional PSKReporter MQTT reception overlay: small amber receiver dots for your transmitted callsign on the focus band, including an inner dot when the focused station reports hearing you.
 - Per-browser 5/15/30/60-minute windows, a saved 15-minute default, automatic per-rig identity and an explicit transmitting-callsign override.
 - One shared TLS MQTT connection, bounded one-hour in-memory reception cache, reconnect/resubscribe and expiry during outages; no XML polling or focus-triggered upstream requests.

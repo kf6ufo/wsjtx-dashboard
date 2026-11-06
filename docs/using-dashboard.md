@@ -43,6 +43,10 @@ The list extends alongside the station/contact area and scrolls independently. S
 
 ## Diagnostics and Settings
 
-Diagnostics provides exact heard-instance, activity and packet-type filters. Heartbeat means presence, Status carries station/radio state, Decode is received activity, and Logged ADIF is a completed-contact event. Expand a packet for parsed/raw details. Pause/clear affect the bounded diagnostic display, not reception, focus or logging.
+Diagnostics has **UDP** and **PSKReporter MQTT** tabs. Switching tabs preserves the UDP filters; only the visible interface polls diagnostic rows.
+
+**UDP** provides exact heard-instance, activity and packet-type filters. Heartbeat means presence, Status carries station/radio state, Decode is received activity, and Logged ADIF is a completed-contact event. Expand a packet for parsed/raw details. Pause/clear affect the bounded diagnostic display, not reception, focus or logging.
+
+**PSKReporter MQTT** shows disabled/waiting/connecting/connected/error states, transmitting-callsign subscriptions and broker acknowledgements, received/accepted/rejected/duplicate counters, last-message/connection times, cached bands and the focus band/saved window. Recent message summaries explain rejections; connection events show retry/disconnect/subscription activity. An explanation at the top distinguishes a disabled feed, no traffic and reports filtered off the map. Pause/clear affect display rows only: collection, counters, reception cache, focus and contact data continue. [MQTT Diagnostics details](pskreporter.md#diagnostics).
 
 Settings tabs identify each Save scope. Saving one section does not implicitly save another tab. The header Theme and Station Desk controls provide local previews; Workspace saves shared defaults. [Configuration](configuration.md) explains each section.
