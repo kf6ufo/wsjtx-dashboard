@@ -40,6 +40,52 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  expect(b!.width).toBeLessThan(a!.width)
  expect(Math.abs((a!.x+a!.width/2)-(b!.x+b!.width/2))).toBeLessThan(2)
  expect(Math.abs((a!.y+a!.height/2)-(b!.y+b!.height/2))).toBeLessThan(2)
+ // Full screen gives spare vertical space to the map, above scrollable contacts.
+ const expectViewportFill = async () => {
+  await expect.poll(async () => page.locator('.station-map').evaluate(node => Math.abs(node.getBoundingClientRect().bottom + scrollY - (innerHeight - 10)))).toBeLessThan(2)
+  expect((await page.locator('.station-map-canvas').boundingBox())!.height).toBeGreaterThan(280)
+  await expect.poll(() => page.locator('.station-map-canvas').evaluate(node => {
+   const canvas=node.getBoundingClientRect(), pin=node.querySelector('.station-map-pin')!.getBoundingClientRect()
+   return Math.max(Math.abs(pin.x+pin.width/2-canvas.x-canvas.width/2),Math.abs(pin.y+pin.height/2-canvas.y-canvas.height/2))
+  })).toBeLessThan(3)
+ }
+ await page.setViewportSize({width:1710,height:1071})
+ await page.getByRole('button',{name:'Full screen',exact:true}).click()
+ await expect.poll(() => page.evaluate(() => document.fullscreenElement === document.documentElement)).toBe(true)
+ await expectViewportFill()
+ const fullHeight=(await page.locator('.station-map').boundingBox())!.height
+ const fullZoom=await page.locator('.station-map-canvas').getAttribute('data-zoom')
+ await page.locator('.qso-heading').scrollIntoViewIfNeeded()
+ await expect.poll(async () => (await page.locator('.station-map').boundingBox())!.height).toBe(fullHeight)
+ await page.evaluate(()=>scrollTo(0,0))
+ await page.setViewportSize({width:1920,height:1440})
+ await expectViewportFill()
+ expect((await page.locator('.station-map').boundingBox())!.height).toBeGreaterThan(fullHeight)
+ expect(await page.locator('.station-map-canvas').getAttribute('data-zoom')).toBe(fullZoom)
+ const topWithoutStrip=(await page.locator('.station-map').boundingBox())!.y
+ snapshot.revision++;snapshot.preferences.radioStrip=true
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ await expect(page.locator('.rig-strip')).toBeVisible()
+ expect((await page.locator('.station-map').boundingBox())!.y).toBeGreaterThan(topWithoutStrip)
+ await expectViewportFill()
+ snapshot.revision++;snapshot.preferences.radioStrip=false
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ snapshot.revision++;snapshot.pskreporter.status='reconnecting';snapshot.pskreporter.error='Fixture resize outage'
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ await expect(page.locator('.station-map-note[role="status"]')).toContainText('Fixture resize outage')
+ await expectViewportFill()
+ snapshot.revision++;snapshot.pskreporter.status='connected';snapshot.pskreporter.error=''
+ await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
+ await page.getByRole('button',{name:'Settings',exact:true}).click()
+ await page.getByRole('button',{name:'Station',exact:true}).click()
+ await expectViewportFill()
+ await page.screenshot({path:'test-results/pskreporter-fullscreen-map.png'})
+ await page.setViewportSize({width:1710,height:720})
+ await expect.poll(async () => (await page.locator('.station-map-canvas').boundingBox())!.height).toBe(280)
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ await page.getByRole('button',{name:'Exit full screen',exact:true}).click()
+ await expect.poll(async () => (await page.locator('.station-map-canvas').boundingBox())!.height).toBe(280)
+ await page.setViewportSize({width:1600,height:1100})
  await page.getByLabel('Reception time window').selectOption('60')
  await expect(page.locator('.station-map-reception')).toHaveCount(3)
  await page.locator('.station-map').screenshot({path:'test-results/pskreporter-map-dark.png'})

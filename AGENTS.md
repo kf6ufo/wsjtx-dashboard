@@ -28,6 +28,8 @@ The November 6 operator request authorizes an executable foreground `run.sh` lau
 
 The November 6 operator request authorizes compacting the Station map header and publishing the change to `main` after validation. Preserve map controls, reception/error distinctions and the operating installation. This is a presentation-only update; keep `0.9.0-rc.1`, saved settings and integration/logging behavior unchanged.
 
+The subsequent November 6 operator request authorizes expanding the Station map to the remaining viewport height in full-screen mode, with main publication after validation. Keep contacts accessible below the map, retain a usable minimum height on short screens and preserve normal-window sizing. Source publication does not update/restart the operating installation or change settings/integrations/version.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

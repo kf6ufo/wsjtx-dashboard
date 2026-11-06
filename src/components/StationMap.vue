@@ -9,8 +9,35 @@ import 'leaflet/dist/leaflet.css'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 
-const props = defineProps<{ call: string; entry?: Entry; enrichment?: EnrichmentState; receptions?: PskReporterState; sender?: string; connected?: boolean }>()
+const props = defineProps<{ call: string; entry?: Entry; enrichment?: EnrichmentState; receptions?: PskReporterState; sender?: string; connected?: boolean; fullscreen?: boolean }>()
 const location = computed(() => stationMapLocation(props.call, props.entry, props.enrichment))
+const frame = ref<HTMLElement>(), fillHeight = ref(0)
+let layoutObserver: ResizeObserver | undefined, layoutFrame = 0
+function sizeToViewport() {
+ cancelAnimationFrame(layoutFrame)
+ layoutFrame = requestAnimationFrame(() => {
+  if (!props.fullscreen || !frame.value?.clientWidth) return
+  // Use document position so scrolling to contacts does not grow the map again.
+  const top = frame.value.getBoundingClientRect().top + window.scrollY
+  fillHeight.value = Math.max(0, window.innerHeight - top - 10)
+ })
+}
+watch(() => props.fullscreen, sizeToViewport)
+onMounted(() => {
+ layoutObserver = new ResizeObserver(sizeToViewport)
+ layoutObserver.observe(document.body)
+ // Async profile/status changes and navigation can move the map's top edge.
+ if (frame.value?.parentElement) {
+  layoutObserver.observe(frame.value.parentElement)
+  for (const sibling of Array.from(frame.value.parentElement.children)) {
+   layoutObserver.observe(sibling)
+   if (sibling === frame.value) break
+  }
+ }
+ window.addEventListener('resize', sizeToViewport)
+ sizeToViewport()
+})
+onBeforeUnmount(() => { layoutObserver?.disconnect(); cancelAnimationFrame(layoutFrame); window.removeEventListener('resize', sizeToViewport) })
 const minutes = ref(props.receptions?.config.window_minutes ?? 15), now = ref(Date.now())
 const spots = computed(() => receptionSpots(props.receptions, props.sender ?? '', props.entry?.band, minutes.value, now.value))
 const focusSpot = computed(() => spots.value.find(spot => spot.receiver === props.call))
@@ -101,7 +128,7 @@ async function update() {
    receptionMarkers = L.layerGroup().addTo(map)
    map.on('zoomend', () => { zoom.value = map!.getZoom() })
    // v-show navigation and column resizing must not leave a half-rendered map.
-   observer = new ResizeObserver(() => { if (host.value?.clientWidth) map?.invalidateSize({ pan: false }) })
+   observer = new ResizeObserver(() => { if (host.value?.clientWidth) map?.invalidateSize({ animate: false, pan: true }) })
    observer.observe(host.value)
   }
   markers!.clearLayers()
@@ -126,7 +153,7 @@ onMounted(() => { mounted = true; update(); ageTimer = window.setInterval(() => 
 onBeforeUnmount(() => { mounted = false; generation++; window.clearInterval(ageTimer); destroy() })
 </script>
 <template>
- <section class="station-map" aria-labelledby="station-map-title">
+ <section ref="frame" class="station-map" :class="{ 'station-map-fill': fullscreen && location }" :style="fullscreen && location ? { minHeight: `${fillHeight}px` } : undefined" aria-labelledby="station-map-title">
   <div class="station-map-heading">
    <div class="station-map-identity"><h3 id="station-map-title">Station map</h3><span v-if="location" class="station-map-location" :title="`${call} · ${location.label} · ${location.detail}`">{{ call }} · {{ location.label }}<span class="visually-hidden"> · {{ location.detail }}</span></span></div>
    <div v-if="receptions" class="station-map-summary" :title="receptionStatus" role="status"><span class="station-map-heard"><i v-if="receptions.config.enabled" class="reception-legend-dot" aria-hidden="true"></i>{{ receptionSummary }}</span><span v-if="focusSpot" class="station-map-focus-heard">{{ call }} heard you {{ Math.max(0, Math.floor((now - focusSpot.heardAt) / 60000)) }} min ago</span></div>

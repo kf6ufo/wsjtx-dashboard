@@ -45,6 +45,12 @@ Same-call repeat clicks may not produce Status changes. Current-band counts incl
 
 Historical field-coverage validation at application `b2338e6` passed **179 backend tests**, **35 frontend tests**, type checking/build and **five affected browser workflows**. Those results precede this documentation branch. A Starlette/httpx deprecation and a separately loaded map-renderer size advisory remain.
 
+## Full-screen map height follow-up — November 6
+
+The operator authorized filling the remaining full-screen height with the Station map and main publication through [PR #21](https://github.com/kf6ufo/wsjtx-dashboard/pull/21). At application source **`33f62e7`**, the map adapts to window and content changes, preserves geographic center/zoom, and retains its minimum height on short screens. Contacts remain available below by scrolling; normal window sizing returns on exit.
+
+**38 frontend tests**, type checking/build and the three affected production-build Chrome workflows passed, including laptop/taller/short sizing, radio-strip/status changes, contact scrolling, navigation and existing reception behavior. Fictional **1710 × 1071** and **1920 × 1440** captures passed visual review; the full-screen documentation image is refreshed with nine fictional dots and attribution. A fresh source export passed the real native installer on macOS arm64 / Python 3.13.1 / Node 24.21.0 with a new Python environment and locked dependencies. Local Markdown links passed. Existing dependency/bundle advisories, version `0.9.0-rc.1`, backend/integration logic and operating services/settings/data are unchanged. Ubuntu/other-browser execution of this layout remains unverified.
+
 ## Compact Station map header follow-up — November 6
 
 The operator authorized a compact Station map header and main publication through [PR #20](https://github.com/kf6ufo/wsjtx-dashboard/pull/20). At application source **`27cb45d`**, the normal desktop header measured **36px**, down from **131.5px** with the same fictional fixture; the map canvas remains 280px. Station/grid, reception summary, time window and zoom/Center controls share one toolbar. Narrow screens use two compact rows; failure/missing-data explanations remain visible when needed.
