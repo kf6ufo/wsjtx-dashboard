@@ -45,6 +45,14 @@ Same-call repeat clicks may not produce Status changes. Current-band counts incl
 
 Historical field-coverage validation at application `b2338e6` passed **179 backend tests**, **35 frontend tests**, type checking/build and **five affected browser workflows**. Those results precede this documentation branch. A Starlette/httpx deprecation and a separately loaded map-renderer size advisory remain.
 
+## Launcher and reception imagery follow-up — November 6
+
+The operator authorized `run.sh`, refreshed PSKReporter documentation imagery and main publication through [PR #19](https://github.com/kf6ufo/wsjtx-dashboard/pull/19). At source **`9326fd6`**, **262 backend tests**, shell/JavaScript syntax checks, type checking and production build passed. The real installed-server test uses the launcher from outside the checkout with a spaced config filename and unrelated active-environment variable; it preserves configuration/state across two starts and propagates termination with an open SSE stream.
+
+A fresh source export passed the real native installer on macOS arm64 / Python 3.13.1 / Node 24.21.0. The installed launcher passed `--help`, outside-directory startup with a spaced custom config path, HTTP 200, preserved config bytes and graceful SIGINT shutdown. Missing-environment behavior was also checked and created no configuration/dependencies. Fresh-install success now prints `Start: ./run.sh`; update success points to the same launcher while retaining manual service control.
+
+The actual built standard/native-fullscreen screenshots and map close-up were regenerated with nine fictional same-band receiver reports. A fixed browser clock, API/photo fixtures and capture assertions keep the dots current/visible without live MQTT or operator data. All three captures passed visual review and retain attribution; all local document links passed. Version/dependencies remain unchanged at `0.9.0-rc.1`; existing dependency/bundle warnings remain. The operating installation/settings/data were untouched. New launcher execution on Ubuntu remains unverified.
+
 ## Diagnostics follow-up — November 6
 
 The operator approved main publication of the UDP / PSKReporter MQTT Diagnostics tabs through [PR #18](https://github.com/kf6ufo/wsjtx-dashboard/pull/18). Application source **`2f8762f`** matches the validated preview byte-for-byte. **262 backend tests**, **38 frontend tests**, type checking/production build and the production-build MQTT Diagnostics and existing loopback UDP Chrome workflows passed. Desktop dark and narrow light layouts were visually inspected; local Markdown links passed.
