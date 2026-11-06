@@ -45,6 +45,12 @@ Same-call repeat clicks may not produce Status changes. Current-band counts incl
 
 Historical field-coverage validation at application `b2338e6` passed **179 backend tests**, **35 frontend tests**, type checking/build and **five affected browser workflows**. Those results precede this documentation branch. A Starlette/httpx deprecation and a separately loaded map-renderer size advisory remain.
 
+## Compact Station map header follow-up — November 6
+
+The operator authorized a compact Station map header and main publication through [PR #20](https://github.com/kf6ufo/wsjtx-dashboard/pull/20). At application source **`27cb45d`**, the normal desktop header measured **36px**, down from **131.5px** with the same fictional fixture; the map canvas remains 280px. Station/grid, reception summary, time window and zoom/Center controls share one toolbar. Narrow screens use two compact rows; failure/missing-data explanations remain visible when needed.
+
+**38 frontend tests**, type checking/production build and the affected Chrome reception workflow passed. Desktop dark/narrow light layouts and all three refreshed documentation captures passed visual review, preserving fictional dots and map attribution. A fresh source export passed the real native installer with a new Python environment and locked dependencies on macOS arm64 / Python 3.13.1 / Node 24.21.0. Local Markdown links passed. Version remains `0.9.0-rc.1`; backend/integration logic, operating services/settings/data and dependencies are unchanged. Ubuntu/other-browser execution of this layout remains unverified.
+
 ## Launcher and reception imagery follow-up — November 6
 
 The operator authorized `run.sh`, refreshed PSKReporter documentation imagery and main publication through [PR #19](https://github.com/kf6ufo/wsjtx-dashboard/pull/19). At source **`9326fd6`**, **262 backend tests**, shell/JavaScript syntax checks, type checking and production build passed. The real installed-server test uses the launcher from outside the checkout with a spaced config filename and unrelated active-environment variable; it preserves configuration/state across two starts and propagates termination with an open SSE stream.
