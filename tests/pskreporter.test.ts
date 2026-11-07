@@ -6,6 +6,11 @@ const spot: ReceptionSpot = { sender:'N0CALL', receiver:'K1FOCUS', band:'20m', g
 const feed = (spots: ReceptionSpot[]): PskReporterState => ({ config:{enabled:true,callsign:'',window_minutes:15}, status:'connected', error:'', callsigns:['N0CALL'], spots, connectedAt:now-120000, evicted:0 })
 
 describe('recent reception overlay', () => {
+ it('includes ten-character receiver grids without truncating their precision', () => {
+  const extended = {...spot, grid:'EN34qb49ta', band:'12m', frequency:24915791}
+  expect(receptionSpots(feed([extended]),'N0CALL','12m',15,now)).toEqual([extended])
+  expect(receptionLabel(extended,now)).toContain('EN34qb49ta (approximate)')
+ })
  it('shows only the transmitting identity and focus band, deduplicates latest receiver across modes', () => {
   const data = feed([spot, {...spot,mode:'FT4',heardAt:now-30000}, {...spot,sender:'K2OTHER'}, {...spot,band:'15m'}, {...spot,receiver:'K3OLD',heardAt:now-20*60000}, {...spot,receiver:'K4BAD',grid:'ZZ99'}, {...spot,receiver:'K5FUTURE',heardAt:now+60000}])
   expect(receptionSpots(data,'N0CALL','20m',15,now)).toEqual([{...spot,mode:'FT4',heardAt:now-30000}])

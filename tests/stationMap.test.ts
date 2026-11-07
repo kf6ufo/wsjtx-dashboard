@@ -17,6 +17,24 @@ describe('station map location', () => {
   expect(gridLocation('RR99')?.lng).toBe(179)
   for (const raw of ['', 'ZZ99', 'AA', 'AA000', 'AA00ZZ', 0, null, '<img>']) expect(gridLocation(raw)).toBeUndefined()
  })
+ it('uses the full ten-character locator for its center and bounds', () => {
+  const location = gridLocation(' en34QB49ta ')!
+  expect(location.label).toBe('EN34QB49TA')
+  expect(location.lng).toBeCloseTo(-92.6265625, 9)
+  expect(location.lat).toBeCloseTo(44.07925347222222, 9)
+  const [[south, west], [north, east]] = location.bounds!
+  expect(east - west).toBeCloseTo(2 / 5760, 12)
+  expect(north - south).toBeCloseTo(1 / 5760, 12)
+  const parent = gridLocation('EN34qb49')!.bounds!
+  expect(south).toBeGreaterThanOrEqual(parent[0][0])
+  expect(west).toBeGreaterThanOrEqual(parent[0][1])
+  expect(north).toBeLessThanOrEqual(parent[1][0])
+  expect(east).toBeLessThanOrEqual(parent[1][1])
+  expect(gridLocation('AA00aa00aa')!.bounds![0]).toEqual([-90, -180])
+  expect(gridLocation('RR99xx99xx')!.bounds![1][0]).toBeCloseTo(90, 12)
+  expect(gridLocation('RR99xx99xx')!.bounds![1][1]).toBeCloseTo(180, 12)
+  for (const raw of ['EN34qb49t', 'EN34qb49taa', 'EN34qb49ya', 'EN34qb49ay', 'EN34qb49a0', 'EN34qb4ata', 'EN34yb49ta', 'SN34qb49ta', 'EN34qb49ta00']) expect(gridLocation(raw)).toBeUndefined()
+ })
  it('shows a selected operating grid immediately, ahead of conflicting callbook coordinates', () => {
   expect(stationMapLocation('K1ACT', entry, enrichment)).toMatchObject({ lat: 35.5, lng: 137, detail: 'WSJT-X operating grid · approximate center' })
   expect(stationMapLocation('K1ACT', entry)).toMatchObject({ label: 'PM85' })
