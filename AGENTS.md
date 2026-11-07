@@ -34,6 +34,8 @@ The November 7 operator request authorizes publishing the reviewed 10-character 
 
 The subsequent November 7 operator request authorizes implementing bounded PSKReporter receiver identifiers with numeric/text hyphen suffixes and publishing to `main` for testing through PR #23, preserving feature history. Validated application source is `eed3c3c`. Retain complete receiver identifiers in Diagnostics, map labels and deduplication; do not conflate a suffixed receiver with its base callsign. Transmitter/selection/settings/QSO validation remains unchanged. Keep `0.9.0-rc.1` and all operating installation settings/services/logs/queues unchanged; do not deploy/restart, create a release/tag or change visibility. See `docs/current-checkpoint.md` and `docs/pskreporter.md`.
 
+The later November 7 operator request authorizes basic PSKReporter Diagnostics filtering by Sender → receiver, Band / mode and Result, plus publication to `main` for testing through PR #24. Validated application source is `66a271f`. Filters apply locally to retained report rows, preserve collection/counters/map behavior and keep version `0.9.0-rc.1`. Preserve feature history and operating installation settings/services/logs/queues; source publication does not deploy/restart the station installation or authorize a release/tag/visibility change. See `docs/current-checkpoint.md` and `docs/pskreporter.md#diagnostics`.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).
