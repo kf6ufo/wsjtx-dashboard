@@ -9,7 +9,7 @@ export interface StationLocation {
 export function gridLocation(raw: unknown): StationLocation | undefined {
  if (typeof raw !== 'string') return
  const grid = raw.trim().toUpperCase()
- if (!/^[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)?$/.test(grid)) return
+ if (!/^[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2}(?:[A-X]{2})?)?)?$/.test(grid)) return
  let lng = -180 + (grid.charCodeAt(0) - 65) * 20 + Number(grid[2]) * 2
  let lat = -90 + (grid.charCodeAt(1) - 65) * 10 + Number(grid[3])
  let width = 2, height = 1
@@ -18,9 +18,14 @@ export function gridLocation(raw: unknown): StationLocation | undefined {
   lng += (grid.charCodeAt(4) - 65) * width
   lat += (grid.charCodeAt(5) - 65) * height
  }
- if (grid.length === 8) {
+ if (grid.length >= 8) {
   width /= 10; height /= 10
   lng += Number(grid[6]) * width; lat += Number(grid[7]) * height
+ }
+ if (grid.length === 10) {
+  width /= 24; height /= 24
+  lng += (grid.charCodeAt(8) - 65) * width
+  lat += (grid.charCodeAt(9) - 65) * height
  }
  return { lat: lat + height / 2, lng: lng + width / 2, bounds: [[lat, lng], [lat + height, lng + width]], label: grid, detail: 'Approximate grid center', zoom: grid.length === 4 ? 6 : 9 }
 }

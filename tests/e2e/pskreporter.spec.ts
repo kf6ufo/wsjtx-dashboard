@@ -10,7 +10,7 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
   counters:{packets:5,decodes:3,malformed:0}, receiver:{status:'listening',error:null},
   preferences:{title:'Reception overlay preview · fictional stations',appearance:'dark',radioStrip:false},
   pskreporter:{config:{enabled:true,callsign:'',window_minutes:15},status:'connected',error:'',callsigns:['N0CALL'],connectedAt:now-600000,evicted:0,
-   spots:[spot,{...spot,receiver:'K2NEAR',grid:'FN32',mode:'FT4',heardAt:now-120000},{...spot,receiver:'K3OLDER',grid:'FM29',heardAt:now-1200000},{...spot,receiver:'K4BAND',band:'15m'},{...spot,sender:'K5OTHER',receiver:'K6IDENTITY'}]}}
+   spots:[spot,{...spot,receiver:'K2NEAR',grid:'FN32ab49ta',mode:'FT4',heardAt:now-120000},{...spot,receiver:'K3OLDER',grid:'FM29',heardAt:now-1200000},{...spot,receiver:'K4BAND',band:'15m'},{...spot,sender:'K5OTHER',receiver:'K6IDENTITY'}]}}
  const errors:string[]=[]; page.on('pageerror', error=>errors.push(error.message))
  await page.clock.install({time:now})
  await mockMapTiles(page)
@@ -28,6 +28,7 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  await page.goto('/')
  await expect(page.locator('.station-map-canvas')).toHaveAttribute('data-basemap-state','ready')
  await expect(page.locator('.station-map-reception')).toHaveCount(2)
+ await expect(page.locator('.station-map-reception[aria-label^="K2NEAR heard"]')).toHaveAttribute('aria-label', /FN32ab49ta/)
  const header=await page.locator('.station-map-heading').boundingBox()
  const mapCanvas=await page.locator('.station-map-canvas').boundingBox()
  expect(header!.height).toBeLessThanOrEqual(44)

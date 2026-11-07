@@ -48,7 +48,7 @@ def inspect_spot(payload, calls, now):
         grid = data.get('rl')
         if not isinstance(grid, str): return None, 'invalid_grid', preview
         grid = grid.strip().upper()
-        if not re.fullmatch(r'[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2})?)?', grid): return None, 'invalid_grid', preview
+        if not re.fullmatch(r'[A-R]{2}[0-9]{2}(?:[A-X]{2}(?:[0-9]{2}(?:[A-X]{2})?)?)?', grid): return None, 'invalid_grid', preview
         frequency, heard = data.get('f'), data.get('t_tx', data.get('t'))
         if type(frequency) not in (int, float) or not math.isfinite(frequency): return None, 'unsupported_frequency', preview
         band = band_from_hz(frequency)

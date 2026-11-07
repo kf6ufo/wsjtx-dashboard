@@ -30,6 +30,8 @@ The November 6 operator request authorizes compacting the Station map header and
 
 The subsequent November 6 operator request authorizes expanding the Station map to the remaining viewport height in full-screen mode, with main publication after validation. Keep contacts accessible below the map, retain a usable minimum height on short screens and preserve normal-window sizing. Source publication does not update/restart the operating installation or change settings/integrations/version.
 
+The November 7 operator request authorizes publishing the reviewed 10-character PSKReporter locator correction to `main` through PR #22, preserving feature history. Validated application source is `d3d8b67`. MQTT reception and browser map conversion accept valid 4/6/8/10-character locators, retaining full map precision; logging-field validation is unchanged. Keep `0.9.0-rc.1`, saved settings, integrations and operating station services unchanged. This is source publication only; do not update/restart the operating installation, create a release/tag or change visibility. See `docs/current-checkpoint.md`.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

@@ -52,6 +52,44 @@ def test_schema_time_frequency_band_and_literal_portable_calls():
         assert parse_spot(raw, {'N0CALL'}, NOW) is None
 
 
+@pytest.mark.parametrize('grid', ['EN34', 'EN34qb', 'EN34qb49', 'EN34qb49ta', 'en34QB49TA',
+    ' EN34qb49ta ', 'AA00aa00aa', 'RR99xx99xx'])
+def test_receiver_grid_precision_and_case_are_preserved(grid):
+    parsed, reason, preview = inspect_spot(spot(rl=grid), {'N0CALL'}, NOW)
+    assert parsed is not None and reason == ''
+    assert parsed['grid'] == grid.strip().upper()
+    assert preview['rl'] == grid
+
+
+@pytest.mark.parametrize('grid', ['EN34qb49t', 'EN34qb49taa', 'EN34qb49ya', 'EN34qb49ay',
+    'EN34qb49a0', 'EN34qb4ata', 'EN34yb49ta', 'SN34qb49ta', 'EN34qb49ta00'])
+def test_malformed_extended_receiver_grids_are_rejected(grid):
+    parsed, reason, _ = inspect_spot(spot(rl=grid), {'N0CALL'}, NOW)
+    assert parsed is None and reason == 'invalid_grid'
+
+
+def test_extended_receiver_grid_reaches_diagnostics_and_map_snapshot(tmp_path):
+    state = WorkspaceState(tmp_path/'workspace.sqlite3'); state.enter_radio_workspace()
+    try:
+        state.call = 'K1FOCUS'
+        state.history = [dict(call='K1FOCUS',rigId='A',stationCall='N0CALL',band='12m',selectedAt=NOW*1000,recency=1)]
+        history = deepcopy(state.history)
+        service = PskReporterService(state, PskReporterSettings(True,'N0CALL'),client_factory=FakeClient,clock=lambda:NOW)
+        service.calls = {'N0CALL'}
+        payload = spot(rl='EN34qb49ta', f=24915791, rp=-13)
+        assert service.ingest(payload)
+        report = service.snapshot()['spots'][0]
+        assert report['grid'] == 'EN34QB49TA' and report['band'] == '12m' and report['snr'] == -13
+        d = service.diagnostics()
+        assert d['counts']['accepted'] == 1 and d['counts']['rejected'] == 0
+        assert d['counts']['matchingWindow'] == 1 and not d['rejectionReasons']
+        assert d['reports'][0]['outcome'] == 'accepted' and d['reports'][0]['preview']['rl'] == 'EN34qb49ta'
+        assert state.call == 'K1FOCUS' and state.history == history
+        assert not service.ingest(payload)  # The longer locator retains existing duplicate protection.
+        assert service.diagnostics()['counts']['duplicates'] == 1
+    finally: state.close()
+
+
 class FakeClient:
     def __init__(self, inbox):
         self.inbox, self.topics, self.removed = inbox, [], []
