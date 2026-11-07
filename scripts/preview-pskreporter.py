@@ -36,7 +36,7 @@ class FixtureFeed:
                 ('K3COAST','FM29',180,14074000), ('W4NEAR','FM17',300,14074000),
                 ('K5WEST','EM59',420,14074000), ('K6OLDER','EN80',1200,14074000),
                 ('K7BAND','FN20',30,21074000)]:
-            payload = dict(sc='N0CALL',rc=call,rl=grid,f=frequency,md='FT8',rp=-12,t=now-age)
+            payload = dict(sc='N0CALL',rc=call,rl=grid,f=frequency,md='FT4' if call == 'K2NEAR-888' else 'FT8',rp=-12,t=now-age)
             self.inbox.put_nowait(('spot', json.dumps(payload).encode()))
         # Diagnostic fixtures: duplicate, stale, invalid-grid and malformed data.
         base = dict(sc='N0CALL',rc='K1FOCUS',rl='FN31',f=14074000,md='FT8',rp=-12,t=now-60)
