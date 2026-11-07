@@ -5,6 +5,7 @@ test('UDP and MQTT diagnostics distinguish wire traffic, filtering and map match
  const first=await browser.newPage(), second=await browser.newPage(), errors:string[]=[]
  for (const page of [first,second]) { await mockMapTiles(page); page.on('pageerror',error=>errors.push(error.message)); await page.goto(baseURL!) }
  await expect(second.locator('.station-map-reception')).toHaveCount(5)
+ await expect(second.locator('.station-map-reception[aria-label^="K2NEAR-888 heard"]')).toHaveCount(1)
  const original=(await(await request.get('/api/snapshot')).json()).history
  await first.getByRole('button',{name:'Diagnostics',exact:true}).click()
  await expect(first.getByRole('tab',{name:'UDP',exact:true})).toHaveAttribute('aria-selected','true')
@@ -18,6 +19,7 @@ test('UDP and MQTT diagnostics distinguish wire traffic, filtering and map match
  await expect(stats).toHaveText(['11','7','3','1','7','5'])
  await expect(panel.locator('.psk-band-list')).toContainText('N0CALL · 15m · 1')
  await expect(panel.locator('.psk-band-list')).toContainText('N0CALL · 20m · 6')
+ await expect(panel.locator('.psk-report-table tbody tr').filter({hasText:'K2NEAR-888'})).toContainText('accepted')
  await panel.getByLabel('Reception outcome').selectOption('rejected')
  await expect(panel.locator('.psk-report-table tbody tr')).toHaveCount(3)
  await expect(panel.locator('.psk-report-table')).toContainText('Missing or invalid receiver grid')

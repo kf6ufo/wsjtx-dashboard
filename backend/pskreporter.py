@@ -22,6 +22,17 @@ CACHE_LIMIT = 10000
 MAX_AGE = 3600
 
 
+def normalize_receiver(raw):
+    """Keep a receiver's station suffix without relaxing transmitted callsigns."""
+    if not isinstance(raw, str) or not raw.isascii() or not raw.isprintable(): return None
+    receiver = raw.strip().upper()
+    if not 3 <= len(receiver) <= 32: return None
+    base, separator, suffix = receiver.partition('-')
+    if normalize_call(base) != base: return None
+    if separator and not re.fullmatch(r'[A-Z0-9]+(?:-[A-Z0-9]+)*', suffix): return None
+    return receiver
+
+
 def topic_for(call):
     # Portable calls use a literal slash, which occupies another MQTT level.
     return f'pskr/filter/v2/+/+/{call}/#'
@@ -42,7 +53,7 @@ def inspect_spot(payload, calls, now):
             elif type(value) in (int, float) and math.isfinite(value): preview[key] = value
         tx, rx = data.get('sc'), data.get('rc')
         if not isinstance(tx, str) or not isinstance(rx, str): return None, 'invalid_callsign', preview
-        tx, rx = normalize_call(tx), normalize_call(rx)
+        tx, rx = normalize_call(tx), normalize_receiver(rx)
         if not tx or not rx: return None, 'invalid_callsign', preview
         if tx not in calls: return None, 'wrong_sender', preview
         grid = data.get('rl')
