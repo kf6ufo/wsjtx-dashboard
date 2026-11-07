@@ -32,6 +32,8 @@ The subsequent November 6 operator request authorizes expanding the Station map 
 
 The November 7 operator request authorizes publishing the reviewed 10-character PSKReporter locator correction to `main` through PR #22, preserving feature history. Validated application source is `d3d8b67`. MQTT reception and browser map conversion accept valid 4/6/8/10-character locators, retaining full map precision; logging-field validation is unchanged. Keep `0.9.0-rc.1`, saved settings, integrations and operating station services unchanged. This is source publication only; do not update/restart the operating installation, create a release/tag or change visibility. See `docs/current-checkpoint.md`.
 
+The subsequent November 7 operator request authorizes implementing bounded PSKReporter receiver identifiers with numeric/text hyphen suffixes and publishing to `main` for testing through PR #23, preserving feature history. Validated application source is `eed3c3c`. Retain complete receiver identifiers in Diagnostics, map labels and deduplication; do not conflate a suffixed receiver with its base callsign. Transmitter/selection/settings/QSO validation remains unchanged. Keep `0.9.0-rc.1` and all operating installation settings/services/logs/queues unchanged; do not deploy/restart, create a release/tag or change visibility. See `docs/current-checkpoint.md` and `docs/pskreporter.md`.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).
