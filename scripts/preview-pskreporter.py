@@ -32,7 +32,7 @@ class FixtureFeed:
     def subscribe(self, topic, qos):
         now = int(time.time())
         # All callsigns/report locations are deliberately fictional examples.
-        for call, grid, age, frequency in [('K1FOCUS','FN31',60,14074000), ('K2NEAR','FN32',120,14074000),
+        for call, grid, age, frequency in [('K1FOCUS','FN31',60,14074000), ('K2NEAR-888','FN32',120,14074000),
                 ('K3COAST','FM29',180,14074000), ('W4NEAR','FM17',300,14074000),
                 ('K5WEST','EM59',420,14074000), ('K6OLDER','EN80',1200,14074000),
                 ('K7BAND','FN20',30,21074000)]:

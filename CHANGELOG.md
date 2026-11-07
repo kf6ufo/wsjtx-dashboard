@@ -18,6 +18,7 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Changed
 
+- PSKReporter accepts bounded receiver identifiers with numeric/text hyphen suffixes, such as `N9HXR-888`, preserving each receiver's identity in Diagnostics and on the map while keeping transmitter and QSO validation unchanged.
 - PSKReporter reception and map conversion accept valid 10-character Maidenhead locators such as `EN34qb49ta`, retaining their full position precision instead of rejecting the report.
 - In full-screen mode, the Station map grows to the bottom of the viewport, adapts to window/station-content changes and keeps previous contacts available by scrolling. Normal window map height is preserved.
 - Compact Station map toolbar combines location, reception summary, window and zoom/center controls; the normal desktop header is about 73% shorter. Detailed error states remain visible when needed.

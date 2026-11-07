@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from backend.app import create_app
 from backend.config import load_config
 from backend.protocol import parse_packet
-from backend.state import FocusState
+from backend.state import FocusState, normalize_call
 from backend.tests.fixtures import status
 from backend.pskreporter import MqttInbox, PskReporterService, inspect_spot, parse_spot, topic_for
 from backend.pskreporter_config import PskReporterSettings
@@ -50,6 +50,63 @@ def test_schema_time_frequency_band_and_literal_portable_calls():
     assert topic_for('N0CALL/P') == 'pskr/filter/v2/+/+/N0CALL/P/#'
     for raw in (b'null', b'[]', b'bad JSON', b'\xff', b' ' * 4097):
         assert parse_spot(raw, {'N0CALL'}, NOW) is None
+
+
+@pytest.mark.parametrize('receiver', ['N9HXR-888', ' n9hxr-888 ', 'N3AGE-0', 'W1HS-12',
+    'K1FOCUS-RX', 'N0CALL/P-2', 'K1FOCUS-RX-2', 'K1FOCUS', 'N0CALL/P', 'N0CALL-'+'A'*25])
+def test_receiver_identifiers_preserve_numeric_and_text_suffixes(receiver):
+    parsed, reason, _ = inspect_spot(spot(rc=receiver), {'N0CALL'}, NOW)
+    assert parsed is not None and reason == ''
+    assert parsed['receiver'] == receiver.strip().upper()
+
+
+@pytest.mark.parametrize('receiver', [None, 123, True, {}, '', '-888', 'N9HXR-', 'N9HXR--888',
+    'N9HXR -888', 'N9HXR/ -888', 'N9HXR-/888', 'N9HXR-8 8', 'N9HXR_888', 'N9HXR-+', 'N9HXR-#', 'N9HXR-<img>', 'N9HXR-888\x00',
+    '\nN9HXR-888', 'N9HXR-888\t', 'N9HXR-888\x7f', 'N9HXR-８８８', 'Ｎ9HXR-888',
+    'ABC-888', '123-ABC', 'N0CALL-'+'A'*26])
+def test_malformed_receiver_identifiers_are_rejected(receiver):
+    parsed, reason, _ = inspect_spot(spot(rc=receiver), {'N0CALL'}, NOW)
+    assert parsed is None and reason == 'invalid_callsign'
+
+
+def test_receiver_suffix_support_does_not_relax_sender_selection_or_settings_validation():
+    assert normalize_call('N9HXR-888') is None
+    with pytest.raises(ValueError): PskReporterSettings(True, 'N9HXR-888')
+    parsed, reason, _ = inspect_spot(spot(sc='N0CALL-888'), {'N0CALL-888'}, NOW)
+    assert parsed is None and reason == 'invalid_callsign'
+    parsed, reason, _ = inspect_spot(spot(sc='N0CALL/P', rc='N9HXR-888'), {'N0CALL'}, NOW)
+    assert parsed is None and reason == 'wrong_sender'  # Sender matching stays exact.
+
+
+def test_suffixed_receiver_reports_remain_distinct_without_claiming_base_call_reception(tmp_path):
+    async def scenario():
+        state = WorkspaceState(tmp_path/'workspace.sqlite3'); state.enter_radio_workspace()
+        state.call = 'K1FOCUS'
+        state.history = [dict(call='K1FOCUS',rigId='A',stationCall='N0CALL',band='15m',selectedAt=NOW*1000,recency=1)]
+        service = PskReporterService(state, PskReporterSettings(True,'N0CALL'),client_factory=FakeClient,clock=lambda:NOW)
+        try:
+            await service.start(); service.client.connect(); await service.tick()
+            history = deepcopy(state.history)
+            for receiver in ('K1FOCUS-888', 'K1FOCUS-1'):
+                service.inbox.put_nowait(('spot', spot(rc=receiver, f=21074669)))
+            await service.tick()
+            d = service.diagnostics()
+            assert d['counts']['accepted'] == 2 and d['counts']['rejected'] == 0
+            assert d['counts']['matchingWindow'] == 2 and not d['focus']['focusHeard']
+            assert {s['receiver'] for s in service.snapshot()['spots']} == {'K1FOCUS-888', 'K1FOCUS-1'}
+            assert all(r['outcome'] == 'accepted' for r in d['reports'])
+            assert d['reports'][0]['preview']['rc'] == 'K1FOCUS-1'
+            assert not service.ingest(spot(rc='k1focus-888', f=21074669, t=NOW-90))
+            assert service.ingest(spot(rc='k1focus-888', f=21074669, t=NOW-30))
+            assert service.ingest(spot(rc='K1FOCUS', f=21074669))
+            d = service.diagnostics()
+            assert d['counts']['cached'] == 3 and d['counts']['duplicates'] == 1
+            assert d['focus']['focusHeard']
+            assert service.cache[('N0CALL','15m','K1FOCUS-888')]['heardAt'] == (NOW-30)*1000
+            assert state.call == 'K1FOCUS' and state.history == history
+        finally:
+            await service.stop(); state.close()
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize('grid', ['EN34', 'EN34qb', 'EN34qb49', 'EN34qb49ta', 'en34QB49TA',
