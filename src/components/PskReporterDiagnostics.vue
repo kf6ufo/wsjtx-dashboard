@@ -4,8 +4,16 @@ import type { Dashboard } from '../focus'
 import type { PskReporterDiagnostics } from '../types'
 const props = defineProps<{ dashboard: Dashboard; active: boolean }>()
 const data = ref<PskReporterDiagnostics>(), error = ref(''), paused = ref(false), filter = ref('all'), clearing = ref(false)
+const calls = ref(''), bandMode = ref('')
 let stopped = false, requesting = false, generation = 0
-const rows = computed(() => data.value?.reports.filter(row => filter.value === 'all' || row.outcome === filter.value) ?? [])
+type Report = PskReporterDiagnostics['reports'][number]
+const reportBandMode = (row: Report) => `${row.band || (typeof row.preview.f === 'number' ? `${(row.preview.f / 1e6).toFixed(6)} MHz` : 'Unknown')} / ${row.preview.md || '—'}`
+const matches = (value: string, query: string) => query.toUpperCase().trim().split(/\s+/).every(term => value.toUpperCase().includes(term))
+const rows = computed(() => data.value?.reports.filter(row =>
+ (filter.value === 'all' || row.outcome === filter.value) &&
+ matches(`${row.preview.sc || '—'} → ${row.preview.rc || '—'}`, calls.value) && matches(reportBandMode(row), bandMode.value)) ?? [])
+const filtered = computed(() => !!(calls.value.trim() || bandMode.value.trim() || filter.value !== 'all'))
+function resetFilters() { calls.value = ''; bandMode.value = ''; filter.value = 'all' }
 const reasons: Record<string,string> = { malformed_json:'Invalid JSON', invalid_payload:'Invalid payload', invalid_callsign:'Invalid callsign', wrong_sender:'Different transmitting callsign', invalid_grid:'Missing or invalid receiver grid', unsupported_frequency:'Unknown band / invalid frequency', invalid_timestamp:'Missing or invalid report time', too_old:'Report older than one hour', future_timestamp:'Report time is in the future', oversized:'Payload exceeds 4096 bytes', duplicate_or_older:'Duplicate or older report' }
 const reason = (key:string) => reasons[key] || key
 const utc = (at: number | null | undefined) => at ? `${new Date(at).toISOString().slice(0,10)} ${new Date(at).toISOString().slice(11,19)}` : 'None yet'
@@ -52,12 +60,23 @@ onUnmounted(() => { stopped = true; ++generation; window.clearInterval(timer) })
    <h3>Cached receivers by band <small>Last hour · all monitored callsigns</small></h3>
    <div class="psk-band-list"><span v-for="band in data.bands" :key="`${band.sender}:${band.band}`" class="band-tag">{{ band.sender }} · {{ band.band }} · {{ band.count }}</span><p v-if="!data.bands.length">No usable reception reports cached.</p></div>
    <p class="diagnostic-note">{{ data.counts.focusBand }} receivers cached on the focus band for the transmitting callsign. The Station map’s local time-window selection can differ from the saved default shown here. No historical backfill; reports may arrive late.</p>
-   <div class="diagnostic-toolbar"><label>Reception outcome<select v-model="filter" class="form-select"><option value="all">All recent messages</option><option value="accepted">Accepted reports</option><option value="rejected">Rejected reports</option><option value="duplicate">Duplicate / older reports</option></select></label><button class="btn console-button" :aria-pressed="paused" @click="togglePause">{{ paused ? 'Resume MQTT display' : 'Pause MQTT display' }}</button><button class="btn console-button" :disabled="clearing" @click="clear">Clear MQTT diagnostic rows</button></div>
+   <div class="diagnostic-toolbar psk-report-filters" role="group" aria-label="MQTT report filters">
+    <label>Sender → receiver<input v-model="calls" type="search" class="form-control" placeholder="Either callsign" aria-describedby="psk-filter-help" maxlength="100" /></label>
+    <label>Band / mode<input v-model="bandMode" type="search" class="form-control" placeholder="20m FT8" aria-describedby="psk-filter-help" maxlength="100" /></label>
+    <label>Result<select v-model="filter" class="form-select"><option value="all">All recent messages</option><option value="accepted">Accepted reports</option><option value="rejected">Rejected reports</option><option value="duplicate">Duplicate / older reports</option></select></label>
+    <button class="btn console-button" :disabled="!filtered" @click="resetFilters">Reset filters</button>
+    <button class="btn console-button" :aria-pressed="paused" @click="togglePause">{{ paused ? 'Resume MQTT display' : 'Pause MQTT display' }}</button><button class="btn console-button" :disabled="clearing" @click="clear">Clear MQTT diagnostic rows</button>
+   </div>
+   <p id="psk-filter-help" class="diagnostic-note">Search partial callsigns, bands or modes, ignoring case. Space-separated terms and all three filters apply together to retained report rows only.</p>
+   <p class="diagnostic-note psk-filter-count" aria-live="polite">Showing {{ rows.length }} of {{ data.reports.length }} retained messages.</p>
    <p class="diagnostic-note">{{ paused ? 'Display paused; collection continues.' : 'Newest first; refreshes every second while this tab is open.' }} Counters cover this server session. Clear removes recent rows only; counters, reception cache, focus and contact data are preserved.</p>
    <div v-if="Object.keys(data.rejectionReasons).length" class="psk-rejection-reasons"><span v-for="(count,key) in data.rejectionReasons" :key="key">{{ reason(key) }}: <strong>{{ count }}</strong></span></div>
-   <div class="packet-scroll" tabindex="0" aria-label="MQTT reception reports"><table class="table qso-table psk-report-table"><thead><tr><th>Arrived · UTC</th><th>Sender → receiver</th><th>Band / mode</th><th>Grid / SNR</th><th>Result</th></tr></thead><tbody><tr v-for="row in rows" :key="row.id"><td>{{ utc(row.at) }}<small>{{ row.size }} bytes</small></td><td>{{ row.preview.sc || '—' }} → {{ row.preview.rc || '—' }}<small class="psk-topic" :title="row.topic">{{ row.topic }}</small></td><td>{{ row.band || (typeof row.preview.f === 'number' ? `${(row.preview.f / 1e6).toFixed(6)} MHz` : 'Unknown') }} / {{ row.preview.md || '—' }}</td><td>{{ row.preview.rl || '—' }}<small>{{ row.preview.rp !== undefined ? `${row.preview.rp} dB` : 'SNR unavailable' }}</small></td><td :class="{ 'error-text': row.outcome === 'rejected' }">{{ row.outcome }}<small v-if="row.reason">{{ reason(row.reason) }}</small></td></tr><tr v-if="!rows.length"><td colspan="5">No retained messages match this filter. Use the connection/subscription status above to check collection.</td></tr></tbody></table></div>
+   <div class="packet-scroll" tabindex="0" aria-label="MQTT reception reports"><table class="table qso-table psk-report-table"><thead><tr><th>Arrived · UTC</th><th>Sender → receiver</th><th>Band / mode</th><th>Grid / SNR</th><th>Result</th></tr></thead><tbody><tr v-for="row in rows" :key="row.id"><td>{{ utc(row.at) }}<small>{{ row.size }} bytes</small></td><td>{{ row.preview.sc || '—' }} → {{ row.preview.rc || '—' }}<small class="psk-topic" :title="row.topic">{{ row.topic }}</small></td><td>{{ reportBandMode(row) }}</td><td>{{ row.preview.rl || '—' }}<small>{{ row.preview.rp !== undefined ? `${row.preview.rp} dB` : 'SNR unavailable' }}</small></td><td :class="{ 'error-text': row.outcome === 'rejected' }">{{ row.outcome }}<small v-if="row.reason">{{ reason(row.reason) }}</small></td></tr><tr v-if="!rows.length"><td colspan="5">No retained messages match these filters. Use the connection/subscription status above to check collection.</td></tr></tbody></table></div>
    <h3>Connection activity</h3><div class="packet-scroll psk-event-scroll" tabindex="0" aria-label="MQTT connection activity"><table class="table qso-table"><thead><tr><th>Time · UTC</th><th>Event</th><th>Details</th></tr></thead><tbody><tr v-for="event in data.events" :key="event.id"><td>{{ utc(event.at) }}</td><td>{{ event.kind }}</td><td>{{ event.message }}</td></tr><tr v-if="!data.events.length"><td colspan="3">No retained connection events.</td></tr></tbody></table></div>
    <p class="diagnostic-note">Queue {{ data.counts.queued }}/{{ data.limits.queue }} · {{ data.counts.queueDropped }} reports dropped by queue capacity · {{ data.counts.controlDropped }} connection events dropped · {{ data.counts.oversized }} oversized payloads · {{ data.counts.evicted }} cache evictions · {{ data.counts.expired }} expired/removed entries · {{ data.counts.bytes }} received bytes. Retains {{ data.limits.reports }} message summaries and {{ data.limits.events }} connection events in memory; no raw MQTT payloads are saved.</p>
   </template>
  </section>
 </template>
+<style scoped>
+.psk-report-filters input::placeholder { color: var(--muted); opacity: 1 }
+</style>
