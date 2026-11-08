@@ -47,7 +47,12 @@ const outlook = computed(() => calculateQsoOutlook({ feed: props.receptions, sen
 const focusSpot = computed(() => spots.value.find(spot => spot.receiver === props.call) ?? outlook.value.direct)
 const outlookSummary = computed(() => `QSO Outlook: ${outlook.value.score === null ? 'Unknown' : `${outlook.value.score}/100 — ${outlook.value.classification}`}`)
 const popupOpen = ref(false), popup = ref<InstanceType<typeof QsoOutlookPopup>>()
-async function openOutlook() { popupOpen.value = true; await nextTick(); popup.value?.focus() }
+async function toggleOutlook() {
+ if (popupOpen.value) { closeOutlook(); return }
+ popupOpen.value = true
+ await nextTick()
+ popup.value?.focus()
+}
 function closeOutlook() { popupOpen.value = false; focusMarker?.getElement()?.focus({ preventScroll: true }) }
 const receptionStatus = computed(() => {
  const feed = props.receptions
@@ -99,8 +104,8 @@ async function updateReceptions() {
    title: text.textContent, keyboard: true, zIndexOffset: spot.receiver === props.call ? 1100 : 1000,
   }).bindTooltip(text, { direction: 'top' }).addTo(receptionMarkers)
   marker.getElement()?.setAttribute('aria-label', text.textContent)
-  // The amber center dot sits above the pin; it opens the same focus popup.
-  if (spot.receiver === props.call) marker.on('click', openOutlook)
+  // The amber center dot sits above the pin; it toggles the same focus popup.
+  if (spot.receiver === props.call) marker.on('click', toggleOutlook)
  }
 }
 async function loadBasemap(target: LeafletMap) {
@@ -166,9 +171,9 @@ async function update() {
   const element = marker.getElement()
   element?.setAttribute('aria-expanded', 'false')
   element?.addEventListener('keydown', event => {
-   if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); void openOutlook() }
+   if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); void toggleOutlook() }
   })
-  marker.on('click', openOutlook)
+  marker.on('click', toggleOutlook)
   updateOutlook()
   if (!basemapRequest || basemapRequest.signal.aborted) void loadBasemap(map)
   ready.value = true
