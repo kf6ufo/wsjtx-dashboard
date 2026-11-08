@@ -46,7 +46,7 @@ onUnmounted(() => { stopped = true; ++generation; window.clearInterval(timer) })
 <template>
  <section class="psk-diagnostics" aria-label="PSKReporter MQTT diagnostics">
   <div class="diagnostics-heading"><div><span class="section-eyebrow">MQTT / RECEIVE ONLY</span><h3>PSKReporter interface</h3></div><span v-if="data" class="psk-feed-badge" :data-status="data.status">{{ data.status }}</span></div>
-  <p>Browser stream: {{ dashboard.state.connection }}. Diagnostic polling reads this Dashboard’s local collector; it does not query PSKReporter.</p>
+  <p>Browser updates: {{ dashboard.state.connection }}. Diagnostic polling reads this Dashboard’s local collector; it does not query PSKReporter.</p>
   <p v-if="error" class="connection-note" role="alert">{{ error }}<span v-if="data"> Last successful diagnostic response: {{ utc(data.generatedAt) }} UTC.</span></p>
   <p v-if="!data && !error" role="status">Loading MQTT diagnostics…</p>
   <template v-if="data">

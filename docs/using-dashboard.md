@@ -10,6 +10,12 @@ Station shows the focused callsign, available operator information/photo, compac
 
 The callsign and Focus History update immediately after a reported selection change. Enrichment and history arrive independently; a slow lookup for an older station cannot replace your newer focus. Opening several browsers shares the server's focus/history. A reconnect obtains a fresh snapshot.
 
+### Automatic browser recovery
+
+If browser updates go quiet for about 30 seconds, Dashboard checks the server directly. It catches up any newer state and reconnects a stalled live stream automatically. Returning to the tab or waking its window also prompts a check. A check has an eight-second deadline; an unavailable server shows the existing reconnecting notice and checks continue. Quiet radios are valid inactivity: an unchanged server snapshot does not cause repeated stream restarts. No receiver restart is involved.
+
+Diagnostics shows **Browser updates** and **Last browser check** separately from **Last packet**. The browser check can stay fresh while radios are silent. A stalled UDP packet-list request times out after ten seconds and polling resumes automatically. These browser checks do not diagnose every possible receiver or network failure; [issue #16](https://github.com/kf6ufo/wsjtx-dashboard/issues/16) also tracks the separate receiver-supervision work.
+
 ## Full screen and multiple monitors
 
 Move the browser window onto the monitor you want to use, then click **Full screen** in the toolbar. The browser hides its tabs/address bar; Dashboard hides its title/footer, reduces the outer margins and keeps a compact navigation/status toolbar. Click **Exit full screen** or press **Esc** to return to the normal view.

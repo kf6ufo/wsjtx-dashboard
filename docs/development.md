@@ -27,6 +27,7 @@ npx playwright install chromium
 npm run test:e2e
 npm run test:e2e:foundation
 npm run test:e2e:receiver
+npm run test:e2e:live
 npm run test:e2e:enrichment
 npm run test:e2e:wavelog
 npm run test:e2e:qso
@@ -34,6 +35,8 @@ npm run test:e2e:steps57
 ```
 
 Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` when using installed macOS Chrome. The foundation browser suite runs the real installed server against a temporary config/database and production build. See the checkpoint for actual results. The receiver browser suite starts the installed entry point with loopback UDP 18238 and HTTP 8792; it sends synthetic protocol fixtures through an actual UDP socket. This validates socket/parse/state/browser behavior, not real WSJT-X or multicast.
+
+The live-recovery browser workflow uses the same isolated fixture ports in a separate run. It suppresses snapshot callbacks on an otherwise-open browser stream while the real fixture backend continues receiving UDP, then verifies automatic catch-up, stream replacement, resumed-page validation and subsequent live selections without reloading. It also holds one diagnostics request pending to verify its deadline and retry. Run it separately from the receiver workflow so each starts with a fresh temporary workspace. Unit tests cover quiet unchanged state, old revisions/epochs, overlapping checks, timeout, offline/resume and disposal with fake clocks. This fault injection validates recovery behavior, not the original Safari transport trigger or multi-day reproduction.
 
 Optional read-only actual station check (requires the running receiver and real traffic):
 
