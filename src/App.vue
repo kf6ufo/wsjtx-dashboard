@@ -50,7 +50,7 @@ if (!state.call && !state.live) {
 const entry = computed(() => state.history.find(e => e.call === state.call)!)
 const displayRigs = computed(() => state.live ? state.liveRigs : rigs)
 const rig = (id: string) => displayRigs.value.find(r => r.id === id) ?? { name: id, color: '#70c9bd', mode: '' }
-const radioStatus = computed(() => state.connection !== 'connected' ? 'Radio server disconnected' : state.receiver.status === 'listening' ? 'Radio receiver listening' : state.receiver.status === 'error' ? 'Radio receiver unavailable' : 'Radio receiver disabled')
+const radioStatus = computed(() => state.connection !== 'connected' ? 'Browser updates reconnecting' : state.receiver.status === 'listening' ? 'Radio receiver listening' : state.receiver.status === 'error' ? 'Radio receiver unavailable' : 'Radio receiver disabled')
 const profile = computed(() => state.profile.status === 'loaded' ? state.profile.data : null)
 const radioFields = computed(() => state.enrichment?.result.call === state.call ? state.enrichment.result.fields ?? {} : {})
 const radioPhoto = computed(() => photoUrl(radioFields.value.image) || photoUrl(state.photoUrls[state.call]))

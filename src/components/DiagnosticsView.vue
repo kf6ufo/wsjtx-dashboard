@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type { Dashboard } from '../focus'
 import UdpDiagnostics from './UdpDiagnostics.vue'
 import PskReporterDiagnostics from './PskReporterDiagnostics.vue'
-defineProps<{ dashboard: Dashboard }>()
+const props = defineProps<{ dashboard: Dashboard }>()
+const browserCheck = computed(() => props.dashboard.state.lastServerUpdateAt === null ? 'Waiting for server data' : new Date(props.dashboard.state.lastServerUpdateAt).toISOString().slice(0,19).replace('T',' ') + ' UTC')
 const tab = ref<'udp' | 'pskreporter'>('udp')
 const tabs = [{id:'udp',label:'UDP'}, {id:'pskreporter',label:'PSKReporter MQTT'}] as const
 async function navigate(event: KeyboardEvent, index: number) {
@@ -17,6 +18,7 @@ async function navigate(event: KeyboardEvent, index: number) {
  <section class="utility-panel diagnostics-view" aria-label="Diagnostics">
   <h2>Diagnostics</h2>
   <p class="diagnostic-note">{{ dashboard.state.preferences.title }} · receive-only interface diagnostics</p>
+  <p v-if="dashboard.state.live" class="diagnostic-note" aria-label="Browser update status">Browser updates: {{ dashboard.state.connection }} · Last browser check: {{ browserCheck }}.</p>
   <div class="settings-tabs diagnostics-tabs" role="tablist" aria-label="Diagnostics interfaces">
    <button v-for="(item,index) in tabs" :key="item.id" :id="`diagnostics-tab-${item.id}`" role="tab" :aria-selected="tab === item.id" :aria-controls="`diagnostics-panel-${item.id}`" :tabindex="tab === item.id ? 0 : -1" @click="tab = item.id" @keydown="navigate($event,index)">{{ item.label }}</button>
   </div>

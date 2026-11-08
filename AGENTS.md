@@ -36,6 +36,8 @@ The subsequent November 7 operator request authorizes implementing bounded PSKRe
 
 The later November 7 operator request authorizes basic PSKReporter Diagnostics filtering by Sender → receiver, Band / mode and Result, plus publication to `main` for testing through PR #24. Validated application source is `66a271f`. Filters apply locally to retained report rows, preserve collection/counters/map behavior and keep version `0.9.0-rc.1`. Preserve feature history and operating installation settings/services/logs/queues; source publication does not deploy/restart the station installation or authorize a release/tag/visibility change. See `docs/current-checkpoint.md` and `docs/pskreporter.md#diagnostics`.
 
+The subsequent November 7 operator request authorizes publishing browser-update recovery and bounded UDP diagnostics polling to `main` for tonight's testing through PR #25, preserving feature history. Validated application source is `9481725`. Keep version `0.9.0-rc.1` and operating installation settings/services/logs/queues unchanged. Source publication does not update/restart the operating installation, create a release/tag or change visibility. Receiver-task supervision remains separate work in issue #16. See `docs/current-checkpoint.md` and `docs/using-dashboard.md#automatic-browser-recovery`.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).

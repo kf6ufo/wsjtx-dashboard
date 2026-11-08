@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createDashboard } from '../src/focus'
+import { connectLive } from '../src/live'
 import { mockProviders } from '../src/providers'
 import { profiles, sampleQsos } from '../src/fixtures'
 import type { Snapshot } from '../src/types'
@@ -8,6 +9,248 @@ const snapshot = (revision: number, call = 'JA2HDE'): Snapshot => ({
  history: [{ call, rigId: 'new-radio', band: '20m', mode: 'FT4', selectedAt: 100, recency: revision }],
  rigs: [{ id: 'new-radio', name: 'New radio', band: '20m', mode: 'FT4', color: '#70c9bd', call, frequency: 14080000, lastSeen: 100, online: true }],
  counters: { decodes: 0, malformed: 0 }, receiver: { status: 'disabled', error: null },
+})
+
+class FakeEventSource {
+ static CLOSED = 2
+ static instances: FakeEventSource[] = []
+ readyState = 0
+ onopen: ((event: Event) => void) | null = null
+ onerror: ((event: Event) => void) | null = null
+ private listener?: (event: MessageEvent) => void
+ close = vi.fn(() => { this.readyState = FakeEventSource.CLOSED })
+ constructor(readonly url: string) { FakeEventSource.instances.push(this) }
+ addEventListener(_name: string, listener: (event: MessageEvent) => void) { this.listener = listener }
+ open() { this.readyState = 1; this.onopen?.(new Event('open')) }
+ snapshot(value: Snapshot) { this.listener?.(new MessageEvent('snapshot', { data: JSON.stringify(value) })) }
+ fail(closed = false) { this.readyState = closed ? FakeEventSource.CLOSED : 0; this.onerror?.(new Event('error')) }
+}
+
+const wireSnapshot = (revision: number, call = 'JA2HDE', epoch = 'server-one'): Snapshot => ({
+ ...snapshot(revision, call), epoch, step: 1, sample: false,
+})
+const reply = (value: Snapshot) => new Response(JSON.stringify(value))
+
+describe('browser live connection recovery', () => {
+ let fetcher: ReturnType<typeof vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>>
+ let online = true
+ let visibility: DocumentVisibilityState = 'visible'
+ let cleanups: (() => void)[]
+
+ beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(0)
+  online = true; visibility = 'visible'; cleanups = []
+  FakeEventSource.instances = []
+  fetcher = vi.fn(async () => reply(wireSnapshot(1)))
+  vi.stubGlobal('fetch', fetcher)
+  vi.stubGlobal('EventSource', FakeEventSource)
+  vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => online)
+  vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibility)
+ })
+ afterEach(async () => {
+  cleanups.forEach(dispose => dispose())
+  await vi.advanceTimersByTimeAsync(0)
+  vi.useRealTimers()
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+ })
+
+ function start(value = wireSnapshot(1)) {
+  const dashboard = createDashboard(undefined, true)
+  const dispose = connectLive(dashboard)
+  cleanups.push(dispose)
+  const source = FakeEventSource.instances.at(-1)!
+  source.open(); source.snapshot(value)
+  return { dashboard, source, dispose }
+ }
+
+ it('repairs a frozen OPEN stream from HTTP and replaces it without waiting for a socket error', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(0)
+  fetcher.mockResolvedValue(reply(wireSnapshot(5, 'DL1DEMO')))
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(dashboard.state.lastServerUpdateAt).toBe(30_000)
+  expect(source.close).toHaveBeenCalledOnce()
+  expect(FakeEventSource.instances).toHaveLength(2)
+  source.snapshot(wireSnapshot(99, 'W7DEMO'))
+  source.open()
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(fetcher).toHaveBeenCalledTimes(2)
+ })
+
+ it('checks an idle station without reconnecting or claiming a receiver failure', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(120_000)
+  expect(fetcher).toHaveBeenCalledTimes(5)
+  expect(FakeEventSource.instances).toHaveLength(1)
+  expect(source.close).not.toHaveBeenCalled()
+  expect(dashboard.state.connection).toBe('connected')
+  expect(dashboard.state.lastServerUpdateAt).toBe(120_000)
+  expect(dashboard.state.counters.decodes).toBe(0)
+ })
+
+ it('does not repeatedly reconnect when only HTTP confirms an unchanged quiet snapshot', async () => {
+  const dashboard = createDashboard(undefined, true)
+  cleanups.push(connectLive(dashboard))
+  const source = FakeEventSource.instances[0]!
+  source.open()
+  await vi.advanceTimersByTimeAsync(120_000)
+  expect(fetcher).toHaveBeenCalledTimes(5)
+  expect(source.close).not.toHaveBeenCalled()
+  expect(FakeEventSource.instances).toHaveLength(1)
+  expect(dashboard.state.lastServerUpdateAt).toBe(120_000)
+  expect(dashboard.state.connection).toBe('connected')
+ })
+
+ it('uses fresh stream snapshots to defer checks and ignores an older HTTP revision', async () => {
+  let finish!: (response: Response) => void
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(1_000)
+  source.snapshot(wireSnapshot(2, 'DL1DEMO'))
+  await vi.advanceTimersByTimeAsync(1_000)
+  finish(reply(wireSnapshot(1)))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(dashboard.state.lastServerUpdateAt).toBe(1_000)
+  await vi.advanceTimersByTimeAsync(27_000)
+  source.snapshot(wireSnapshot(3, 'W7DEMO'))
+  await vi.advanceTimersByTimeAsync(1_000)
+  expect(fetcher).toHaveBeenCalledOnce()
+  expect(dashboard.state.lastServerUpdateAt).toBe(29_000)
+ })
+
+ it.each(['focus', 'pageshow', 'online', 'visibilitychange'])('revalidates immediately on %s', async event => {
+  const { dashboard } = start()
+  await vi.advanceTimersByTimeAsync(1_000)
+  fetcher.mockResolvedValue(reply(wireSnapshot(2, 'DL1DEMO')))
+  if (event === 'visibilitychange') document.dispatchEvent(new Event(event))
+  else window.dispatchEvent(new Event(event))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(fetcher).toHaveBeenCalledTimes(2)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(dashboard.state.lastServerUpdateAt).toBe(1_000)
+ })
+
+ it('coalesces resume checks and bounds a stuck HTTP request, then recovers on the next check', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(0)
+  let finish!: (response: Response) => void
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  await vi.advanceTimersByTimeAsync(30_000)
+  const signal = fetcher.mock.calls[1]![1]!.signal!
+  window.dispatchEvent(new Event('focus'))
+  window.dispatchEvent(new Event('pageshow'))
+  document.dispatchEvent(new Event('visibilitychange'))
+  await vi.advanceTimersByTimeAsync(5_000)
+  expect(fetcher).toHaveBeenCalledTimes(2)
+  expect(signal.aborted).toBe(false)
+  await vi.advanceTimersByTimeAsync(3_000)
+  expect(signal.aborted).toBe(true)
+  expect(dashboard.state.connection).toBe('disconnected')
+  expect(dashboard.state.lastServerUpdateAt).toBe(0)
+  finish(reply(wireSnapshot(99, 'W7DEMO')))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(dashboard.state.call).toBe('JA2HDE')
+  fetcher.mockImplementation(async () => reply(wireSnapshot(3, 'DL1DEMO')))
+  await vi.advanceTimersByTimeAsync(22_000)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(source.close).toHaveBeenCalledOnce()
+  const replacement = FakeEventSource.instances.at(-1)!
+  replacement.open(); replacement.snapshot(wireSnapshot(3, 'DL1DEMO'))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(dashboard.state.connection).toBe('connected')
+ })
+
+ it('recovers from a failed HTTP response and a closed stream', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(0)
+  fetcher.mockResolvedValueOnce(new Response('unavailable', { status: 503 }))
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(dashboard.state.connection).toBe('disconnected')
+  expect(dashboard.state.lastServerUpdateAt).toBe(0)
+  source.fail(true)
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(FakeEventSource.instances).toHaveLength(2)
+  expect(dashboard.state.lastServerUpdateAt).toBe(60_000)
+ })
+
+ it('accepts a new backend epoch through HTTP and discards queued events from the replaced stream', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(0)
+  fetcher.mockImplementation(async () => reply(wireSnapshot(0, 'DL1DEMO', 'server-two')))
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(source.close).toHaveBeenCalledOnce()
+  source.snapshot(wireSnapshot(99, 'W7DEMO'))
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  const replacement = FakeEventSource.instances.at(-1)!
+  replacement.open()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(FakeEventSource.instances).toHaveLength(2)
+  replacement.snapshot(wireSnapshot(1, 'W7DEMO', 'server-two'))
+  expect(dashboard.state.call).toBe('W7DEMO')
+ })
+
+ it('rejects an old-epoch HTTP response after the stream has observed a backend restart', async () => {
+  let finish!: (response: Response) => void
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(1_000)
+  source.snapshot(wireSnapshot(0, 'DL1DEMO', 'server-two'))
+  await vi.advanceTimersByTimeAsync(1_000)
+  finish(reply(wireSnapshot(99, 'W7DEMO')))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(dashboard.state.call).toBe('DL1DEMO')
+  expect(dashboard.state.lastServerUpdateAt).toBe(1_000)
+  expect(FakeEventSource.instances).toHaveLength(1)
+ })
+
+ it('aborts on offline, resumes online, and ignores hidden visibility events', async () => {
+  const { dashboard, source } = start()
+  await vi.advanceTimersByTimeAsync(0)
+  visibility = 'hidden'
+  document.dispatchEvent(new Event('visibilitychange'))
+  expect(fetcher).toHaveBeenCalledOnce()
+  let finish!: (response: Response) => void
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  window.dispatchEvent(new Event('focus'))
+  const signal = fetcher.mock.calls[1]![1]!.signal!
+  online = false
+  window.dispatchEvent(new Event('offline'))
+  expect(signal.aborted).toBe(true)
+  expect(source.close).toHaveBeenCalledOnce()
+  finish(reply(wireSnapshot(99, 'W7DEMO')))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(dashboard.state.call).toBe('JA2HDE')
+  online = true
+  window.dispatchEvent(new Event('online'))
+  await vi.advanceTimersByTimeAsync(0)
+  expect(FakeEventSource.instances).toHaveLength(2)
+  expect(dashboard.state.connection).toBe('connected')
+ })
+
+ it('disposes timers, listeners and pending requests without late updates', async () => {
+  let finish!: (response: Response) => void
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const { dashboard, source, dispose } = start()
+  const signal = fetcher.mock.calls[0]![1]!.signal!
+  dispose()
+  expect(signal.aborted).toBe(true)
+  expect(vi.getTimerCount()).toBe(0)
+  finish(reply(wireSnapshot(99, 'W7DEMO')))
+  source.snapshot(wireSnapshot(100, 'DL1DEMO'))
+  for (const name of ['online', 'focus', 'pageshow']) window.dispatchEvent(new Event(name))
+  document.dispatchEvent(new Event('visibilitychange'))
+  await vi.advanceTimersByTimeAsync(60_000)
+  expect(fetcher).toHaveBeenCalledOnce()
+  expect(FakeEventSource.instances).toHaveLength(1)
+  expect(dashboard.state.call).toBe('JA2HDE')
+  expect(dashboard.state.connection).toBe('disconnected')
+  expect(dashboard.state.lastServerUpdateAt).toBe(0)
+ })
 })
 describe('centrally owned live snapshots', () => {
  it('accepts arbitrary network IDs and ordered revisions, preventing older responses and local simulations', async () => {

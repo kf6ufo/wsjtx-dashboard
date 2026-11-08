@@ -8,27 +8,40 @@ const state = props.dashboard.state
 const data = ref<DiagnosticPage>({ generation: 0, latest: 0, limit: 200, rows: [] })
 const activity = ref('all')
 const paused = ref(false), filter = ref('all'), instance = ref(''), offset = ref(0), error = ref(''), detail = ref<DiagnosticDetail | null>(null)
-let stopped = false, requesting = false, requestGeneration = 0
+let stopped = false, requestGeneration = 0
+let request: { controller: AbortController; timeout: number } | undefined
 const instances = computed(() => [...new Set([...state.liveRigs.map(rig => rig.id), ...data.value.rows.flatMap(row => row.instance ? [row.instance] : []), ...(instance.value ? [instance.value] : [])])].sort((a, b) => a.localeCompare(b)))
 const rows = computed(() => data.value.rows.filter(row =>
  (filter.value === 'all' || (filter.value === 'errors' ? row.error : filter.value === 'unknown' ? row.name === 'Unknown' : row.kind === Number(filter.value))) &&
  (activity.value === 'all' || packetActivity(row) === activity.value) && (!instance.value || row.instance === instance.value)))
 const page = computed(() => rows.value.slice(offset.value, offset.value + 100))
 watch([filter, instance, activity], () => { offset.value = 0 })
+function cancelRefresh() {
+ const pending = request
+ request = undefined
+ if (pending) { window.clearTimeout(pending.timeout); pending.controller.abort() }
+}
 async function refresh() {
- if (!props.active || paused.value || requesting || stopped) return
- requesting = true
+ if (!props.active || paused.value || request || stopped) return
  const generation = requestGeneration
+ const pending = { controller: new AbortController(), timeout: 0 }
+ request = pending
+ pending.timeout = window.setTimeout(() => {
+  if (request !== pending) return
+  cancelRefresh()
+  error.value = 'Diagnostics request timed out. Retrying automatically.'
+ }, 10000)
  try {
-  const response = await fetch('/api/diagnostics', { cache: 'no-store' })
+  const response = await fetch('/api/diagnostics', { cache: 'no-store', signal: pending.controller.signal })
   if (!response.ok) throw new Error('Diagnostics unavailable. Check the server connection.')
   const value = await response.json() as DiagnosticPage
-  if (!stopped && !paused.value && generation === requestGeneration) { data.value = value; error.value = ''; if (offset.value >= rows.value.length) offset.value = 0 }
- } catch (failure) { if (!stopped) error.value = failure instanceof Error ? failure.message : 'Diagnostics unavailable' }
- finally { requesting = false }
+  if (request === pending && !stopped && props.active && !paused.value && generation === requestGeneration) { data.value = value; error.value = ''; if (offset.value >= rows.value.length) offset.value = 0 }
+ } catch (failure) { if (request === pending && !stopped && props.active && !paused.value && generation === requestGeneration) error.value = failure instanceof Error ? failure.message : 'Diagnostics unavailable' }
+ finally { window.clearTimeout(pending.timeout); if (request === pending) request = undefined }
 }
 async function clear() {
  ++requestGeneration
+ cancelRefresh()
  try {
   const response = await fetch('/api/diagnostics', { method: 'DELETE' })
   if (!response.ok) throw new Error('Clear failed; check connection.')
@@ -42,15 +55,15 @@ async function inspect(id: number) {
   detail.value = await response.json(); error.value = ''
  } catch (failure) { detail.value = null; error.value = failure instanceof Error ? failure.message : 'Packet unavailable' }
 }
-function togglePause() { paused.value = !paused.value; ++requestGeneration; if (!paused.value) void refresh() }
+function togglePause() { paused.value = !paused.value; ++requestGeneration; cancelRefresh(); if (!paused.value) void refresh() }
 const utc = (at: number) => new Date(at).toISOString().slice(11, 23)
-watch(() => props.active, active => { ++requestGeneration; if (active) void refresh() })
+watch(() => props.active, active => { ++requestGeneration; cancelRefresh(); if (active) void refresh() })
 void refresh()
 const timer = window.setInterval(refresh, 1000)
-onUnmounted(() => { stopped = true; ++requestGeneration; window.clearInterval(timer) })
+onUnmounted(() => { stopped = true; ++requestGeneration; cancelRefresh(); window.clearInterval(timer) })
 </script>
 <template>
- <section aria-label="UDP diagnostics"><div class="diagnostics-heading"><div><span class="section-eyebrow">PRIMARY UDP / RECEIVE ONLY</span><h3>UDP receiver</h3></div><span class="receiver-badge" :data-status="state.receiver.status">{{ state.receiver.status }}</span></div><p>Receiver {{ state.receiver.listen || '0.0.0.0' }}:{{ state.receiver.port || 2238 }} · {{ state.receiver.group || 'Unicast' }} · interface {{ state.receiver.interface || 'not set' }}. Browser stream: {{ state.connection }}.</p><p v-if="state.receiver.error" class="connection-note" role="alert">{{ state.receiver.error }}</p>
+ <section aria-label="UDP diagnostics"><div class="diagnostics-heading"><div><span class="section-eyebrow">PRIMARY UDP / RECEIVE ONLY</span><h3>UDP receiver</h3></div><span class="receiver-badge" :data-status="state.receiver.status">{{ state.receiver.status }}</span></div><p>Receiver {{ state.receiver.listen || '0.0.0.0' }}:{{ state.receiver.port || 2238 }} · {{ state.receiver.group || 'Unicast' }} · interface {{ state.receiver.interface || 'not set' }}. Browser updates: {{ state.connection }}.</p><p v-if="state.receiver.error" class="connection-note" role="alert">{{ state.receiver.error }}</p>
  <div class="packet-stats"><article><span>RECEIVED PACKETS</span><strong>{{ state.counters.packets ?? 0 }}</strong></article><article><span>DECODES</span><strong>{{ state.counters.decodes }}</strong></article><article><span>PARSE FAILURES</span><strong>{{ state.counters.malformed }}</strong></article><article><span>IGNORED / PASSIVE</span><strong>{{ state.counters.ignored ?? 0 }}</strong></article><article><span>RECEIVER ERRORS</span><strong>{{ state.counters.receiverErrors ?? 0 }}</strong></article><article><span>LAST PACKET · UTC</span><strong class="last-packet">{{ state.receiver.lastPacketAt ? utc(state.receiver.lastPacketAt) : 'None yet' }}</strong></article></div>
  <h3>WSJT-X instances <small>{{ state.sample ? 'No live instances · sample workspace' : `${state.liveRigs.length}/32 network IDs · ${state.counters.capacity ?? 0} capacity refusals` }}</small></h3><div class="instances-scroll"><table class="table qso-table instance-table"><thead><tr><th>Network ID / source</th><th>State</th><th>Last seen · UTC</th><th>DX Call</th><th>Band / mode</th></tr></thead><tbody><tr v-for="rig in (state.sample ? [] : state.liveRigs)" :key="rig.id"><td><strong>{{ rig.id }}</strong><small>{{ rig.source || 'Source unavailable' }}</small></td><td>{{ rig.online ? 'Seen recently' : 'Closed / inactive' }}</td><td>{{ rig.lastSeen ? utc(rig.lastSeen) : '—' }}</td><td>{{ rig.call || '—' }}</td><td>{{ rig.band || '—' }} / {{ rig.mode || '—' }}</td></tr><tr v-if="state.sample || !state.liveRigs.length"><td colspan="5">No received instances yet. Enable/configure the receiver in Settings.</td></tr></tbody></table></div>
  <div class="diagnostic-toolbar"><label>Heard instance<select class="form-select" v-model="instance"><option value="">All heard instances</option><option v-for="id in instances" :key="id" :value="id">{{ id }}</option></select></label><label>Radio activity<select class="form-select" v-model="activity"><option value="all">All activity</option><option v-for="[id, label] in activities" :key="id" :value="id">{{ label }}</option></select></label><label>Packet filter<select class="form-select" v-model="filter"><option value="all">All packet types</option><option v-for="[kind, label] in packetTypes" :key="kind" :value="String(kind)">{{ label }}</option><option value="errors">Parse failures</option><option value="unknown">Unknown types</option></select></label><button class="btn console-button" @click="togglePause" :aria-pressed="paused">{{ paused ? 'Resume display' : 'Pause display' }}</button><button class="btn console-button" @click="clear">Clear diagnostics</button></div>
