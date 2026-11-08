@@ -24,6 +24,32 @@ The volatile cache keeps the latest report per sender/band/receiver for one hour
 
 The implementation follows the [feed operator's endpoints, topic layout and JSON schema](https://www.mqtt.pskreporter.info/) and [timestamp guidance](https://www.mqtt.pskreporter.info/timing.html): frequency determines band, `t_tx` takes precedence over `t`, and old, malformed, wrong-sender or invalid-grid reports are rejected. TLS certificate verification stays enabled on `mqtt.pskreporter.info:1884`. Paho MQTT 2.1.0 is pinned in `requirements.lock`; [Paho's client documentation](https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html) describes connection/reconnect behavior. Only subscribe/unsubscribe and connection-control traffic is sent; no spots are published.
 
+## Experimental QSO Outlook ring — Version 1
+
+The focused station's teal marker has an outer ring: **green — Favorable (70–100)**, **yellow — Moderate (40–69)**, **red — Limited evidence (1–39)** or **gray — Unknown**. This is a deterministic heuristic using the existing volatile reception cache, **not a statistically calibrated probability**. A missing report never means that a station cannot hear you.
+
+Click the focused marker (including its amber center), or focus it and press **Enter** or **Space**, to open its compact QSO Outlook popup. It shows callsign/band/mode, score/classification, direct confirmation, distinct receiver counts within 200/500 km, nearest qualifying receiver, latest qualifying report age and an explanation. The 500 km count includes receivers within 200 km. The popup stays within the map and scrolls on short screens; opening it does not pan or zoom. **Escape** or its close button returns keyboard focus to the marker. A focus/location change closes the old popup.
+
+Only the selected **transmitting callsign and focus band's** reports count. Direct evidence uses the exact focused receiver identifier, retaining the distinction between a base callsign and a suffixed receiver. Direct evidence always takes priority, even in another mode on that band. For nearby evidence, prefer receivers reporting the focus entry's operating mode when any qualifying receivers in that mode exist within 500 km; otherwise fall back to all modes on the band. The popup labels the nearby mode scope. Only the latest cached report per complete receiver identifier is available; earlier reports/modes are not recovered or stored.
+
+Rules are applied in this order:
+
+| Evidence | Score |
+| --- | --- |
+| Focused station directly heard you no more than 5 minutes ago | 90 |
+| Direct reception more than 5, up to 15 minutes ago | 80 |
+| At least 3 distinct receivers within 200 km in the last 10 minutes | 75 |
+| 1–2 receivers within 200 km in the last 10 minutes | 60 |
+| At least 3 receivers within 500 km in the last 10 minutes | 55 |
+| 1–2 receivers within 500 km in the last 10 minutes | 35 |
+| No qualifying evidence | Unknown |
+
+All scoring evidence must also fit the browser's selected reception window. A 5-minute window therefore limits both direct and nearby evidence to 5 minutes; 30/60-minute windows do not extend the scoring caps of 15/10 minutes. Ages use report timestamps with the existing feed's 30-second future-clock tolerance. Receiver grid centers and the existing station grid/callbook location determine great-circle distances. Country/entity estimates cannot establish a station position, so they give Unknown. PSKReporter off, missing band/transmitting identity, an unavailable location or no usable cached evidence also give Unknown. Recent usable cached reports can continue to support an outlook during a feed or Dashboard outage, expiring on the existing ten-second browser timer; connection warnings remain visible independently.
+
+The **amber center dot** and **Heard you: Confirmed** remain separate evidence that the exact station reported your signal, across all modes in the selected overlay window. A 20-minute-old direct report can still show confirmation in a 30/60-minute overlay while QSO Outlook is Unknown; the popup marks that confirmation as outside Outlook evidence. Confirmed reception does **not** guarantee a QSO. Outlook does not account for antenna differences, interference, pileups or operator availability. Callbook/home locations and coarse receiver grids can differ from actual operating positions; receiver identifiers need not represent independent antennas.
+
+The calculation runs entirely in the browser and refreshes with focus/location, transmitting identity, band/mode, reports, time window and report age. It uses no WSJT-X received SNR, CQ status, Wavelog history, new API, subscription, database, machine learning or historical collection. No new Settings control is needed. Version remains `0.9.0-rc.1`; source publication for testing does not update/restart an operating installation.
+
 ## Diagnostics
 
 Open **Diagnostics → UDP / PSKReporter MQTT**. The operator approved this follow-up for publication to `main` on November 6, 2026; the version remains `0.9.0-rc.1`. Update and restart your installation through the normal workflow to get the new tabs. Publication itself does not change an operating installation or enable PSKReporter.
