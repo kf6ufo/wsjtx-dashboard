@@ -3,6 +3,7 @@ import type { EnrichmentState, Entry } from './types'
 export interface StationLocation {
  lat: number; lng: number; label: string; detail: string; zoom: number
  bounds?: [[number, number], [number, number]]
+ isEntityEstimate?: boolean
 }
 
 /** Maidenhead locations describe a cell, never an exact antenna position. */
@@ -49,5 +50,5 @@ export function stationMapLocation(call: string, entry?: Entry, enrichment?: Enr
  const home = gridLocation(data.callbookGrid)
  if (home) return { ...home, detail: 'Callbook home grid · approximate center' }
  const estimate = enrichment?.config.allow_country_estimate && gridLocation(data.locationGrid)
- if (estimate && data.locationSource?.startsWith('Approximate provider coordinates')) return { ...estimate, detail: 'Approximate entity location · not a station position', zoom: 3 }
+ if (estimate && data.locationSource?.startsWith('Approximate provider coordinates')) return { ...estimate, detail: 'Approximate entity location · not a station position', zoom: 3, isEntityEstimate: true }
 }

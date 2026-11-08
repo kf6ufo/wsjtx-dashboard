@@ -16,12 +16,14 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  await mockMapTiles(page)
  await page.addInitScript(() => {
   window.EventSource = class {
+   static CLOSED = 2
+   readyState = 1
    onopen?: () => void
    constructor() { setTimeout(()=>this.onopen?.(), 25) }
    addEventListener(_name: string, callback: (event: { data: string }) => void) {
     window.addEventListener('psk-fixture', event=>callback({data:JSON.stringify((event as CustomEvent).detail)}))
    }
-   close() {}
+   close() { this.readyState = 2 }
   } as unknown as typeof EventSource
  })
  await page.route('**/api/**', route=>route.fulfill({contentType:'application/json',body:JSON.stringify(snapshot)}))
@@ -45,7 +47,7 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  expect(mapCanvas!.height).toBe(280)
  await expect(page.getByRole('button',{name:'Center station',exact:true})).toBeVisible()
  await expect(page.getByLabel('Reception time window')).toBeVisible()
- await expect(page.locator('.station-map')).toContainText('K1FOCUS heard you 1 min ago')
+ await expect(page.locator('.station-map')).toContainText('Heard you: Confirmed · 1 min ago')
  const focus=page.locator('.station-map-pin'), heard=page.locator('.station-map-reception[aria-label^="K1FOCUS heard"]')
  const a=await focus.boundingBox(), b=await heard.boundingBox()
  expect(b!.width).toBeLessThan(a!.width)

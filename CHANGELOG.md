@@ -6,6 +6,7 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Added
 
+- Experimental QSO Outlook ring and keyboard-accessible Station map popup, using only recent cached PSKReporter reception evidence. Direct confirmation stays independent; scores are heuristic and missing evidence remains Unknown.
 - PSKReporter Diagnostics filters for sender/receiver text, band/mode text and result, with combined case-insensitive matching, matching-row counts and a reset action. Filtering is local to the retained report table.
 - November 6 testing update: executable `run.sh` starts the installed server without virtual-environment activation and forwards `--config` arguments. Installer/updater output and current startup instructions point to the launcher.
 - Refreshed standard/full-screen documentation imagery and a reception-map close-up show nine fictional PSKReporter dots, including the focus station’s inner dot, with retained map attribution.

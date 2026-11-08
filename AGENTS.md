@@ -38,6 +38,8 @@ The later November 7 operator request authorizes basic PSKReporter Diagnostics f
 
 The subsequent November 7 operator request authorizes publishing browser-update recovery and bounded UDP diagnostics polling to `main` for tonight's testing through PR #25, preserving feature history. Validated application source is `9481725`. Keep version `0.9.0-rc.1` and operating installation settings/services/logs/queues unchanged. Source publication does not update/restart the operating installation, create a release/tag or change visibility. Receiver-task supervision remains separate work in issue #16. See `docs/current-checkpoint.md` and `docs/using-dashboard.md#automatic-browser-recovery`.
 
+The November 8 operator request authorizes implementing experimental QSO Outlook Ring Version 1 and publishing to `main` for testing after validation, preserving feature history. Use only existing recent PSKReporter cache data and station locations, with deterministic browser-side scoring and independent direct-reception confirmation. Missing evidence remains Unknown. No new service, API, subscription, persistence or settings screen is authorized. Keep `0.9.0-rc.1` and all operating installation settings/services/logs/queues unchanged; source publication does not deploy/restart, create a release/tag or change visibility. See `docs/pskreporter.md#experimental-qso-outlook-ring--version-1` and the current checkpoint.
+
 0. Visual Station/Diagnostics/Settings foundation, server-owned sample state, SSE/reconnect snapshots, real native macOS and Ubuntu install path. Show Step 0 for review before Step 1.
 1. Configurable primary WSJT-X UDP reception and bounded diagnostics.
 2. Configurable enrichment (pyhamtools and verified callbook capabilities).
