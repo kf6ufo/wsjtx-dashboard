@@ -80,6 +80,10 @@ npm run build
 
 Open **http://127.0.0.1:8798/**. The title explicitly says fictional reports. The preview uses temporary configuration/state, disables radio reception and logging, and replaces MQTT with an offline fixture feed. It does not read the operating configuration or contact files. Basemap tiles still need internet access. Ctrl+C stops it and removes its temporary state. Use `--port` to choose another isolated port; 8787 is excluded.
 
+## QSO Outlook validation — November 8, 2026
+
+Application source `0ccbca5`, based on main `e2b721b`: 81 frontend tests (including 21 new outlook cases), type checking/production build, seven production-build Chrome fixture workflows and the MQTT Diagnostics workflow passed on macOS. Checks include all score tiers, report ages/windows, unique/suffixed receiver identities, band/transmitter/mode matching, location safety, outages, focus changes, popup keyboard access, live expiry, independent confirmation, narrow layout, reception dots and preserved map pan/zoom. Fictional desktop dark/mobile light captures were visually reviewed. A clean source export passed the native installer and isolated installed-server startup/configuration-preservation/shutdown checks. The backend is unchanged; its full suite was not rerun. Ordinary live station alignment and outlook behavior, Ubuntu and other browsers still need testing. No operating installation was updated or restarted. See [the checkpoint](current-checkpoint.md) for exact evidence and remaining limits.
+
 ## Evidence — November 5, 2026
 
 - macOS, Python 3.13.1, Node 24.21.0: 252 backend tests passed at RC1 application source `04c6644` in an isolated source copy with pinned dependencies. The 17 PSKReporter cases cover schema validation, report direction, exact identity, time/frequency handling, cache bounds/deduplication, expiry, identity changes, reconnect/resubscribe, refusal retry delay, settings validation and unrelated configuration preservation.
