@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gridLocation, stationMapLocation } from '../src/stationMap'
+import { gridLocation, longitudeNear, stationMapLocation } from '../src/stationMap'
 import type { EnrichmentState, Entry } from '../src/types'
 
 const entry: Entry = { call: 'K1ACT', dxGrid: 'PM85', rigId: 'Fixture', selectedAt: 0, recency: 1, band: '20m' }
@@ -7,6 +7,19 @@ const enrichment: EnrichmentState = { config: { enabled: true, allow_country_est
  call: 'K1ACT', status: 'loaded', callbookGrid: 'FN31', fields: { latitude: 41.2, longitude: -73.1 }, fieldSources: { latitude: 'QRZ XML', longitude: 'QRZ XML' },
 } }
 describe('station map location', () => {
+ it('keeps longitudes in the visible world across the date line and multiple wraps', () => {
+  expect(longitudeNear(-179, 179)).toBe(181)
+  expect(longitudeNear(179, -179)).toBe(-181)
+  expect(longitudeNear(179, 899)).toBe(899)
+  expect(longitudeNear(-179, -899)).toBe(-899)
+  for (const longitude of [-179, -73, 0, 77, 179]) {
+   for (const center of [-2160, -901, -181, 0, 181, 901, 2160]) {
+    const visible = longitudeNear(longitude, center)
+    expect(Math.abs(visible - center)).toBeLessThanOrEqual(180)
+    expect((visible - longitude) % 360).toBeCloseTo(0)
+   }
+  }
+ })
  it('converts 4, 6 and 8 character grids to cell centers and bounds, including equator and dateline', () => {
   expect(gridLocation('pm85')).toMatchObject({ lat: 35.5, lng: 137, bounds: [[35, 136], [36, 138]] })
   expect(gridLocation('FN31pr')?.lat).toBeCloseTo(41.7291667)
