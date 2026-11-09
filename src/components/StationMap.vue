@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Map as LeafletMap, LayerGroup, Marker } from 'leaflet'
+import type { Map as LeafletMap, LayerGroup, Marker, SVGOverlay } from 'leaflet'
 import type { EnrichmentState, Entry, PskReporterState, LocalReceptionState } from '../types'
-import { stationMapLocation } from '../stationMap'
+import { longitudeNear, stationMapLocation, type StationLocation } from '../stationMap'
 import { receptionSpots } from '../pskreporter'
 import { localReceptionSpots, mapReceptions, mapReceptionLabel, type ReceptionView } from '../receptionMap'
 import { calculateQsoOutlook } from '../qsoOutlook'
@@ -79,10 +79,30 @@ const host = ref<HTMLDivElement>(), tilesFailed = ref(false), mapFailed = ref(fa
 const basemapReady = ref(false)
 let map: LeafletMap | undefined, markers: LayerGroup | undefined, receptionMarkers: LayerGroup | undefined, observer: ResizeObserver | undefined
 let focusMarker: Marker | undefined
+let focusGrid: SVGOverlay | undefined
+let makeBounds: typeof import('leaflet')['latLngBounds'] | undefined
+const receptionPositions = new Map<Marker, StationLocation>()
 let ageTimer: number | undefined
 let basemapRequest: AbortController | undefined
 let mounted = false, generation = 0
-function destroy() { ready.value = false; basemapReady.value = false; basemapRequest?.abort(); observer?.disconnect(); observer = undefined; map?.remove(); map = undefined; markers = undefined; receptionMarkers = undefined; focusMarker = undefined }
+function destroy() { ready.value = false; basemapReady.value = false; basemapRequest?.abort(); observer?.disconnect(); observer = undefined; map?.remove(); map = undefined; markers = undefined; receptionMarkers = undefined; focusMarker = undefined; focusGrid = undefined; receptionPositions.clear() }
+function wrapStations() {
+ if (!map || !location.value) return
+ const center = map.getCenter().lng
+ const position = (marker: Marker, point: StationLocation) => {
+  const lng = longitudeNear(point.lng, center)
+  if (marker.getLatLng().lng !== lng) marker.setLatLng([point.lat, lng])
+ }
+ if (focusMarker) position(focusMarker, location.value)
+ for (const [marker, point] of receptionPositions) position(marker, point)
+ const bounds = location.value.bounds
+ if (focusGrid && bounds && makeBounds) {
+  const shift = longitudeNear(location.value.lng, center) - location.value.lng
+  if (focusGrid.getBounds().getWest() !== bounds[0][1] + shift) {
+   focusGrid.setBounds(makeBounds([[bounds[0][0], bounds[0][1] + shift], [bounds[1][0], bounds[1][1] + shift]]))
+  }
+ }
+}
 function updateOutlook() {
  const element = focusMarker?.getElement()
  if (!element) return
@@ -100,16 +120,17 @@ async function updateReceptions() {
  const L = await import('leaflet')
  if (map !== target || !receptionMarkers) return
  receptionMarkers.clearLayers()
+ receptionPositions.clear()
  for (const station of visibleReceptions.value) {
   const point = station.call === props.call ? location.value : station.location
   if (!point) continue
   const text = document.createElement('span'); text.textContent = mapReceptionLabel(station, now.value)
-  // Plot nearby receivers across the date line in the focus station's world.
-  const lng = point.lng + 360 * Math.round(((location.value?.lng ?? point.lng) - point.lng) / 360)
+  const lng = longitudeNear(point.lng, target.getCenter().lng)
   const marker = L.marker([point.lat, lng], {
    icon: L.divIcon({ className: 'station-map-reception', html: '<span aria-hidden="true"></span>', iconSize: [10, 10], iconAnchor: [5, 5] }),
    title: text.textContent, keyboard: true, zIndexOffset: station.call === props.call ? 1100 : 1000,
-  }).bindTooltip(text, { direction: 'top' }).addTo(receptionMarkers)
+  }).bindTooltip(text, { direction: 'top', className: 'station-map-reception-label' }).addTo(receptionMarkers)
+  receptionPositions.set(marker, point)
   marker.getElement()?.setAttribute('aria-label', text.textContent)
   if (marker.getElement()) marker.getElement()!.dataset.direction = station.direction
   // The amber center dot sits above the pin; it toggles the same focus popup.
@@ -152,32 +173,47 @@ async function update() {
  try {
   const L = await import('leaflet')
   if (!mounted || request !== generation || !host.value || !location.value) return
+  makeBounds = L.latLngBounds
   mapFailed.value = false
   if (!map) {
    tilesFailed.value = false
-   map = L.map(host.value, { zoomControl: false, fadeAnimation: false, minZoom: 2, maxZoom: 19, worldCopyJump: true, scrollWheelZoom: false, attributionControl: true, maxBounds: [[-85, -Infinity], [85, Infinity]], maxBoundsViscosity: 1 })
+   map = L.map(host.value, { zoomControl: false, fadeAnimation: false, minZoom: 2, maxZoom: 19, worldCopyJump: false, scrollWheelZoom: false, attributionControl: true, maxBounds: [[-85, -Infinity], [85, Infinity]], maxBoundsViscosity: 1 })
    map.attributionControl.addAttribution(MAP_ATTRIBUTION)
    L.control.scale({ imperial: false }).addTo(map)
    markers = L.layerGroup().addTo(map)
    receptionMarkers = L.layerGroup().addTo(map)
    map.on('zoomend', () => { zoom.value = map!.getZoom() })
+   // Keep every overlay in the world currently shown by the wrapping basemap,
+   // including during a drag. Reposition layers without panning or recreating them.
+   map.on('move', wrapStations)
    // v-show navigation and column resizing must not leave a half-rendered map.
    observer = new ResizeObserver(() => {
     if (host.value?.clientWidth) {
      map?.invalidateSize({ animate: false, pan: true })
      popupHeight.value = Math.max(60, host.value.clientHeight - 36)
+     host.value.style.setProperty('--reception-tooltip-width', `${Math.min(310, host.value.clientWidth - 24)}px`)
     }
    })
    observer.observe(host.value)
   }
   markers!.clearLayers()
+  focusGrid = undefined
   const point = location.value
-  if (point.bounds) L.rectangle(point.bounds, { color: '#16899c', weight: 1, fillOpacity: .07, interactive: false }).addTo(markers!)
+  if (point.bounds) {
+   // A bounds-owned SVG overlay avoids the vector renderer's stale clip region
+   // while moving a grid into another world copy during a drag.
+   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+   svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none')
+   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+   for (const [name, value] of Object.entries({ width: '100', height: '100', fill: '#16899c', 'fill-opacity': '.07', stroke: '#16899c', 'stroke-width': '1', 'vector-effect': 'non-scaling-stroke' })) rect.setAttribute(name, value)
+   svg.append(rect)
+   focusGrid = L.svgOverlay(svg, point.bounds, { interactive: false, className: 'station-map-grid' }).addTo(markers!)
+  }
   const text = document.createElement('span'); text.textContent = props.call
   const marker = focusMarker = L.marker([point.lat, point.lng], {
    icon: L.divIcon({ className: 'station-map-pin', html: '<span aria-hidden="true"></span>', iconSize: [24, 24], iconAnchor: [12, 12] }),
    title: `${props.call} · ${point.detail}`, keyboard: true,
-  }).bindTooltip(text, { permanent: true, direction: 'top', offset: [0, -18] })
+  }).bindTooltip(text, { permanent: true, direction: 'top', offset: [0, -18], className: 'station-map-focus-label' })
    .addTo(markers!)
   // A new Leaflet map creates marker elements only after its first setView.
   center()

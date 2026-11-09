@@ -29,6 +29,11 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 - Package and lockfile versions advance from `0.9.0-beta.1` to `0.9.0-rc.1`; current operator documentation identifies RC1.
 
+### Fixed
+
+- Focus callsign labels remain horizontal; reception tooltips have a separate bounded multiline width.
+- Large east/west map drags keep station markers, inner reception evidence and the focused grid aligned with the visible world, including incoming reports after a world crossing.
+
 ### Validation and limits
 
 - Offline automated tests and desktop/mobile browser review passed. Actual MQTT connection/subscription succeeded, but no reports arrived in the brief check; ordinary live reception-data acceptance remains pending.

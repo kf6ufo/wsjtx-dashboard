@@ -6,6 +6,11 @@ export interface StationLocation {
  isEntityEstimate?: boolean
 }
 
+/** Place a geographic longitude in the world copy nearest the current view. */
+export function longitudeNear(longitude: number, center: number) {
+ return longitude + 360 * Math.round((center - longitude) / 360)
+}
+
 /** Maidenhead locations describe a cell, never an exact antenna position. */
 export function gridLocation(raw: unknown): StationLocation | undefined {
  if (typeof raw !== 'string') return
