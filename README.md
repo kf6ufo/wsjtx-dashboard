@@ -37,7 +37,7 @@
 
 - **Click to focus from WSJT-X.** Click a callsign in WSJT-X to select a different station and see available operator details, QRZ photographs, location and a zoomable map in the Dashboard. The callsign appears first; lookups follow without interrupting you.
 - **Know your history.** Compact callsign and current-band indicators show whether you have worked the station. Browse previous QSOs, bands and modes. Failed or incomplete history never becomes a false “NEW”.
-- **See who hears you.** Optional PSKReporter MQTT dots show recent receivers of your transmitted callsign on the focus band. An inner amber dot marks reception by the focused station; choose a 5–60 minute window. [Reception map setup](docs/pskreporter.md).
+- **See who hears you.** Choose Heard me, I heard or Both on the Station map: PSKReporter reception uses amber circles, local WSJT-X decodes use blue squares and mutual reception uses split circles. The focused station retains its experimental QSO Outlook ring; choose a 5–60 minute display window. [Reception map setup](docs/pskreporter.md).
 - **Revisit a contact.** Shared Focus History follows deliberate selections across multiple WSJT-X instances. Browse an older station without changing the radio.
 - **Fill a station monitor.** Full-screen mode trims browser and Dashboard headings while keeping navigation and radio status available. Use a separate window on each monitor as needed.
 - **Improve the record before logging.** Optional pyhamtools and QRZ enrichment fills reliable missing information, including QSL routing, contact details and calculated distance. Original WSJT-X values take priority, reducing later callbook-update work.

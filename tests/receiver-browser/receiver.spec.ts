@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 
 // Sends only to the dedicated loopback test socket, never station multicast.
 function packet(expression: string, count = 1) {
- execFileSync('.venv/bin/python', ['-c', `import socket\nfrom backend.tests.fixtures import status, decode, header\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\nfor _ in range(${count}): s.sendto(${expression},('127.0.0.1',18238))\ns.close()`])
+ execFileSync('.venv/bin/python', ['-c', `import socket,time\nfrom backend.tests.fixtures import status, decode, header\ns=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)\nfor _ in range(${count}): s.sendto(${expression},('127.0.0.1',18238))\ns.close()`])
 }
 
 test('actual local UDP drives two browsers and bounded interactive diagnostics', async ({ browser, request, baseURL }) => {
@@ -27,6 +27,19 @@ test('actual local UDP drives two browsers and bounded interactive diagnostics',
  await expect(first.getByTestId('focused-call')).toHaveText('W1ACT')
  const after = (await (await request.get('/api/snapshot')).json()).history
  expect(after.map(({ browsedAt, ...entry }: any) => entry)).toEqual(before)
+ // Actual loopback Decode evidence reaches both browsers without changing focus/history.
+ packet("decode(rig='Radio A',message='CQ K7LOCAL FN31',milliseconds=int(time.time()*1000)%86400000)")
+ packet("decode(rig='Radio B',message='CQ K8OTHER FN32',milliseconds=int(time.time()*1000)%86400000)")
+ packet("decode(rig='Radio A',message='CQ K9BAD ZZ99',milliseconds=int(time.time()*1000)%86400000)")
+ for (const page of [first,second]) {
+  await page.getByRole('group',{name:'Reception direction'}).getByRole('button',{name:'I heard',exact:true}).click()
+  await expect(page.locator('.station-map-reception[aria-label^="N0TEST heard K7LOCAL"]')).toHaveAttribute('data-direction','recv')
+  await expect(page.locator('.station-map-reception[aria-label*="K8OTHER"]')).toHaveCount(0)
+  await expect(page.getByTestId('focused-call')).toHaveText('W1ACT')
+ }
+ const localSnapshot=(await (await request.get('/api/snapshot')).json())
+ expect(localSnapshot.localReceptions.spots.map((spot:any)=>spot.call)).toEqual(['K7LOCAL'])
+ expect(localSnapshot.history).toEqual(after)
  packet("decode(rig='Radio A')")
  packet("status(call='',rig='Radio B')")
  await expect(first.getByTestId('focused-call')).toHaveText('W1ACT')

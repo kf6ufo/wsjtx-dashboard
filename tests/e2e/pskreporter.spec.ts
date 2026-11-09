@@ -138,7 +138,7 @@ test('reception dots follow focus band and transmitting identity, expire, and pr
  await page.evaluate(data=>window.dispatchEvent(new CustomEvent('psk-fixture',{detail:data})),snapshot)
  await page.setViewportSize({width:390,height:844})
  await expect(page.locator('.station-map-focus-heard')).toBeVisible()
- expect((await page.locator('.station-map-heading').boundingBox())!.height).toBeLessThanOrEqual(84)
+ expect((await page.locator('.station-map-heading').boundingBox())!.height).toBeLessThanOrEqual(120)
  await page.getByRole('button',{name:'Center station',exact:true}).click()
  await page.locator('.station-map').screenshot({path:'test-results/pskreporter-map-light-mobile.png'})
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)

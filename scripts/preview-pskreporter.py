@@ -17,6 +17,7 @@ from backend.app import create_app
 from backend.config import load_config, save_pskreporter_config
 from backend.pskreporter_config import PskReporterSettings
 from backend.workspace import WorkspaceState
+from backend.protocol import Packet
 
 
 class FixtureFeed:
@@ -67,6 +68,13 @@ def main():
                               frequency=14074000,dxGrid='FN31',deGrid='CN85',selectedAt=now,recency=1)]
         state.selection_sequence = 1
         state.preferences['title'] = 'PSKReporter preview · fictional reports'
+        # Fictional local evidence uses the same bounded cache, without a UDP socket.
+        state.local_receptions.capture(Packet(1, 'Fictional radio', dx_call='K1FOCUS', frequency=14074000,
+            mode='FT8', fields=dict(deCall='N0CALL', dxGrid='FN31')), at=now)
+        for call, grid, age in [('K1FOCUS','FN31',5), ('K3COAST','FM29',10), ('K8LOCAL','FN33',15)]:
+            state.local_receptions.capture(Packet(2, 'Fictional radio', fields=dict(new=True, offAir=False,
+                lowConfidence=False, milliseconds=(now-age*1000) % 86400000, mode='~',
+                message=f'CQ {call} {grid}', snr=-14)), at=now)
         config = load_config(path)
         app = create_app(config.receiver,state,config_path=path)
         state.pskreporter.client_factory = FixtureFeed
