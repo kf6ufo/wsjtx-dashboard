@@ -12,6 +12,7 @@ from .foundation import FoundationState
 from .state import FocusState
 from .protocol import diagnostic_header
 from .history_config import HistorySettings
+from .local_reception import LocalReceptionCache
 
 PACKET_NAMES = {0: 'Heartbeat', 1: 'Status', 2: 'Decode', 3: 'Clear', 4: 'Reply', 5: 'QSO Logged',
                 6: 'Close', 7: 'Replay', 8: 'Halt Tx', 9: 'Free Text', 10: 'WSPR Decode',
@@ -25,6 +26,7 @@ class WorkspaceState(FoundationState):
         super().__init__(path)
         self.sample_payload = deepcopy(self._saved)
         self.sample = True
+        self.local_receptions = LocalReceptionCache()
         self.photo_urls = {}
         self.diagnostics = deque(maxlen=200)
         self.counters['receiverErrors'] = 0
@@ -99,9 +101,11 @@ class WorkspaceState(FoundationState):
         if getattr(self, 'observations', None): snapshot['observations'] = self.observations.snapshot()
         if getattr(self, 'forwarding', None): snapshot['forwarding'] = self.forwarding.snapshot()
         if getattr(self, 'pskreporter', None): snapshot['pskreporter'] = self.pskreporter.snapshot()
+        snapshot['localReceptions'] = self.local_receptions.snapshot(self.call, self.history, self.rigs)
         return snapshot
 
     def accept(self, packet, **kwargs):
+        self.local_receptions.capture(packet, self.history, at=kwargs.get('at'))
         if getattr(self, 'observations', None): self.observations.capture(packet)
         if getattr(self, 'qso_service', None): self.qso_service.capture(packet)
         super().accept(packet, **kwargs)

@@ -24,6 +24,8 @@ class ReceiverRuntime:
         self.settings = settings
         await self.stop()
         self.state.previous.clear()
+        if getattr(self.state, 'local_receptions', None):
+            self.state.local_receptions.contexts.clear()  # Fresh Status before new decode evidence.
         for rig in self.state.rigs.values():
             rig['online'] = False
         if settings.enabled:

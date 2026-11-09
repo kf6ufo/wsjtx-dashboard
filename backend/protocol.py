@@ -104,6 +104,12 @@ def parse_packet(data: bytes) -> Packet:
         fields['mode'], fields['message'] = r.text(64), r.text()
         if milliseconds >= 86400000 or not math.isfinite(dt):
             raise PacketError("invalid decode fields")
+        # Optional append-only flags. Do not reject a formerly uninterpreted
+        # tail: absent/non-boolean values simply cannot establish map evidence.
+        for name in ('lowConfidence', 'offAir'):
+            if r.pos < len(data):
+                value = r.number('B')
+                fields[name] = bool(value) if value in (0, 1) else None
     if kind == 12:
         fields['adif'] = r.text(65000)
         if r.pos != len(data): raise PacketError('Unexpected Logged ADIF payload tail')

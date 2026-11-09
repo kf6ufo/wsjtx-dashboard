@@ -12,7 +12,7 @@ export interface ReceiverState extends Partial<ReceiverConfig> { status: 'disabl
 export interface DiagnosticRow { preview?: Record<string, string | number | boolean>; id: number; at: number; source: string; instance: string | null; kind: number | null; name: string; schema: number | null; size: number; error: string | null }
 export interface DiagnosticDetail extends DiagnosticRow { fields: Record<string, unknown>; rawBase64: string }
 export interface DiagnosticPage { generation: number; latest: number; limit: number; rows: DiagnosticRow[] }
-export interface Snapshot { pskreporter?: PskReporterState; observations?: ObservationState; historySettings?: HistorySettings; forwarding?: ForwardingState;  qso?: QsoServiceState; qsoHistory?: HistorySelectionState; wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
+export interface Snapshot { localReceptions?: LocalReceptionState; pskreporter?: PskReporterState; observations?: ObservationState; historySettings?: HistorySettings; forwarding?: ForwardingState;  qso?: QsoServiceState; qsoHistory?: HistorySelectionState; wavelog?: WavelogState; photoUrls?: Record<string, string>; enrichment?: EnrichmentState; step?: number; storageError?: string | null; diagnostics?: { retained: number; limit: number; latest: number; generation: number }; sample?: boolean; preferences?: Preferences; epoch: string; revision: number; call: string; source: 'radio' | 'browse'; history: Entry[]; rigs: LiveRig[]; counters: { decodes: number; malformed: number; packets?: number; receiverErrors?: number; ignored?: number; capacity?: number }; receiver: ReceiverState }
 
 export interface EnrichmentConfig {
  enabled: boolean; source: 'countryfile' | 'clublogxml' | 'clublogapi' | 'qrz'; filename: string;
@@ -56,3 +56,6 @@ export interface PskReporterDiagnostics {
  events: { id: number; at: number; kind: string; message: string }[]
  reports: { id: number; at: number; outcome: string; reason: string; topic: string; size: number; preview: Record<string, string | number>; band: string | null }[]
 }
+
+export interface LocalReceptionSpot { call: string; rigId: string; stationCall: string; band: string; grid: string; gridAt?: number; gridSource?: string; heardAt: number; mode: string; snr: number | null }
+export interface LocalReceptionState { spots: LocalReceptionSpot[]; evicted: number }

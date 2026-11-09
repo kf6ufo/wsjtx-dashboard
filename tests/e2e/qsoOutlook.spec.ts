@@ -77,7 +77,7 @@ test('QSO Outlook ring and accessible popup follow local evidence without moving
  await page.clock.fastForward(10 * 60000)
  await expect(pin).toHaveAttribute('data-outlook-score', 'unknown')
  await expect(page.locator('.station-map-focus-heard')).toContainText('Heard you: Confirmed')
- await expect(popup).toContainText('outside Outlook evidence')
+ await expect(popup).toContainText('outside 15-minute Outlook window')
  // Fresh nearby evidence exercises every ring category and live popup updates.
  const fresh = now + 15 * 60000
  snapshot.pskreporter!.spots = [0, 1, 2].map(i => ({ ...spot, receiver: `K${i + 2}NEAR`, grid: 'FN32', heardAt: fresh }))
@@ -94,7 +94,7 @@ test('QSO Outlook ring and accessible popup follow local evidence without moving
  snapshot.pskreporter!.spots = [{ ...spot, receiver: 'K2NEAR', grid: 'FN34', heardAt: fresh }]; await push()
  await expect(pin).toHaveAttribute('data-outlook-score', '35')
  await expect(pin).toHaveAttribute('data-outlook', 'red')
- expect(await pin.evaluate(node => getComputedStyle(node, '::after').borderTopColor)).toBe('rgb(223, 85, 85)')
+ expect(await pin.evaluate(node => getComputedStyle(node, '::after').borderTopColor)).toBe('rgb(196, 108, 116)')
  // Popup stays inside even a narrow map, with all explanatory text scrollable.
  snapshot.preferences!.appearance = 'light'; await push()
  await page.setViewportSize({ width: 320, height: 700 })

@@ -6,6 +6,8 @@ November 5, 2026: operator-approved Release Candidate 1 for testing from `main`.
 
 ### Added
 
+- Station map Heard me / I heard / Both views, amber circles / blue squares / mutual split markers, a bounded volatile local Decode cache, updated QSO Outlook ring colors and a popup with an internally scrolling evidence body and fixed close control. Outlook scoring stays independent of map filtering and local decodes.
+
 - Experimental QSO Outlook ring and keyboard-accessible Station map popup, using only recent cached PSKReporter reception evidence. Direct confirmation stays independent; scores are heuristic and missing evidence remains Unknown.
 - PSKReporter Diagnostics filters for sender/receiver text, band/mode text and result, with combined case-insensitive matching, matching-row counts and a reset action. Filtering is local to the retained report table.
 - November 6 testing update: executable `run.sh` starts the installed server without virtual-environment activation and forwards `--config` arguments. Installer/updater output and current startup instructions point to the launcher.
