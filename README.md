@@ -2,10 +2,6 @@
 
 *See who you're working. Know who you've worked. Log the contact automatically.*
 
-> [!WARNING]
-> **Release Candidate 1 (RC1) — `v0.9.0-rc.1`**
-> This release candidate is intended for testing and may contain bugs, incomplete behavior or unverified integrations. Back up your configuration and QSO data, and verify logging results before relying on it. See [known limitations and release readiness](docs/release-readiness.md).
-
 [![WSJT-X Dashboard showing a fictional selected station, profile illustration, worked-before indicators and station details](docs/assets/dashboard-hero.png)](docs/assets/dashboard-hero.png)
 
 **Tested on macOS and Ubuntu.** A self-hosted companion for WSJT-X: put the operator, previous contacts and station information beside your radio session. Run it on your station computer and open it in a browser. **Wavelog is optional.** Automatic logging and UDP forwarding are opt-in.
@@ -30,8 +26,6 @@
 | Add station information | Use Wavelog's “Update from Callbook” afterward as needed | Include reliable, available enrichment before submission |
 
 **Use one uploader per contact.** Disable competing WaveLogGate or downstream upload routes before enabling Dashboard's Wavelog logging to avoid duplicate QSOs. Dashboard does not disable other applications for you. [Logging setup and recovery](docs/logging.md).
-
-**Release Candidate 1: v0.9.0-rc.1.** Approved for testing from `main`, including the PSKReporter reception overlay. A GitHub release/tag has not been published. macOS has been exercised on real station hardware; the operator also reports successful Ubuntu testing. Windows and Docker are not verified installation paths. [Readiness and limitations](docs/release-readiness.md).
 
 ## At the operating desk
 
@@ -65,7 +59,7 @@ After installation succeeds, start Dashboard (no virtual-environment activation 
 ./run.sh
 ```
 
-Open **http://127.0.0.1:8787/**. Keep the terminal open; Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install current `main`; the RC1 tag does **not** exist yet. Repository access is required while the project remains private.
+Open **http://127.0.0.1:8787/**. Keep the terminal open. Ctrl+C stops the server. The installer builds the frontend, creates configuration only if missing, and preserves existing settings/data. It does not install a background service or change WSJT-X. These commands install the current `main` branch.
 
 Next, configure [WSJT-X → Settings → Reporting → UDP Server (primary)](docs/wsjtx-reporting.md), then match that destination in **Dashboard → Settings → Radio receiver** and enable reception. The deprecated secondary UDP server is not required. For multicast, select the Dashboard computer's receiving interface. The first Status establishes a baseline; then click a different callsign in WSJT-X to focus the Dashboard on it. [Connect your first station](docs/quick-start.md).
 
@@ -84,7 +78,9 @@ Next, configure [WSJT-X → Settings → Reporting → UDP Server (primary)](doc
    ./run.sh
    ```
 
-The updater checks the repository/branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. It never manages services. Retain any custom `--config` argument; see the [full update and service instructions](docs/installation.md#updates-and-backups).
+The updater checks the repository/branch, refuses local tracked edits, fast-forwards from `origin/main` and runs the installer, including temporary Node setup. It never manages services. Retain any custom `--config` argument. See the [full update and service instructions](docs/installation.md#updates-and-backups).
+
+An open browser tab can still show the Dashboard while the server is stopped. Live station updates and packet diagnostics require the server. If diagnostics are empty, stale or show zero packets after an update, start the server and check that the browser reconnects before troubleshooting WSJT-X UDP settings. [Startup troubleshooting](docs/troubleshooting.md#installation-or-startup).
 
 ## Use the combination that fits your station
 
@@ -103,9 +99,9 @@ Start with reception and history. When enabling logging, ensure another uploader
 
 [Documentation home](docs/README.md) · [Installation & updates](docs/installation.md) · [Quick start](docs/quick-start.md) · [Configuration](docs/configuration.md) · [Using the Dashboard](docs/using-dashboard.md) · [Logging & recovery](docs/logging.md) · [Troubleshooting](docs/troubleshooting.md) · [Architecture](docs/architecture.md)
 
-[Changelog](CHANGELOG.md) · [RC1 notes](docs/releases/v0.9.0-rc.1.md) · [Readiness checklist](docs/release-readiness.md) · [QSO field audit](docs/qso-field-audit.md) · [Development checks](docs/development.md)
+[Changelog](CHANGELOG.md) · [Readiness checklist](docs/release-readiness.md) · [QSO field audit](docs/qso-field-audit.md) · [Development checks](docs/development.md)
 
-## Release candidate status
+## Platform and integration support
 
 The Dashboard has been tested on **macOS and Ubuntu**, including successful Ubuntu testing reported by the operator. Detailed macOS evidence includes multiple WSJT-X radios, QRZ/Wavelog reads and GridTracker2 reception. Enriched logging, recovery and field selection have extensive isolated automated coverage, but full isolated Wavelog write/outage acceptance and the new optional-field live export check remain outstanding. Windows, Docker, MacLoggerDX integration and inline biography retrieval remain unverified or deferred. [Evidence and limits](docs/release-readiness.md).
 
